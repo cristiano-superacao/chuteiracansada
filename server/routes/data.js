@@ -272,13 +272,20 @@ async function replaceAllData(data) {
 
 const router = express.Router();
 
+function sendDbAware(res, err, fallbackStatus, payload) {
+  if (err && err.code === 'DB_DISABLED') {
+    return res.status(503).json({ error: 'db_unavailable' });
+  }
+  return res.status(fallbackStatus).json(payload);
+}
+
 router.get('/data', async (_req, res) => {
   try {
     const data = await fetchData();
     res.json(data);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'failed_to_load' });
+    sendDbAware(res, err, 500, { error: 'failed_to_load' });
   }
 });
 
@@ -288,7 +295,7 @@ router.get('/associados', async (_req, res) => {
     res.json(data.associados);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'failed_to_load' });
+    sendDbAware(res, err, 500, { error: 'failed_to_load' });
   }
 });
 
@@ -298,7 +305,7 @@ router.get('/jogadores', async (_req, res) => {
     res.json(data.jogadores);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'failed_to_load' });
+    sendDbAware(res, err, 500, { error: 'failed_to_load' });
   }
 });
 
@@ -308,7 +315,7 @@ router.get('/gastos', async (_req, res) => {
     res.json(data.gastos);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'failed_to_load' });
+    sendDbAware(res, err, 500, { error: 'failed_to_load' });
   }
 });
 
@@ -318,7 +325,7 @@ router.get('/entradas', async (_req, res) => {
     res.json(data.entradas);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'failed_to_load' });
+    sendDbAware(res, err, 500, { error: 'failed_to_load' });
   }
 });
 
@@ -328,7 +335,7 @@ router.get('/times', async (_req, res) => {
     res.json(data.times);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'failed_to_load' });
+    sendDbAware(res, err, 500, { error: 'failed_to_load' });
   }
 });
 
@@ -338,7 +345,7 @@ router.get('/campeonato', async (_req, res) => {
     res.json(data.campeonato);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'failed_to_load' });
+    sendDbAware(res, err, 500, { error: 'failed_to_load' });
   }
 });
 
@@ -348,7 +355,7 @@ router.put('/data', requireAdmin, async (req, res) => {
     res.json({ ok: true });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'failed_to_save' });
+    sendDbAware(res, err, 500, { error: 'failed_to_save' });
   }
 });
 
@@ -359,7 +366,7 @@ router.put('/associados', requireAdmin, async (req, res) => {
     res.json({ ok: true });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'failed_to_save' });
+    sendDbAware(res, err, 500, { error: 'failed_to_save' });
   }
 });
 
@@ -370,7 +377,7 @@ router.put('/jogadores', requireAdmin, async (req, res) => {
     res.json({ ok: true });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'failed_to_save' });
+    sendDbAware(res, err, 500, { error: 'failed_to_save' });
   }
 });
 
@@ -381,7 +388,7 @@ router.put('/gastos', requireAdmin, async (req, res) => {
     res.json({ ok: true });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'failed_to_save' });
+    sendDbAware(res, err, 500, { error: 'failed_to_save' });
   }
 });
 
@@ -392,7 +399,7 @@ router.put('/entradas', requireAdmin, async (req, res) => {
     res.json({ ok: true });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'failed_to_save' });
+    sendDbAware(res, err, 500, { error: 'failed_to_save' });
   }
 });
 
@@ -403,7 +410,7 @@ router.put('/times', requireAdmin, async (req, res) => {
     res.json({ ok: true });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'failed_to_save' });
+    sendDbAware(res, err, 500, { error: 'failed_to_save' });
   }
 });
 
@@ -414,7 +421,7 @@ router.put('/campeonato', requireAdmin, async (req, res) => {
     res.json({ ok: true });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'failed_to_save' });
+    sendDbAware(res, err, 500, { error: 'failed_to_save' });
   }
 });
 
@@ -441,7 +448,7 @@ router.post('/associados', requireAdmin, async (req, res) => {
   } catch (err) {
     try { await client.query('ROLLBACK'); } catch { /* ignore */ }
     console.error(err);
-    res.status(500).json({ error: 'failed_to_create' });
+    sendDbAware(res, err, 500, { error: 'failed_to_create' });
   } finally {
     client.release();
   }
@@ -455,7 +462,7 @@ router.delete('/associados/:id', requireAdmin, async (req, res) => {
     res.json({ ok: true });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'failed_to_delete' });
+    sendDbAware(res, err, 500, { error: 'failed_to_delete' });
   }
 });
 
@@ -475,7 +482,7 @@ router.post('/jogadores', requireAdmin, async (req, res) => {
     res.json({ ok: true, id: ins.rows[0].id });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'failed_to_create' });
+    sendDbAware(res, err, 500, { error: 'failed_to_create' });
   }
 });
 
@@ -487,7 +494,7 @@ router.delete('/jogadores/:id', requireAdmin, async (req, res) => {
     res.json({ ok: true });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'failed_to_delete' });
+    sendDbAware(res, err, 500, { error: 'failed_to_delete' });
   }
 });
 
@@ -505,7 +512,7 @@ router.post('/gastos', requireAdmin, async (req, res) => {
     res.json({ ok: true, id: ins.rows[0].id });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'failed_to_create' });
+    sendDbAware(res, err, 500, { error: 'failed_to_create' });
   }
 });
 
@@ -517,7 +524,7 @@ router.delete('/gastos/:id', requireAdmin, async (req, res) => {
     res.json({ ok: true });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'failed_to_delete' });
+    sendDbAware(res, err, 500, { error: 'failed_to_delete' });
   }
 });
 
@@ -535,7 +542,7 @@ router.post('/entradas', requireAdmin, async (req, res) => {
     res.json({ ok: true, id: ins.rows[0].id });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'failed_to_create' });
+    sendDbAware(res, err, 500, { error: 'failed_to_create' });
   }
 });
 
@@ -547,7 +554,7 @@ router.delete('/entradas/:id', requireAdmin, async (req, res) => {
     res.json({ ok: true });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'failed_to_delete' });
+    sendDbAware(res, err, 500, { error: 'failed_to_delete' });
   }
 });
 
@@ -572,7 +579,7 @@ router.post('/times', requireAdmin, async (req, res) => {
     res.json({ ok: true, id: ins.rows[0].id });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'failed_to_create' });
+    sendDbAware(res, err, 500, { error: 'failed_to_create' });
   }
 });
 
@@ -584,7 +591,7 @@ router.delete('/times/:id', requireAdmin, async (req, res) => {
     res.json({ ok: true });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'failed_to_delete' });
+    sendDbAware(res, err, 500, { error: 'failed_to_delete' });
   }
 });
 
@@ -605,7 +612,7 @@ router.post('/campeonato/jogos', requireAdmin, async (req, res) => {
     res.json({ ok: true, id: ins.rows[0].id });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'failed_to_create' });
+    sendDbAware(res, err, 500, { error: 'failed_to_create' });
   }
 });
 
@@ -617,7 +624,7 @@ router.delete('/campeonato/jogos/:id', requireAdmin, async (req, res) => {
     res.json({ ok: true });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'failed_to_delete' });
+    sendDbAware(res, err, 500, { error: 'failed_to_delete' });
   }
 });
 
@@ -629,7 +636,7 @@ router.post('/campeonato/videos', requireAdmin, async (req, res) => {
     res.json({ ok: true, id: ins.rows[0].id });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'failed_to_create' });
+    sendDbAware(res, err, 500, { error: 'failed_to_create' });
   }
 });
 
@@ -641,7 +648,7 @@ router.delete('/campeonato/videos/:id', requireAdmin, async (req, res) => {
     res.json({ ok: true });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'failed_to_delete' });
+    sendDbAware(res, err, 500, { error: 'failed_to_delete' });
   }
 });
 
@@ -654,7 +661,7 @@ router.post('/campeonato/imagens', requireAdmin, async (req, res) => {
     res.json({ ok: true, id: ins.rows[0].id });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'failed_to_create' });
+    sendDbAware(res, err, 500, { error: 'failed_to_create' });
   }
 });
 
@@ -666,7 +673,7 @@ router.delete('/campeonato/imagens/:id', requireAdmin, async (req, res) => {
     res.json({ ok: true });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'failed_to_delete' });
+    sendDbAware(res, err, 500, { error: 'failed_to_delete' });
   }
 });
 
@@ -685,7 +692,7 @@ router.post('/campeonato/posts', requireAdmin, async (req, res) => {
     res.json({ ok: true, id });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'failed_to_create' });
+    sendDbAware(res, err, 500, { error: 'failed_to_create' });
   }
 });
 
@@ -697,7 +704,7 @@ router.delete('/campeonato/posts/:id', requireAdmin, async (req, res) => {
     res.json({ ok: true });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'failed_to_delete' });
+    sendDbAware(res, err, 500, { error: 'failed_to_delete' });
   }
 });
 
@@ -716,7 +723,7 @@ router.post('/campeonato/posts/:id/comentarios', async (req, res) => {
     res.json({ ok: true });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'failed_to_comment' });
+    sendDbAware(res, err, 500, { error: 'failed_to_comment' });
   }
 });
 

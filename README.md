@@ -19,6 +19,8 @@ Crie um arquivo `.env` na raiz (use `.env.example` como base):
 - `ADMIN_JWT_SECRET` = segredo do JWT (string longa)
 - `PORT` = (opcional) porta do servidor
 
+> Dica: se `DATABASE_URL` ficar vazio, o servidor sobe em **modo fallback** (sem Postgres). Nesse modo, os endpoints de dados retornam `503` e o site usa **localStorage** como armazenamento.
+
 ## Rodar localmente
 No diretório do projeto:
 

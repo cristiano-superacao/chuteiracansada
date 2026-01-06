@@ -52,7 +52,7 @@ const DEFAULT_DATA = {
     { mes: 'Jan', data: '2026-01-05', descricao: 'Água / gelo', valor: 20 },
   ],
   entradas: [
-    { mes: 'Jan', data: '2026-01-05', origem: 'Mensalidade', valor: 60 },
+    { mes: 'Jan', data: '2026-01-05', origem: 'Doação', valor: 60 },
   ],
   times: [
     { time: 'Brasil', pg: 15, j: 5, v: 5, e: 0, der: 0, gf: 15, gs: 5, sg: 10, ca: 10, cv: 1 },
@@ -217,7 +217,11 @@ async function loadDataPreferApi() {
     setData(data);
     return data;
   } catch (err) {
-    console.warn('Falha ao carregar via API, usando dados locais.', err);
+    if (err?.status === 503 || String(err?.message || '') === 'db_unavailable') {
+      console.warn('API indisponível (banco não configurado). Usando dados locais.', err);
+    } else {
+      console.warn('Falha ao carregar via API, usando dados locais.', err);
+    }
     return getData();
   }
 }
@@ -231,10 +235,19 @@ async function saveDataPreferApi(state) {
   } catch (err) {
     console.error('Falha ao salvar via API.', err);
     setData(state.data);
-    alert('Não consegui salvar no servidor.\n\nSe você está em modo local, inicie o servidor (npm run dev).\n\nOs dados foram salvos apenas neste navegador.');
+    if (err?.status === 503 || String(err?.message || '') === 'db_unavailable') {
+      alert('O servidor está rodando, mas o banco (Postgres) não está configurado.\n\nConfigure DATABASE_URL (Railway/Postgres) e reinicie o servidor.\n\nOs dados foram salvos apenas neste navegador.');
+    } else {
+      alert('Não consegui salvar no servidor.\n\nSe você está em modo local, inicie o servidor (npm run dev).\n\nOs dados foram salvos apenas neste navegador.');
+    }
     toast('Salvo localmente');
     return false;
   }
+}
+
+function isMensalidadeEntrada(item) {
+  const origem = normalizeText(item?.origem ?? '');
+  return origem.includes('mensalidade');
 }
 
 function bindAdminControls(state) {
@@ -1982,7 +1995,9 @@ function summarizeSaldo(state) {
   const mensalidadeByMonth = computeMensalidadeByMonth(state.data.associados);
   const totalMensalidades = [...mensalidadeByMonth.values()].reduce((a, b) => a + b, 0);
 
-  const totalOutrasEntradas = state.data.entradas.reduce((acc, it) => acc + parseMoney(it.valor), 0);
+  const totalOutrasEntradas = state.data.entradas
+    .filter((it) => !isMensalidadeEntrada(it))
+    .reduce((acc, it) => acc + parseMoney(it.valor), 0);
   const totalEntradas = totalMensalidades + totalOutrasEntradas;
   const totalGastos = state.data.gastos.reduce((acc, it) => acc + parseMoney(it.valor), 0);
   const saldo = totalEntradas - totalGastos;
@@ -2007,6 +2022,7 @@ function summarizeSaldo(state) {
     }
 
     for (const e of state.data.entradas) {
+      if (isMensalidadeEntrada(e)) continue;
       const mes = (e.mes || '').trim() || '—';
       if (!byMonth.has(mes)) byMonth.set(mes, { mes, entradas: 0, gastos: 0 });
       byMonth.get(mes).entradas += parseMoney(e.valor);

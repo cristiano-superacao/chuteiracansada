@@ -1,8 +1,9 @@
 const fs = require('fs');
 const path = require('path');
-const { pool } = require('./db');
+const { pool, dbEnabled } = require('./db');
 
 async function migrate() {
+  if (!dbEnabled) return;
   const schemaPath = path.join(__dirname, 'schema.sql');
   const sql = fs.readFileSync(schemaPath, 'utf8');
 
