@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Chuteira Cansada — Classificação</title>
+  <link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body data-page="classificacao">
+  <header class="topbar">
+    <div class="container topbar__inner">
+      <div class="brand">
+        <div class="brand__mark" aria-hidden="true"></div>
+        <div class="brand__text">
+          <div class="brand__title">Chuteira Cansada</div>
+          <div class="brand__subtitle">Gestão do campeonato e do caixa</div>
+        </div>
+      </div>
+
+      <div class="topbar__right">
+        <nav class="nav" aria-label="Navegação principal">
+          <a class="nav__link" href="index.html">Associados</a>
+          <a class="nav__link" href="jogadores.html">Jogadores</a>
+          <a class="nav__link" href="gastos.html">Gastos</a>
+          <a class="nav__link" href="saldo.html">Saldo</a>
+          <a class="nav__link is-active" href="classificacao.html">Classificação</a>
+          <a class="nav__link" href="campeonato.html">Campeonato</a>
+        </nav>
+        <button class="btn btn--ghost" type="button" id="admin-btn" aria-label="Admin"></button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container page">
+    <header class="page__header">
+      <h1 class="page__title">Classificação</h1>
+      <p class="page__subtitle">Acompanhe a tabela do campeonato e estatísticas gerais.</p>
+    </header>
+
+    <section class="card">
+        <div class="card__header">
+          <div>
+            <h2 class="card__title">Tabela</h2>
+            <p class="card__hint">Edite para atualizar a classificação e os totais.</p>
+          </div>
+          <div class="actions">
+            <button class="btn" type="button" data-action="add-row" data-table="times" data-admin-only="1">Adicionar time</button>
+            <button class="btn btn--ghost" type="button" data-action="reset" data-scope="times" data-admin-only="1">Restaurar exemplo</button>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="table" data-table="times">
+            <thead>
+              <tr>
+                <th class="w-220">Time</th>
+                <th class="w-80">PG</th>
+                <th class="w-80">J</th>
+                <th class="w-80">V</th>
+                <th class="w-80">E</th>
+                <th class="w-90">DER</th>
+                <th class="w-80">GF</th>
+                <th class="w-80">GS</th>
+                <th class="w-80">SG</th>
+                <th class="w-80">CA</th>
+                <th class="w-80">CV</th>
+                <th class="w-90">%</th>
+                <th class="w-72" aria-label="Ações"></th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div class="card__footer">
+          <div class="muted">Critérios: PG, V, SG, GF, CA, CV.</div>
+          <button class="btn btn--primary" type="button" data-action="save" data-admin-only="1">Salvar alterações</button>
+        </div>
+    </section>
+
+    <section class="grid grid--even">
+      <div class="card" aria-label="Critérios da classificação">
+        <div class="card__header">
+          <div>
+            <h2 class="card__title">Critérios da classificação</h2>
+            <p class="card__hint">Ordem de desempate usada no campeonato.</p>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="table table--compact" aria-label="Critérios">
+            <thead>
+              <tr>
+                <th class="w-220">Critério</th>
+                <th class="w-110">Sigla</th>
+                <th>Descrição</th>
+              </tr>
+            </thead>
+            <tbody data-slot="criterios-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card__header">
+          <div>
+            <h2 class="card__title">Resumo</h2>
+            <p class="card__hint">Totais e médias do campeonato.</p>
+          </div>
+        </div>
+        <div class="summary" data-slot="classificacao-resumo"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer__inner">
+      <span class="muted">© 2026 Chuteira Cansada</span>
+      <span class="muted">Dados locais (localStorage)</span>
+    </div>
+  </footer>
+
+  <script src="assets/app.js"></script>
+</body>
+</html>

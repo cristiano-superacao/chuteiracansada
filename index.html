@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Chuteira Cansada — Associados</title>
+  <link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body data-page="associados">
+  <header class="topbar">
+    <div class="container topbar__inner">
+      <div class="brand">
+        <div class="brand__mark" aria-hidden="true"></div>
+        <div class="brand__text">
+          <div class="brand__title">Chuteira Cansada</div>
+          <div class="brand__subtitle">Gestão do campeonato e do caixa</div>
+        </div>
+      </div>
+
+      <div class="topbar__right">
+        <nav class="nav" aria-label="Navegação principal">
+          <a class="nav__link is-active" href="index.html">Associados</a>
+          <a class="nav__link" href="jogadores.html">Jogadores</a>
+          <a class="nav__link" href="gastos.html">Gastos</a>
+          <a class="nav__link" href="saldo.html">Saldo</a>
+          <a class="nav__link" href="classificacao.html">Classificação</a>
+          <a class="nav__link" href="campeonato.html">Campeonato</a>
+        </nav>
+        <button class="btn btn--ghost" type="button" id="admin-btn" aria-label="Admin"></button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container page">
+    <header class="page__header">
+      <h1 class="page__title">Associados</h1>
+      <p class="page__subtitle">Acompanhe pagamentos por mês (Janeiro a Dezembro).</p>
+    </header>
+
+    <section class="card" aria-label="Tabela de associados">
+      <div class="card__header">
+        <div>
+          <h2 class="card__title">Pagamentos</h2>
+          <p class="card__hint">Clique em uma célula para editar. Os dados ficam salvos neste navegador.</p>
+        </div>
+        <div class="actions">
+          <button class="btn" type="button" data-action="add-row" data-table="associados" data-admin-only="1">Adicionar associado</button>
+          <button class="btn" type="button" data-action="import-associados" data-admin-only="1">Importar Excel</button>
+          <button class="btn btn--ghost" type="button" data-action="download-associados-template">Baixar template</button>
+          <label class="field" aria-label="Pesquisar por nome">
+            <span class="field__label">Nome</span>
+            <input class="input" id="associados-search-nome" type="search" placeholder="Pesquisar..." />
+          </label>
+          <label class="field" aria-label="Pesquisar por apelido">
+            <span class="field__label">Apelido</span>
+            <input class="input" id="associados-search-apelido" type="search" placeholder="Pesquisar..." />
+          </label>
+          <label class="field" aria-label="Filtrar mês">
+            <span class="field__label">Mês</span>
+            <select class="select" id="associados-filter-mes">
+              <option>Jan</option>
+              <option>Fev</option>
+              <option>Mar</option>
+              <option>Abr</option>
+              <option>Mai</option>
+              <option>Jun</option>
+              <option>Jul</option>
+              <option>Ago</option>
+              <option>Set</option>
+              <option>Out</option>
+              <option>Nov</option>
+              <option>Dez</option>
+            </select>
+          </label>
+          <label class="check" title="Mostrar apenas associados com pagamento pendente no mês selecionado">
+            <input type="checkbox" id="associados-filter-pendentes" />
+            <span>Somente pendentes</span>
+          </label>
+          <button class="btn" type="button" data-action="export-associados-pdf">Exportar PDF</button>
+          <button class="btn btn--ghost" type="button" data-action="reset" data-scope="associados" data-admin-only="1">Restaurar exemplo</button>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="table associados-table" data-table="associados">
+          <thead>
+            <tr>
+              <th class="w-220">Nome</th>
+              <th class="w-110">Apelido</th>
+              <th>Jan</th>
+              <th>Fev</th>
+              <th>Mar</th>
+              <th>Abr</th>
+              <th>Mai</th>
+              <th>Jun</th>
+              <th>Jul</th>
+              <th>Ago</th>
+              <th>Set</th>
+              <th>Out</th>
+              <th>Nov</th>
+              <th>Dez</th>
+              <th class="w-72" aria-label="Ações"></th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="card__footer">
+        <div class="stack">
+          <div class="muted">Dica: use valores como <strong>"Pago"</strong>, <strong>"Pendente"</strong> ou <strong>"R$ 20"</strong>.</div>
+          <div class="pager" aria-label="Paginação">
+            <button class="btn btn--ghost" type="button" id="associados-page-prev">Anterior</button>
+            <span class="muted" id="associados-page-info"></span>
+            <button class="btn btn--ghost" type="button" id="associados-page-next">Próxima</button>
+          </div>
+        </div>
+        <button class="btn btn--primary" type="button" data-action="save" data-admin-only="1">Salvar alterações</button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer__inner">
+      <span class="muted">© 2026 Chuteira Cansada</span>
+      <span class="muted">Dados no servidor (Postgres) com fallback local</span>
+    </div>
+  </footer>
+
+  <input id="import-associados-file" type="file" accept=".xlsx,.xls,.csv" hidden />
+
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>

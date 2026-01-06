@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Chuteira Cansada — Jogadores</title>
+  <link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body data-page="jogadores">
+  <header class="topbar">
+    <div class="container topbar__inner">
+      <div class="brand">
+        <div class="brand__mark" aria-hidden="true"></div>
+        <div class="brand__text">
+          <div class="brand__title">Chuteira Cansada</div>
+          <div class="brand__subtitle">Gestão do campeonato e do caixa</div>
+        </div>
+      </div>
+
+      <div class="topbar__right">
+        <nav class="nav" aria-label="Navegação principal">
+          <a class="nav__link" href="index.html">Associados</a>
+          <a class="nav__link is-active" href="jogadores.html">Jogadores</a>
+          <a class="nav__link" href="gastos.html">Gastos</a>
+          <a class="nav__link" href="saldo.html">Saldo</a>
+          <a class="nav__link" href="classificacao.html">Classificação</a>
+          <a class="nav__link" href="campeonato.html">Campeonato</a>
+        </nav>
+        <button class="btn btn--ghost" type="button" id="admin-btn" aria-label="Admin"></button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container page">
+    <header class="page__header">
+      <h1 class="page__title">Jogadores</h1>
+      <p class="page__subtitle">Acompanhe gols, cartões, suspensões e o time de cada jogador.</p>
+    </header>
+
+    <section class="card" aria-label="Tabela de jogadores">
+      <div class="card__header">
+        <div>
+          <h2 class="card__title">Estatísticas por jogador</h2>
+          <p class="card__hint">Clique para editar. Os dados ficam salvos neste navegador.</p>
+        </div>
+        <div class="actions">
+          <button class="btn" type="button" data-action="add-row" data-table="jogadores" data-admin-only="1">Adicionar jogador</button>
+          <button class="btn" type="button" data-action="import-jogadores" data-admin-only="1">Importar Excel</button>
+          <button class="btn btn--ghost" type="button" data-action="reset" data-scope="jogadores" data-admin-only="1">Restaurar exemplo</button>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="table" data-table="jogadores">
+          <thead>
+            <tr>
+              <th class="w-280">Nome</th>
+              <th class="w-200">Time</th>
+              <th class="w-110">Gols</th>
+              <th class="w-110">Amarelos</th>
+              <th class="w-110">Vermelhos</th>
+              <th class="w-140">Suspensões</th>
+              <th class="w-72" aria-label="Ações"></th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="card__footer">
+        <div class="muted">Dica: use números nas colunas de gols/cartões.</div>
+        <button class="btn btn--primary" type="button" data-action="save" data-admin-only="1">Salvar alterações</button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer__inner">
+      <span class="muted">© 2026 Chuteira Cansada</span>
+      <span class="muted">Dados locais (localStorage)</span>
+    </div>
+  </footer>
+
+  <input id="import-jogadores-file" type="file" accept=".xlsx,.xls,.csv" hidden />
+
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>

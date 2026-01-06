@@ -1,0 +1,101 @@
+-- Chuteira Cansada (PostgreSQL) — schema por módulo
+
+-- Associados
+CREATE TABLE IF NOT EXISTS associados (
+  id BIGSERIAL PRIMARY KEY,
+  nome TEXT NOT NULL,
+  apelido TEXT NOT NULL DEFAULT ''
+);
+
+CREATE TABLE IF NOT EXISTS associados_pagamentos (
+  id BIGSERIAL PRIMARY KEY,
+  associado_id BIGINT NOT NULL REFERENCES associados(id) ON DELETE CASCADE,
+  mes_key TEXT NOT NULL,
+  raw TEXT NOT NULL DEFAULT 'Pendente',
+  valor NUMERIC(12,2) NOT NULL DEFAULT 0,
+  UNIQUE (associado_id, mes_key)
+);
+
+-- Jogadores
+CREATE TABLE IF NOT EXISTS jogadores (
+  id BIGSERIAL PRIMARY KEY,
+  nome TEXT NOT NULL,
+  time TEXT NOT NULL DEFAULT '',
+  gols INT NOT NULL DEFAULT 0,
+  amarelos INT NOT NULL DEFAULT 0,
+  vermelhos INT NOT NULL DEFAULT 0,
+  suspensoes INT NOT NULL DEFAULT 0
+);
+
+-- Gastos
+CREATE TABLE IF NOT EXISTS gastos (
+  id BIGSERIAL PRIMARY KEY,
+  mes TEXT NOT NULL DEFAULT '—',
+  data TEXT NOT NULL DEFAULT '',
+  descricao TEXT NOT NULL DEFAULT '',
+  valor NUMERIC(12,2) NOT NULL DEFAULT 0
+);
+
+-- Entradas (outras arrecadações)
+CREATE TABLE IF NOT EXISTS entradas (
+  id BIGSERIAL PRIMARY KEY,
+  mes TEXT NOT NULL DEFAULT '—',
+  data TEXT NOT NULL DEFAULT '',
+  origem TEXT NOT NULL DEFAULT '',
+  valor NUMERIC(12,2) NOT NULL DEFAULT 0
+);
+
+-- Classificação / Times
+CREATE TABLE IF NOT EXISTS times (
+  id BIGSERIAL PRIMARY KEY,
+  time TEXT NOT NULL DEFAULT '—',
+  pg INT NOT NULL DEFAULT 0,
+  j INT NOT NULL DEFAULT 0,
+  v INT NOT NULL DEFAULT 0,
+  e INT NOT NULL DEFAULT 0,
+  der INT NOT NULL DEFAULT 0,
+  gf INT NOT NULL DEFAULT 0,
+  gs INT NOT NULL DEFAULT 0,
+  sg INT NOT NULL DEFAULT 0,
+  ca INT NOT NULL DEFAULT 0,
+  cv INT NOT NULL DEFAULT 0
+);
+
+-- Campeonato
+CREATE TABLE IF NOT EXISTS campeonato_jogos (
+  id BIGSERIAL PRIMARY KEY,
+  rodada TEXT NOT NULL DEFAULT '—',
+  data TEXT NOT NULL DEFAULT '',
+  hora TEXT NOT NULL DEFAULT '',
+  casa TEXT NOT NULL DEFAULT '',
+  placar TEXT NOT NULL DEFAULT '',
+  fora TEXT NOT NULL DEFAULT '',
+  local TEXT NOT NULL DEFAULT ''
+);
+
+CREATE TABLE IF NOT EXISTS campeonato_videos (
+  id BIGSERIAL PRIMARY KEY,
+  url TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS campeonato_imagens (
+  id BIGSERIAL PRIMARY KEY,
+  url TEXT NOT NULL,
+  legenda TEXT NOT NULL DEFAULT ''
+);
+
+CREATE TABLE IF NOT EXISTS campeonato_posts (
+  id TEXT PRIMARY KEY,
+  rodada TEXT NOT NULL DEFAULT '—',
+  titulo TEXT NOT NULL DEFAULT '',
+  texto TEXT NOT NULL DEFAULT '',
+  criado_em TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS campeonato_comentarios (
+  id BIGSERIAL PRIMARY KEY,
+  post_id TEXT NOT NULL REFERENCES campeonato_posts(id) ON DELETE CASCADE,
+  nome TEXT NOT NULL DEFAULT 'Visitante',
+  texto TEXT NOT NULL,
+  criado_em TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);

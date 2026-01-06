@@ -1,0 +1,6 @@
+Vamos criar um site, para o Chuteira cansada.
+Vamos criar uma pagina de Associados, com nome, apelido, e os meses de janeiro até dezembro para acompanhar os pagamentos.
+Vamos criar uma pagina para acompanhar Nome, cartões, Gols, Suspenções e o time que cada jogador representa.
+Vamos criar uma pagina para acompanhar os gastos por mês, data e com o que gastou.
+Vamos criar uma pagina para fazer a comparação do que gastou com o que arrecadou e mostrar o saldo.
+Vamos criar uma pagina para acompanhar a classificação do campeonato e as estatisticas de melhorando as imagens em anexo.

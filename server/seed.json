@@ -1,0 +1,32 @@
+{
+  "associados": [
+    {"nome":"Adenildo Batista dos Santos","apelido":"Guilito","pagamentos":{"jan":"Pendente","fev":"Pendente","mar":"Pendente","abr":"Pendente","mai":"Pendente","jun":"Pendente","jul":"Pendente","ago":"Pendente","set":"Pendente","out":"Pendente","nov":"Pendente","dez":"Pendente"}},
+    {"nome":"Adilson Jose dos Santos","apelido":"Dica","pagamentos":{"jan":"Pendente","fev":"Pendente","mar":"Pendente","abr":"Pendente","mai":"Pendente","jun":"Pendente","jul":"Pendente","ago":"Pendente","set":"Pendente","out":"Pendente","nov":"Pendente","dez":"Pendente"}}
+  ],
+  "jogadores": [
+    {"nome":"Jogador Exemplo","time":"Brasil","gols":2,"amarelos":1,"vermelhos":0,"suspensoes":0}
+  ],
+  "gastos": [
+    {"mes":"Jan","data":"2026-01-05","descricao":"Água / gelo","valor":20}
+  ],
+  "entradas": [
+    {"mes":"Jan","data":"2026-01-05","origem":"Mensalidade","valor":60}
+  ],
+  "times": [
+    {"time":"Brasil","pg":15,"j":5,"v":5,"e":0,"der":0,"gf":15,"gs":5,"sg":10,"ca":10,"cv":1}
+  ],
+  "campeonato": {
+    "jogos": [
+      {"rodada":"1","data":"2026-01-05","hora":"19:30","casa":"Brasil","placar":"2-1","fora":"Argentina","local":"Campo principal"}
+    ],
+    "videos": [
+      {"url":"https://www.youtube.com/watch?v=dQw4w9WgXcQ"}
+    ],
+    "imagens": [
+      {"url":"https://images.unsplash.com/photo-1521412644187-c49fa049e84d?auto=format&fit=crop&w=1200&q=60","legenda":"Melhores momentos"}
+    ],
+    "posts": [
+      {"id":"post-1","rodada":"1","titulo":"Resumo da rodada","texto":"Jogaços, muita emoção e disputa acirrada na tabela.","criadoEm":"2026-01-05T00:00:00.000Z","comentarios":[{"nome":"Visitante","texto":"Que rodada boa!","criadoEm":"2026-01-05T00:00:00.000Z"}]}
+    ]
+  }
+}

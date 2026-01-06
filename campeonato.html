@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Chuteira Cansada — Campeonato</title>
+  <link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body data-page="campeonato">
+  <header class="topbar">
+    <div class="container topbar__inner">
+      <div class="brand">
+        <div class="brand__mark" aria-hidden="true"></div>
+        <div class="brand__text">
+          <div class="brand__title">Chuteira Cansada</div>
+          <div class="brand__subtitle">Gestão do campeonato e do caixa</div>
+        </div>
+      </div>
+
+      <div class="topbar__right">
+        <nav class="nav" aria-label="Navegação principal">
+          <a class="nav__link" href="index.html">Associados</a>
+          <a class="nav__link" href="jogadores.html">Jogadores</a>
+          <a class="nav__link" href="gastos.html">Gastos</a>
+          <a class="nav__link" href="saldo.html">Saldo</a>
+          <a class="nav__link" href="classificacao.html">Classificação</a>
+          <a class="nav__link is-active" href="campeonato.html">Campeonato</a>
+        </nav>
+        <button class="btn btn--ghost" type="button" id="admin-btn" aria-label="Admin"></button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container page">
+    <header class="page__header">
+      <h1 class="page__title">Campeonato</h1>
+      <p class="page__subtitle">Tabela de jogos, vídeos, imagens e comentários da rodada.</p>
+    </header>
+
+    <section class="card" aria-label="Tabela de jogos">
+      <div class="card__header">
+        <div>
+          <h2 class="card__title">Jogos</h2>
+          <p class="card__hint">A tabela é atualizada pelo administrador. Quem acessa pode apenas visualizar.</p>
+        </div>
+        <div class="actions">
+          <button class="btn" type="button" data-action="add-jogo" data-admin-only="1">Adicionar jogo</button>
+          <button class="btn btn--ghost" type="button" data-action="reset" data-scope="campeonato" data-admin-only="1">Restaurar exemplo</button>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="table table--compact" data-table="jogos">
+          <thead>
+            <tr>
+              <th class="w-90">Rodada</th>
+              <th class="w-140">Data</th>
+              <th class="w-90">Hora</th>
+              <th class="w-200">Casa</th>
+              <th class="w-110">Placar</th>
+              <th class="w-200">Fora</th>
+              <th class="w-220">Local</th>
+              <th class="w-72" aria-label="Ações"></th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="card__footer">
+        <span class="muted">Dica: use “2-1” no placar.</span>
+        <button class="btn btn--primary" type="button" data-action="save" data-admin-only="1">Salvar alterações</button>
+      </div>
+    </section>
+
+    <div class="grid grid--even" style="margin-top:14px">
+      <section class="card" aria-label="Vídeos">
+        <div class="card__header">
+          <div>
+            <h2 class="card__title">Vídeos</h2>
+            <p class="card__hint">Cole links (ex: YouTube). O site incorpora automaticamente.</p>
+          </div>
+          <div class="actions" data-admin-only="1">
+            <label class="field">
+              <span class="field__label">Link do vídeo</span>
+              <input class="input" id="campeonato-video-url" type="url" placeholder="https://..." />
+            </label>
+            <button class="btn" type="button" data-action="add-video">Adicionar</button>
+          </div>
+        </div>
+        <div class="card__body" data-slot="campeonato-videos"></div>
+      </section>
+
+      <section class="card" aria-label="Imagens">
+        <div class="card__header">
+          <div>
+            <h2 class="card__title">Imagens</h2>
+            <p class="card__hint">Cole links de imagem (JPG/PNG/WebP). Exibição responsiva.</p>
+          </div>
+          <div class="actions" data-admin-only="1">
+            <label class="field">
+              <span class="field__label">Link da imagem</span>
+              <input class="input" id="campeonato-imagem-url" type="url" placeholder="https://..." />
+            </label>
+            <button class="btn" type="button" data-action="add-imagem">Adicionar</button>
+          </div>
+        </div>
+        <div class="card__body" data-slot="campeonato-imagens"></div>
+      </section>
+    </div>
+
+    <section class="card" aria-label="Entreterimento" style="margin-top:14px">
+      <div class="card__header">
+        <div>
+          <h2 class="card__title">Entreterimento</h2>
+          <p class="card__hint">Posts da rodada e comentários. Qualquer pessoa pode comentar.</p>
+        </div>
+        <div class="actions" data-admin-only="1">
+          <label class="field">
+            <span class="field__label">Título</span>
+            <input class="input" id="campeonato-post-titulo" type="text" placeholder="Resumo da rodada..." />
+          </label>
+          <label class="field">
+            <span class="field__label">Rodada</span>
+            <input class="input" id="campeonato-post-rodada" type="text" placeholder="1" style="min-width:100px" />
+          </label>
+          <label class="field" style="min-width:260px">
+            <span class="field__label">Texto</span>
+            <input class="input" id="campeonato-post-texto" type="text" placeholder="Escreva um comentário do admin..." style="min-width:260px" />
+          </label>
+          <button class="btn" type="button" data-action="add-post">Publicar</button>
+        </div>
+      </div>
+
+      <div class="card__body" data-slot="campeonato-posts"></div>
+
+      <div class="card__footer">
+        <span class="muted">Comentários são salvos neste navegador (localStorage).</span>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer__inner">
+      <span class="muted">© 2026 Chuteira Cansada</span>
+      <span class="muted">Dados locais (localStorage)</span>
+    </div>
+  </footer>
+
+  <script src="assets/app.js"></script>
+</body>
+</html>

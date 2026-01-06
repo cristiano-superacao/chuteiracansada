@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Chuteira Cansada — Saldo</title>
+  <link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body data-page="saldo">
+  <header class="topbar">
+    <div class="container topbar__inner">
+      <div class="brand">
+        <div class="brand__mark" aria-hidden="true"></div>
+        <div class="brand__text">
+          <div class="brand__title">Chuteira Cansada</div>
+          <div class="brand__subtitle">Gestão do campeonato e do caixa</div>
+        </div>
+      </div>
+
+      <div class="topbar__right">
+        <nav class="nav" aria-label="Navegação principal">
+          <a class="nav__link" href="index.html">Associados</a>
+          <a class="nav__link" href="jogadores.html">Jogadores</a>
+          <a class="nav__link" href="gastos.html">Gastos</a>
+          <a class="nav__link is-active" href="saldo.html">Saldo</a>
+          <a class="nav__link" href="classificacao.html">Classificação</a>
+          <a class="nav__link" href="campeonato.html">Campeonato</a>
+        </nav>
+        <button class="btn btn--ghost" type="button" id="admin-btn" aria-label="Admin"></button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container page">
+    <header class="page__header">
+      <h1 class="page__title">Saldo</h1>
+      <p class="page__subtitle">Comparação do que arrecadou vs o que gastou.</p>
+    </header>
+
+    <section class="grid">
+      <div class="card">
+        <div class="card__header">
+          <div>
+            <h2 class="card__title">Arrecadação</h2>
+            <p class="card__hint">Use lançamentos (entrada) para registrar outras arrecadações (fora mensalidades).</p>
+          </div>
+          <div class="actions">
+            <button class="btn" type="button" data-action="add-row" data-table="entradas" data-admin-only="1">Adicionar entrada</button>
+            <button class="btn btn--ghost" type="button" data-action="reset" data-scope="entradas" data-admin-only="1">Restaurar exemplo</button>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="table" data-table="entradas">
+            <thead>
+              <tr>
+                <th class="w-140">Mês</th>
+                <th class="w-160">Data</th>
+                <th>Origem</th>
+                <th class="w-160">Valor (R$)</th>
+                <th class="w-72" aria-label="Ações"></th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div class="card__footer">
+          <div class="muted" data-slot="entradas-resumo"></div>
+          <button class="btn btn--primary" type="button" data-action="save" data-admin-only="1">Salvar alterações</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card__header">
+          <div>
+            <h2 class="card__title">Resumo</h2>
+            <p class="card__hint">Calculado automaticamente a partir de Gastos e Arrecadação.</p>
+          </div>
+        </div>
+
+        <div class="summary" data-slot="saldo-resumo">
+          <!-- preenchido via JS -->
+        </div>
+      </div>
+    </section>
+
+    <section class="card" aria-label="Detalhamento por mês">
+      <div class="card__header">
+        <div>
+          <h2 class="card__title">Por mês</h2>
+          <p class="card__hint">Veja entrada, gasto e saldo do mês.</p>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="table" data-table="saldo-mensal">
+          <thead>
+            <tr>
+              <th class="w-140">Mês</th>
+              <th class="w-160">Entradas</th>
+              <th class="w-160">Gastos</th>
+              <th class="w-160">Saldo</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer__inner">
+      <span class="muted">© 2026 Chuteira Cansada</span>
+      <span class="muted">Dados locais (localStorage)</span>
+    </div>
+  </footer>
+
+  <script src="assets/app.js"></script>
+</body>
+</html>

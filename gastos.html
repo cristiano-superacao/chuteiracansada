@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Chuteira Cansada — Gastos</title>
+  <link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body data-page="gastos">
+  <header class="topbar">
+    <div class="container topbar__inner">
+      <div class="brand">
+        <div class="brand__mark" aria-hidden="true"></div>
+        <div class="brand__text">
+          <div class="brand__title">Chuteira Cansada</div>
+          <div class="brand__subtitle">Gestão do campeonato e do caixa</div>
+        </div>
+      </div>
+
+      <div class="topbar__right">
+        <nav class="nav" aria-label="Navegação principal">
+          <a class="nav__link" href="index.html">Associados</a>
+          <a class="nav__link" href="jogadores.html">Jogadores</a>
+          <a class="nav__link is-active" href="gastos.html">Gastos</a>
+          <a class="nav__link" href="saldo.html">Saldo</a>
+          <a class="nav__link" href="classificacao.html">Classificação</a>
+          <a class="nav__link" href="campeonato.html">Campeonato</a>
+        </nav>
+        <button class="btn btn--ghost" type="button" id="admin-btn" aria-label="Admin"></button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container page">
+    <header class="page__header">
+      <h1 class="page__title">Gastos</h1>
+      <p class="page__subtitle">Registre gastos por mês, data e descrição.</p>
+    </header>
+
+    <section class="card" aria-label="Tabela de gastos">
+      <div class="card__header">
+        <div>
+          <h2 class="card__title">Lançamentos</h2>
+          <p class="card__hint">Clique para editar. Valores aceitam R$ e número.</p>
+        </div>
+        <div class="actions">
+          <label class="field" aria-label="Selecionar gasto padrão">
+            <span class="field__label">Gasto padrão</span>
+            <select class="select" id="gastos-item-padrao">
+              <optgroup label="Bebidas">
+                <option>Amstel</option>
+                <option>Schin</option>
+                <option>Skol</option>
+                <option>Bebidas Lacta</option>
+              </optgroup>
+              <optgroup label="Alimentos">
+                <option>Almoço</option>
+                <option>Café</option>
+                <option>Frutas</option>
+                <option>Laranja</option>
+                <option>Melancia</option>
+                <option>Melão</option>
+                <option>Pão</option>
+                <option>Pães</option>
+                <option>Queijo e Presunto</option>
+              </optgroup>
+              <optgroup label="Serviços">
+                <option>Árbitro</option>
+                <option>Gandula</option>
+                <option>Goleiro</option>
+                <option>Manutenção do Campo</option>
+              </optgroup>
+              <optgroup label="Contas">
+                <option>Coelba</option>
+                <option>Embasa</option>
+              </optgroup>
+              <optgroup label="Limpeza">
+                <option>Papel higiênico</option>
+                <option>Qboa</option>
+                <option>Vassoura</option>
+              </optgroup>
+              <optgroup label="Esporte">
+                <option>Bola</option>
+                <option>Coletes</option>
+                <option>Shorts</option>
+              </optgroup>
+              <optgroup label="Transporte">
+                <option>Gasolina</option>
+              </optgroup>
+            </select>
+          </label>
+          <button class="btn" type="button" data-action="add-gasto-padrao" data-admin-only="1">Adicionar item</button>
+
+          <label class="field" aria-label="Pesquisar por descrição">
+            <span class="field__label">Pesquisar</span>
+            <input class="input" id="gastos-search" type="search" placeholder="Descrição..." />
+          </label>
+
+          <button class="btn btn--ghost" type="button" data-action="download-gastos-template">Baixar template</button>
+          <button class="btn" type="button" data-action="import-gastos" data-admin-only="1">Importar gastos</button>
+
+          <button class="btn" type="button" data-action="add-row" data-table="gastos" data-admin-only="1">Adicionar gasto</button>
+          <button class="btn btn--ghost" type="button" data-action="reset" data-scope="gastos" data-admin-only="1">Restaurar exemplo</button>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="table" data-table="gastos">
+          <thead>
+            <tr>
+              <th class="w-140">Mês</th>
+              <th class="w-160">Data</th>
+              <th>O que foi</th>
+              <th class="w-160">Valor (R$)</th>
+              <th class="w-72" aria-label="Ações"></th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="card__footer">
+        <div class="stack">
+          <div class="muted" data-slot="gastos-resumo"></div>
+          <div class="pager" aria-label="Paginação">
+            <button class="btn btn--ghost" type="button" id="gastos-page-prev">Anterior</button>
+            <span class="muted" id="gastos-page-info"></span>
+            <button class="btn btn--ghost" type="button" id="gastos-page-next">Próxima</button>
+          </div>
+        </div>
+        <button class="btn btn--primary" type="button" data-action="save" data-admin-only="1">Salvar alterações</button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer__inner">
+      <span class="muted">© 2026 Chuteira Cansada</span>
+      <span class="muted">Dados locais (localStorage)</span>
+    </div>
+  </footer>
+
+  <input id="import-gastos-file" type="file" accept=".xlsx,.xls,.csv" hidden />
+
+  <script src="assets/app.js"></script>
+</body>
+</html>
