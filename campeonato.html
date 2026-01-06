@@ -8,7 +8,7 @@
   <link rel="manifest" href="manifest.json" />
   <link rel="icon" type="image/png" href="assets/icon-192.png" />
   <link rel="apple-touch-icon" href="assets/icon-192.png" />
-  <link rel="stylesheet" href="assets/styles.css" />
+  <link rel="stylesheet" href="assets/styles.css?v=20260106" />
 </head>
 <body data-page="campeonato">
   <header class="topbar">
@@ -55,23 +55,7 @@
 
       <div class="cup-sheet" aria-label="Tabela estilo copa">
         <div class="cup-title">COPA DO MUNDO DO CHUTEIRA CANSADA 2026</div>
-        <div class="table-wrap cup-wrap">
-          <table class="table cup-table" data-table="jogos">
-          <thead>
-            <tr>
-              <th class="w-90">Rodada</th>
-              <th class="w-140">Data</th>
-              <th class="w-90">Hora</th>
-              <th class="w-200">Casa</th>
-              <th class="w-110">Placar</th>
-              <th class="w-200">Fora</th>
-              <th class="w-220">Local</th>
-              <th class="w-72" aria-label="Ações"></th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-          </table>
-        </div>
+        <div class="cup-rounds" data-slot="campeonato-rounds"></div>
       </div>
 
       <div class="card__footer">
@@ -154,6 +138,6 @@
     </div>
   </footer>
 
-  <script src="assets/app.js"></script>
+  <script src="assets/app.js?v=20260106"></script>
 </body>
 </html>

@@ -2522,47 +2522,91 @@ function fmtDateShort(iso) {
 function renderCampeonato(state) {
   if (!state.data.campeonato) state.data.campeonato = { jogos: [], videos: [], imagens: [], posts: [] };
 
-  // Jogos
-  const jogosTable = document.querySelector('table[data-table="jogos"]');
-  if (jogosTable) {
-    const tbody = jogosTable.querySelector('tbody');
-    tbody.innerHTML = '';
-
+  // Jogos (cartelas por rodada)
+  const roundsSlot = document.querySelector('[data-slot="campeonato-rounds"]');
+  if (roundsSlot) {
+    roundsSlot.innerHTML = '';
     const jogos = state.data.campeonato.jogos ?? [];
-    jogos.forEach((j, idx) => {
-      const tr = document.createElement('tr');
+    
+    // Agrupa por rodada
+    const byRound = new Map();
+    for (const j of jogos) {
+      const r = String(j?.rodada || '—').trim();
+      if (!byRound.has(r)) byRound.set(r, []);
+      byRound.get(r).push(j);
+    }
 
-      const td = (val, commit) => {
-        const cell = document.createElement('td');
-        setEditableCell(cell, { value: val ?? '', onCommit: commit });
-        return cell;
-      };
-
-      tr.appendChild(td(j.rodada, (v) => (j.rodada = v || '—')));
-      tr.appendChild(td(j.data, (v) => (j.data = v)));
-      tr.appendChild(td(j.hora, (v) => (j.hora = v)));
-      tr.appendChild(td(j.casa, (v) => (j.casa = v)));
-      tr.appendChild(td(j.placar, (v) => (j.placar = v)));
-      tr.appendChild(td(j.fora, (v) => (j.fora = v)));
-      tr.appendChild(td(j.local, (v) => (j.local = v)));
-
-      const tdActions = document.createElement('td');
-      if (isAdmin()) {
-        const btn = el('button', {
-          class: 'icon-btn',
-          type: 'button',
-          'data-action': 'remove-row',
-          'data-table': 'campeonato.jogos',
-          'data-index': String(idx),
-          title: 'Remover'
-        });
-        btn.textContent = iconTrash();
-        tdActions.appendChild(btn);
-      }
-      tr.appendChild(tdActions);
-
-      tbody.appendChild(tr);
+    const rounds = [...byRound.keys()].sort((a, b) => {
+      const na = Number(a);
+      const nb = Number(b);
+      if (Number.isFinite(na) && Number.isFinite(nb)) return na - nb;
+      return String(a).localeCompare(String(b), 'pt-BR');
     });
+
+    const grid = el('div', { class: 'cup-grid' });
+    for (const roundKey of rounds) {
+      const games = byRound.get(roundKey);
+      const card = el('div', { class: 'cup-card' });
+      const header = el('div', { class: 'cup-card__round' }, [el('strong', { text: `${roundKey}º` })]);
+      card.appendChild(header);
+
+      for (const g of games) {
+        const idx = jogos.indexOf(g);
+        const row = el('div', { class: 'cup-row' });
+
+        const hora = el('div', { class: 'cup-cell cup-cell--hora' });
+        if (isAdmin()) {
+          hora.contentEditable = 'true';
+          hora.textContent = g?.hora || '';
+          hora.addEventListener('blur', () => { g.hora = hora.textContent.trim(); });
+        } else {
+          hora.textContent = g?.hora || '—';
+        }
+
+        const casa = el('div', { class: 'cup-cell cup-cell--team' });
+        if (isAdmin()) {
+          casa.contentEditable = 'true';
+          casa.textContent = g?.casa || '';
+          casa.addEventListener('blur', () => { g.casa = casa.textContent.trim(); });
+        } else {
+          casa.textContent = g?.casa || '—';
+        }
+
+        const vs = el('div', { class: 'cup-cell cup-cell--vs', text: 'x' });
+
+        const fora = el('div', { class: 'cup-cell cup-cell--team' });
+        if (isAdmin()) {
+          fora.contentEditable = 'true';
+          fora.textContent = g?.fora || '';
+          fora.addEventListener('blur', () => { g.fora = fora.textContent.trim(); });
+        } else {
+          fora.textContent = g?.fora || '—';
+        }
+
+        row.appendChild(hora);
+        row.appendChild(casa);
+        row.appendChild(vs);
+        row.appendChild(fora);
+
+        if (isAdmin()) {
+          const btnDel = el('button', {
+            class: 'icon-btn cup-del',
+            type: 'button',
+            'data-action': 'remove-row',
+            'data-table': 'campeonato.jogos',
+            'data-index': String(idx),
+            title: 'Remover'
+          });
+          btnDel.textContent = iconTrash();
+          row.appendChild(btnDel);
+        }
+
+        card.appendChild(row);
+      }
+
+      grid.appendChild(card);
+    }
+    roundsSlot.appendChild(grid);
   }
 
   // Vídeos
