@@ -727,7 +727,7 @@ function downloadAssociadosTemplate() {
 function downloadGastosTemplate() {
   // Template CSV compatível com Excel (pt-BR): separador ';'
   const headers = ['Mês', 'Data', 'O que foi', 'Valor (R$)'];
-  const example1 = ['Jan', '2026-01-05', 'Água / gelo', 'R$ 20,00'];
+  const example1 = ['Jan', '2026-01-05', 'Água / gelo', 'R$ 30,00'];
   const example2 = ['Jan', '2026-01-05', 'Café', '0'];
   const lines = [headers, example1, example2].map((row) => row.map(csvEscape).join(';'));
   const csv = lines.join('\r\n') + '\r\n';
