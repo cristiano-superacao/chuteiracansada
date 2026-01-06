@@ -3,6 +3,7 @@ require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const { migrate } = require('./migrate');
+const { pool, dbEnabled } = require('./db');
 const { authRouter } = require('./routes/auth');
 const { dataRouter } = require('./routes/data');
 
@@ -13,7 +14,20 @@ app.use(express.json({ limit: '2mb' }));
 // Evita 404 no favicon (polimento)
 app.get('/favicon.ico', (_req, res) => res.status(204).end());
 
-app.get('/api/health', (_req, res) => res.json({ ok: true }));
+app.get('/api/health', async (_req, res) => {
+  const base = { ok: true };
+
+  if (!dbEnabled) {
+    return res.json({ ...base, db: { enabled: false, connected: false } });
+  }
+
+  try {
+    await pool.query('SELECT 1');
+    return res.json({ ...base, db: { enabled: true, connected: true } });
+  } catch {
+    return res.json({ ...base, db: { enabled: true, connected: false } });
+  }
+});
 app.use('/api/auth', authRouter);
 app.use('/api', dataRouter);
 
