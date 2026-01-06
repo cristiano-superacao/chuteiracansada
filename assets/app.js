@@ -20,6 +20,8 @@ const API_BASE = '/api';
 
 const MENSALIDADE = 30;
 
+const INADIMPLENCIA_MIN_START_YM = '2026-01';
+
 const XLSX_CDN_URLS = [
   'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js',
   'https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js',
@@ -52,8 +54,8 @@ const MONTHS = [
 
 const DEFAULT_DATA = {
   config: {
-    // Início padrão da cobrança/controle de inadimplência: Ago/2025
-    cobrancaInicio: '2025-08',
+    // Início padrão da cobrança/controle de inadimplência: Jan/2026
+    cobrancaInicio: '2026-01',
   },
   associados: [
     { nome: 'Adenildo Batista dos Santos', apelido: 'Guilito', pagamentosByYear: { '2026': seedPayments('Pendente') } },
@@ -163,6 +165,59 @@ function parseYearMonth(s) {
   return { year: y, month: mm };
 }
 
+function compareYearMonth(aYM, bYM) {
+  const a = parseYearMonth(aYM);
+  const b = parseYearMonth(bYM);
+  if (!a && !b) return 0;
+  if (!a) return -1;
+  if (!b) return 1;
+  return (a.year - b.year) || (a.month - b.month);
+}
+
+function clampInadimplenciaStartYM(ym) {
+  const parsed = parseYearMonth(ym);
+  if (!parsed) return INADIMPLENCIA_MIN_START_YM;
+  return compareYearMonth(ym, INADIMPLENCIA_MIN_START_YM) < 0 ? INADIMPLENCIA_MIN_START_YM : ym;
+}
+
+function isBusinessDay(d) {
+  const day = d.getDay();
+  return day !== 0 && day !== 6;
+}
+
+function fifthBusinessDayOfMonth(year, month) {
+  const y = Math.trunc(Number(year) || currentYear());
+  const m = Math.max(1, Math.min(12, Math.trunc(Number(month) || 1)));
+  let count = 0;
+  for (let day = 1; day <= 31; day++) {
+    const d = new Date(y, m - 1, day);
+    if (d.getMonth() !== (m - 1)) break;
+    if (isBusinessDay(d)) {
+      count++;
+      if (count === 5) return d;
+    }
+  }
+  return null;
+}
+
+function startOfLocalDay(d) {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+function inadimplenciaEndYMForNow(nowDate = new Date()) {
+  const now = nowDate instanceof Date ? nowDate : new Date();
+  const y = now.getFullYear();
+  const m = now.getMonth() + 1;
+  const fifth = fifthBusinessDayOfMonth(y, m);
+
+  // Só considera o mês atual como "em atraso" após o 5º dia útil.
+  if (fifth && startOfLocalDay(now).getTime() < startOfLocalDay(fifth).getTime()) {
+    const prev = new Date(y, m - 2, 1);
+    return fmtYearMonth(prev.getFullYear(), prev.getMonth() + 1);
+  }
+  return fmtYearMonth(y, m);
+}
+
 function fmtYearMonth(year, month) {
   return `${Math.trunc(Number(year) || currentYear())}-${pad2(month)}`;
 }
@@ -228,7 +283,7 @@ function setPagamentoRaw(a, year, monthKey, raw) {
 function normalizeDataModel(data) {
   if (!data || typeof data !== 'object') return data;
   if (!data.config || typeof data.config !== 'object') data.config = {};
-  if (!data.config.cobrancaInicio) data.config.cobrancaInicio = '2025-08';
+  data.config.cobrancaInicio = clampInadimplenciaStartYM(data.config.cobrancaInicio || INADIMPLENCIA_MIN_START_YM);
   for (const a of data.associados ?? []) ensureAssociadoPaymentsByYear(a);
   return data;
 }
@@ -1076,12 +1131,13 @@ function bindInadimplentesFilter(state) {
   const onChange = () => {
     if (!isAdmin()) return;
     const y = Number(String(ano.value || '').trim());
-    const year = Number.isFinite(y) && y > 0 ? Math.trunc(y) : currentYear();
+    let year = Number.isFinite(y) && y > 0 ? Math.trunc(y) : currentYear();
+    year = Math.max(2026, year);
     const label = String(mes.value || 'Ago');
     const idx = MONTHS.findIndex((m) => m.label === label);
     const month = idx >= 0 ? (idx + 1) : 8;
     state.data = normalizeDataModel(state.data);
-    state.data.config.cobrancaInicio = fmtYearMonth(year, month);
+    state.data.config.cobrancaInicio = clampInadimplenciaStartYM(fmtYearMonth(year, month));
     inadimplentesCurrentPage = 1;
     renderPage(state);
     scheduleConfigAutoSave(state);
@@ -1737,8 +1793,8 @@ function renderInadimplentes(state) {
   const next = document.getElementById('inadimplentes-page-next');
   state.data = normalizeDataModel(state.data);
 
-  const configYM = String(state.data?.config?.cobrancaInicio || '2025-08');
-  const parsed = parseYearMonth(configYM) || { year: 2025, month: 8 };
+  const configYM = clampInadimplenciaStartYM(String(state.data?.config?.cobrancaInicio || INADIMPLENCIA_MIN_START_YM));
+  const parsed = parseYearMonth(configYM) || { year: 2026, month: 1 };
 
   const anoEl = document.getElementById('inadimplentes-filter-ano');
   const mesEl = document.getElementById('inadimplentes-filter-mes');
@@ -1752,8 +1808,8 @@ function renderInadimplentes(state) {
   }
 
   const now = new Date();
-  const endYM = fmtYearMonth(now.getFullYear(), now.getMonth() + 1);
-  const months = iterateMonthsInclusive(configYM, endYM);
+  const endYM = inadimplenciaEndYMForNow(now);
+  const months = compareYearMonth(endYM, configYM) < 0 ? [] : iterateMonthsInclusive(configYM, endYM);
 
   const itens = (state.data.associados ?? [])
     .map((a) => {
