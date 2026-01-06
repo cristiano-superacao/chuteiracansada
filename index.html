@@ -174,7 +174,14 @@
       </div>
 
       <div class="card__footer">
-        <div class="muted" data-slot="inadimplentes-resumo"></div>
+        <div class="stack">
+          <div class="muted" data-slot="inadimplentes-resumo"></div>
+          <div class="pager" aria-label="Paginação de inadimplentes">
+            <button class="btn btn--ghost" type="button" id="inadimplentes-page-prev">Anterior</button>
+            <span class="muted" id="inadimplentes-page-info"></span>
+            <button class="btn btn--ghost" type="button" id="inadimplentes-page-next">Próxima</button>
+          </div>
+        </div>
       </div>
     </section>
   </main>

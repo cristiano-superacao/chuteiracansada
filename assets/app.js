@@ -29,6 +29,9 @@ const XLSX_CDN_URLS = [
 const ASSOCIADOS_PAGE_SIZE = 10;
 let associadosCurrentPage = 1;
 
+const INADIMPLENTES_PAGE_SIZE = 10;
+let inadimplentesCurrentPage = 1;
+
 const GASTOS_PAGE_SIZE = 10;
 let gastosCurrentPage = 1;
 
@@ -1066,6 +1069,8 @@ function bindInadimplentesFilter(state) {
   if (document.body.getAttribute('data-page') !== 'associados') return;
   const ano = document.getElementById('inadimplentes-filter-ano');
   const mes = document.getElementById('inadimplentes-filter-mes');
+  const prev = document.getElementById('inadimplentes-page-prev');
+  const next = document.getElementById('inadimplentes-page-next');
   if (!ano || !mes) return;
 
   const onChange = () => {
@@ -1077,12 +1082,26 @@ function bindInadimplentesFilter(state) {
     const month = idx >= 0 ? (idx + 1) : 8;
     state.data = normalizeDataModel(state.data);
     state.data.config.cobrancaInicio = fmtYearMonth(year, month);
-    renderInadimplentes(state);
+    inadimplentesCurrentPage = 1;
+    renderPage(state);
     scheduleConfigAutoSave(state);
   };
 
   ano.addEventListener('change', onChange);
   mes.addEventListener('change', onChange);
+
+  if (prev) {
+    prev.addEventListener('click', () => {
+      inadimplentesCurrentPage = Math.max(1, inadimplentesCurrentPage - 1);
+      renderPage(state);
+    });
+  }
+  if (next) {
+    next.addEventListener('click', () => {
+      inadimplentesCurrentPage = inadimplentesCurrentPage + 1;
+      renderPage(state);
+    });
+  }
 }
 
 function getAssociadosFilter() {
@@ -1713,6 +1732,9 @@ function renderInadimplentes(state) {
   tbody.innerHTML = '';
 
   const resumo = document.querySelector('[data-slot="inadimplentes-resumo"]');
+  const info = document.getElementById('inadimplentes-page-info');
+  const prev = document.getElementById('inadimplentes-page-prev');
+  const next = document.getElementById('inadimplentes-page-next');
   state.data = normalizeDataModel(state.data);
 
   const configYM = String(state.data?.config?.cobrancaInicio || '2025-08');
@@ -1764,8 +1786,23 @@ function renderInadimplentes(state) {
     .sort((a, b) => (b.totalDevido - a.totalDevido) || (b.mesesEmAberto - a.mesesEmAberto) || String(a.nome).localeCompare(String(b.nome), 'pt-BR'));
 
   let soma = 0;
-  for (const it of itens) {
-    soma += it.totalDevido;
+  for (const it of itens) soma += it.totalDevido;
+
+  const total = itens.length;
+  const totalPages = Math.max(1, Math.ceil(total / INADIMPLENTES_PAGE_SIZE));
+  inadimplentesCurrentPage = Math.max(1, Math.min(inadimplentesCurrentPage, totalPages));
+  const start = (inadimplentesCurrentPage - 1) * INADIMPLENTES_PAGE_SIZE;
+  const end = Math.min(total, start + INADIMPLENTES_PAGE_SIZE);
+  const pageItems = itens.slice(start, end);
+
+  if (info) {
+    const showing = total ? `Mostrando ${start + 1}-${end} de ${total}` : 'Nenhum resultado';
+    info.textContent = `${showing} • Página ${inadimplentesCurrentPage} de ${totalPages}`;
+  }
+  if (prev) prev.disabled = inadimplentesCurrentPage <= 1;
+  if (next) next.disabled = inadimplentesCurrentPage >= totalPages;
+
+  for (const it of pageItems) {
     const tr = document.createElement('tr');
     tr.appendChild(el('td', { text: it.nome }));
     tr.appendChild(el('td', { text: it.apelido || '—' }));
