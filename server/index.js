@@ -10,6 +10,9 @@ const app = express();
 
 app.use(express.json({ limit: '2mb' }));
 
+// Evita 404 no favicon (polimento)
+app.get('/favicon.ico', (_req, res) => res.status(204).end());
+
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
 app.use('/api/auth', authRouter);
 app.use('/api', dataRouter);
