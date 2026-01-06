@@ -263,3 +263,50 @@ a{color:inherit;text-decoration:none}
   .input,.select{width:100%;min-width:0}
   .comment-form .input{min-width:0;width:100%}
 }
+
+  /* Campeonato: tabela estilo "copa" (referência da imagem 2) */
+  body[data-page="campeonato"] .cup-sheet{
+    background:#fff;
+    border:2px solid var(--text);
+    border-radius: var(--radius-sm);
+    padding:10px;
+  }
+  body[data-page="campeonato"] .cup-title{
+    text-align:center;
+    font-weight:900;
+    letter-spacing:0.6px;
+    text-transform:uppercase;
+    padding:6px 8px 10px;
+  }
+  body[data-page="campeonato"] .cup-wrap{
+    border:1px solid var(--text);
+    border-radius: 10px;
+    overflow:auto;
+  }
+  body[data-page="campeonato"] .cup-table{
+    width:100%;
+    border-collapse:collapse;
+    border-spacing:0;
+    background:#fff;
+  }
+  body[data-page="campeonato"] .cup-table th,
+  body[data-page="campeonato"] .cup-table td{
+    border:1px solid var(--text);
+    padding:10px 10px;
+    white-space:nowrap;
+  }
+  body[data-page="campeonato"] .cup-table thead th{
+    position:static;
+    background:#fff;
+    color:var(--text);
+  }
+  body[data-page="campeonato"] .cup-table th:nth-child(1),
+  body[data-page="campeonato"] .cup-table td:nth-child(1),
+  body[data-page="campeonato"] .cup-table th:nth-child(3),
+  body[data-page="campeonato"] .cup-table td:nth-child(3),
+  body[data-page="campeonato"] .cup-table th:nth-child(5),
+  body[data-page="campeonato"] .cup-table td:nth-child(5){
+    text-align:center;
+    font-weight:900;
+  }
+  body[data-page="campeonato"] .cup-table tbody tr:hover td{background:#fff}
