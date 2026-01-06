@@ -332,7 +332,133 @@ function normalizeDataModel(data) {
     .map(normalizeHolidayIsoDate)
     .filter(Boolean);
   data.config.feriados = [...new Set(data.config.feriados)].sort();
+
+  if (!Array.isArray(data.associados)) data.associados = [];
+  if (!Array.isArray(data.jogadores)) data.jogadores = [];
+  if (!Array.isArray(data.gastos)) data.gastos = [];
+  if (!Array.isArray(data.entradas)) data.entradas = [];
+  if (!Array.isArray(data.times)) data.times = [];
+
   for (const a of data.associados ?? []) ensureAssociadoPaymentsByYear(a);
+
+  // Limpa espaços e remove itens vazios/duplicados (conservador: duplicatas idênticas)
+  data.associados.forEach((a) => {
+    if (!a || typeof a !== 'object') return;
+    a.nome = trimText(a.nome);
+    a.apelido = trimText(a.apelido);
+  });
+  data.associados = dedupeByKey(
+    data.associados.filter(Boolean),
+    (a) => `${normalizeText(a?.nome)}|${normalizeText(a?.apelido)}`
+  );
+
+  data.jogadores.forEach((j) => {
+    if (!j || typeof j !== 'object') return;
+    j.nome = trimText(j.nome);
+    j.time = trimText(j.time);
+    j.gols = Number(j.gols) || 0;
+    j.amarelos = Number(j.amarelos) || 0;
+    j.vermelhos = Number(j.vermelhos) || 0;
+    j.suspensoes = Number(j.suspensoes) || 0;
+  });
+  data.jogadores = dedupeByKey(
+    data.jogadores.filter((j) => !isBlankJogador(j)),
+    (j) => `${normalizeText(j?.nome)}|${normalizeText(j?.time)}|${j?.gols || 0}|${j?.amarelos || 0}|${j?.vermelhos || 0}|${j?.suspensoes || 0}`
+  );
+
+  data.gastos.forEach((g) => {
+    if (!g || typeof g !== 'object') return;
+    g.mes = trimText(g.mes) || '—';
+    g.data = trimText(g.data);
+    g.descricao = trimText(g.descricao);
+    g.valor = parseMoney(g.valor);
+  });
+  data.gastos = dedupeByKey(
+    data.gastos.filter((g) => !isBlankGasto(g)),
+    (g) => `${trimText(g?.mes)}|${trimText(g?.data)}|${trimText(g?.descricao)}|${parseMoney(g?.valor)}`
+  );
+
+  data.entradas.forEach((e) => {
+    if (!e || typeof e !== 'object') return;
+    e.mes = trimText(e.mes) || '—';
+    e.data = trimText(e.data);
+    e.origem = trimText(e.origem);
+    e.valor = parseMoney(e.valor);
+  });
+  data.entradas = dedupeByKey(
+    data.entradas.filter((e) => !isBlankEntrada(e)),
+    (e) => `${trimText(e?.mes)}|${trimText(e?.data)}|${trimText(e?.origem)}|${parseMoney(e?.valor)}`
+  );
+
+  data.times.forEach((t) => {
+    if (!t || typeof t !== 'object') return;
+    t.time = trimText(t.time);
+  });
+  data.times = dedupeByKey(
+    data.times.filter((t) => isMeaningfulText(t?.time)),
+    (t) => `${normalizeText(t?.time)}|${t?.pg || 0}|${t?.j || 0}|${t?.v || 0}|${t?.e || 0}|${t?.der || 0}|${t?.gf || 0}|${t?.gs || 0}|${t?.sg || 0}|${t?.ca || 0}|${t?.cv || 0}`
+  );
+
+  if (!data.campeonato || typeof data.campeonato !== 'object') data.campeonato = { jogos: [], videos: [], imagens: [], posts: [] };
+  if (!Array.isArray(data.campeonato.jogos)) data.campeonato.jogos = [];
+  if (!Array.isArray(data.campeonato.videos)) data.campeonato.videos = [];
+  if (!Array.isArray(data.campeonato.imagens)) data.campeonato.imagens = [];
+  if (!Array.isArray(data.campeonato.posts)) data.campeonato.posts = [];
+
+  data.campeonato.jogos.forEach((j) => {
+    if (!j || typeof j !== 'object') return;
+    j.rodada = trimText(j.rodada) || '—';
+    j.data = trimText(j.data);
+    j.hora = trimText(j.hora);
+    j.casa = trimText(j.casa);
+    j.placar = trimText(j.placar);
+    j.fora = trimText(j.fora);
+    j.local = trimText(j.local);
+  });
+  data.campeonato.jogos = dedupeByKey(
+    data.campeonato.jogos.filter((j) => !isBlankJogo(j)),
+    (j) => `${trimText(j?.rodada)}|${trimText(j?.data)}|${trimText(j?.hora)}|${normalizeText(j?.casa)}|${trimText(j?.placar)}|${normalizeText(j?.fora)}|${normalizeText(j?.local)}`
+  );
+
+  data.campeonato.videos.forEach((v) => {
+    if (!v || typeof v !== 'object') return;
+    v.url = trimText(v.url);
+  });
+  data.campeonato.videos = dedupeByKey(
+    data.campeonato.videos.filter((v) => isMeaningfulText(v?.url)),
+    (v) => normalizeText(v?.url)
+  );
+
+  data.campeonato.imagens.forEach((img) => {
+    if (!img || typeof img !== 'object') return;
+    img.url = trimText(img.url);
+    img.legenda = trimText(img.legenda);
+  });
+  data.campeonato.imagens = dedupeByKey(
+    data.campeonato.imagens.filter((img) => isMeaningfulText(img?.url)),
+    (img) => normalizeText(img?.url)
+  );
+
+  data.campeonato.posts.forEach((p) => {
+    if (!p || typeof p !== 'object') return;
+    p.id = trimText(p.id) || p.id;
+    p.rodada = trimText(p.rodada) || '—';
+    p.titulo = trimText(p.titulo);
+    p.texto = trimText(p.texto);
+    if (!Array.isArray(p.comentarios)) p.comentarios = [];
+    p.comentarios = p.comentarios
+      .filter(Boolean)
+      .map((c) => ({
+        nome: trimText(c?.nome) || 'Visitante',
+        texto: trimText(c?.texto),
+        criadoEm: c?.criadoEm,
+      }))
+      .filter((c) => isMeaningfulText(c.texto));
+  });
+  data.campeonato.posts = dedupeByKey(
+    data.campeonato.posts.filter((p) => isMeaningfulText(p?.titulo) || isMeaningfulText(p?.texto) || (p?.comentarios?.length || 0) > 0),
+    (p) => String(p?.id || '')
+  );
   return data;
 }
 
@@ -577,6 +703,77 @@ function normalizeText(s) {
     .replace(/\p{Diacritic}/gu, '');
 }
 
+function trimText(s) {
+  return String(s ?? '').trim();
+}
+
+function isPlaceholderText(s) {
+  const t = trimText(s);
+  return !t || t === '—' || t === '-';
+}
+
+function isMeaningfulText(s) {
+  return !isPlaceholderText(s);
+}
+
+function dedupeByKey(list, keyFn) {
+  if (!Array.isArray(list) || list.length === 0) return [];
+  const out = [];
+  const seen = new Set();
+  for (const item of list) {
+    const key = String(keyFn(item) ?? '');
+    if (!key) {
+      out.push(item);
+      continue;
+    }
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(item);
+  }
+  return out;
+}
+
+function isBlankJogo(j) {
+  if (!j || typeof j !== 'object') return true;
+  return (
+    isPlaceholderText(j.rodada) &&
+    !isMeaningfulText(j.data) &&
+    !isMeaningfulText(j.hora) &&
+    !isMeaningfulText(j.casa) &&
+    !isMeaningfulText(j.fora) &&
+    !isMeaningfulText(j.placar) &&
+    !isMeaningfulText(j.local)
+  );
+}
+
+function isVisibleJogoForVisitor(j) {
+  if (!j || typeof j !== 'object') return false;
+  return isMeaningfulText(j.casa) && isMeaningfulText(j.fora);
+}
+
+function isBlankGasto(g) {
+  if (!g || typeof g !== 'object') return true;
+  const valor = parseMoney(g.valor);
+  return isPlaceholderText(g.mes) && !isMeaningfulText(g.data) && !isMeaningfulText(g.descricao) && valor === 0;
+}
+
+function isBlankEntrada(e) {
+  if (!e || typeof e !== 'object') return true;
+  const valor = parseMoney(e.valor);
+  return isPlaceholderText(e.mes) && !isMeaningfulText(e.data) && !isMeaningfulText(e.origem) && valor === 0;
+}
+
+function isBlankJogador(j) {
+  if (!j || typeof j !== 'object') return true;
+  const nome = trimText(j.nome);
+  const time = trimText(j.time);
+  const gols = Number(j.gols) || 0;
+  const amarelos = Number(j.amarelos) || 0;
+  const vermelhos = Number(j.vermelhos) || 0;
+  const suspensoes = Number(j.suspensoes) || 0;
+  return !nome && !time && gols === 0 && amarelos === 0 && vermelhos === 0 && suspensoes === 0;
+}
+
 function decodeArrayBufferSafe(buffer, encoding) {
   try {
     return new TextDecoder(encoding, { fatal: false }).decode(new Uint8Array(buffer));
@@ -776,7 +973,14 @@ function bindGlobalActions(state) {
     if (action === 'add-jogo') {
       if (!state.data.campeonato) state.data.campeonato = { jogos: [], videos: [], imagens: [], posts: [] };
       state.data.campeonato.jogos = state.data.campeonato.jogos ?? [];
-      state.data.campeonato.jogos.push({ rodada: '—', data: '', hora: '', casa: '', placar: '', fora: '', local: '' });
+      const existing = state.data.campeonato.jogos;
+      const maxRodada = Math.max(
+        0,
+        ...existing
+          .map((j) => Number(String(j?.rodada || '').trim()))
+          .filter((n) => Number.isFinite(n))
+      );
+      state.data.campeonato.jogos.push({ rodada: String(maxRodada + 1), data: '', hora: '', casa: '', placar: '', fora: '', local: '' });
       renderPage(state);
       return;
     }
@@ -787,6 +991,11 @@ function bindGlobalActions(state) {
       if (!url) return;
       if (!state.data.campeonato) state.data.campeonato = { jogos: [], videos: [], imagens: [], posts: [] };
       state.data.campeonato.videos = state.data.campeonato.videos ?? [];
+      const exists = state.data.campeonato.videos.some((v) => normalizeText(v?.url) === normalizeText(url));
+      if (exists) {
+        toast('Esse vídeo já foi adicionado');
+        return;
+      }
       state.data.campeonato.videos.unshift({ url });
       if (input) input.value = '';
       renderPage(state);
@@ -799,6 +1008,11 @@ function bindGlobalActions(state) {
       if (!url) return;
       if (!state.data.campeonato) state.data.campeonato = { jogos: [], videos: [], imagens: [], posts: [] };
       state.data.campeonato.imagens = state.data.campeonato.imagens ?? [];
+      const exists = state.data.campeonato.imagens.some((img) => normalizeText(img?.url) === normalizeText(url));
+      if (exists) {
+        toast('Essa imagem já foi adicionada');
+        return;
+      }
       state.data.campeonato.imagens.unshift({ url, legenda: '' });
       if (input) input.value = '';
       renderPage(state);
@@ -2061,7 +2275,10 @@ function renderJogadores(state) {
   const tbody = table.querySelector('tbody');
   tbody.innerHTML = '';
 
-  state.data.jogadores.forEach((j, idx) => {
+  const list = (state.data.jogadores ?? []);
+  const jogadores = isAdmin() ? list : list.filter((j) => !isBlankJogador(j));
+
+  jogadores.forEach((j, idx) => {
     const tr = document.createElement('tr');
 
     const tdNome = document.createElement('td');
@@ -2113,7 +2330,9 @@ function renderGastos(state) {
   tbody.innerHTML = '';
 
   const filter = getGastosFilter();
-  const all = (state.data.gastos ?? []).filter((g) => gastosMatchesSearch(g, filter));
+  const base = (state.data.gastos ?? []);
+  const visible = isAdmin() ? base : base.filter((g) => !isBlankGasto(g));
+  const all = visible.filter((g) => gastosMatchesSearch(g, filter));
 
   const total = all.length;
   const totalPages = Math.max(1, Math.ceil(total / GASTOS_PAGE_SIZE));
@@ -2203,7 +2422,10 @@ function renderEntradas(state) {
   const tbody = table.querySelector('tbody');
   tbody.innerHTML = '';
 
-  state.data.entradas.forEach((en, idx) => {
+  const base = (state.data.entradas ?? []);
+  const entradas = isAdmin() ? base : base.filter((e) => !isBlankEntrada(e));
+
+  entradas.forEach((en, idx) => {
     const tr = document.createElement('tr');
 
     const tdMes = document.createElement('td');
@@ -2526,7 +2748,12 @@ function renderCampeonato(state) {
   const roundsSlot = document.querySelector('[data-slot="campeonato-rounds"]');
   if (roundsSlot) {
     roundsSlot.innerHTML = '';
-    const jogos = state.data.campeonato.jogos ?? [];
+    const allJogos = state.data.campeonato.jogos ?? [];
+    const jogos = isAdmin() ? allJogos : allJogos.filter((j) => isVisibleJogoForVisitor(j));
+
+    if (!jogos.length) {
+      roundsSlot.appendChild(el('div', { class: 'muted', text: 'Nenhum jogo cadastrado.' }));
+    }
     
     // Agrupa por rodada
     const byRound = new Map();
