@@ -138,6 +138,7 @@ a{color:inherit;text-decoration:none}
 .input::placeholder{color:rgba(91,107,128,0.8);font-weight:700}
 .input:focus{outline:none;border-color:rgba(0,180,216,0.55);box-shadow:0 0 0 3px rgba(144,224,239,0.28)}
 .input:hover{border-color:rgba(0,180,216,0.45);background-color:rgba(144,224,239,0.12)}
+.input:disabled{opacity:0.65;cursor:not-allowed;background-color:rgba(3,4,94,0.02)}
 .select{
   appearance:none;
   border:1px solid var(--border);
@@ -153,6 +154,7 @@ a{color:inherit;text-decoration:none}
   background-repeat:no-repeat;
 }
 .select:hover{border-color:rgba(0,180,216,0.45);background-color:rgba(144,224,239,0.12)}
+.select:disabled{opacity:0.65;cursor:not-allowed;background-color:rgba(3,4,94,0.02)}
 
 .check{display:inline-flex;align-items:center;gap:8px;padding:9px 10px;border-radius:12px;border:1px solid var(--border);background:#fff;font-weight:700;color:var(--text);cursor:pointer}
 .check:hover{border-color:rgba(0,180,216,0.45);background:rgba(144,224,239,0.22)}

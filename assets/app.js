@@ -11,6 +11,11 @@ const STORAGE_KEY = 'chuteiraCansada.v1';
 const ADMIN_SESSION_KEY = 'chuteiraCansada.adminSession.v1';
 const ADMIN_TOKEN_KEY = 'chuteiraCansada.adminToken.v1';
 
+const LOCAL_FALLBACK_NOTICE_KEY = 'chuteiraCansada.localFallbackNotice.v1';
+const COMMENT_FALLBACK_NOTICE_KEY = 'chuteiraCansada.commentFallbackNotice.v1';
+
+const CONFIG_AUTOSAVE_TOAST_KEY = 'chuteiraCansada.configAutosaveToast.v1';
+
 const API_BASE = '/api';
 
 const MENSALIDADE = 30;
@@ -43,13 +48,17 @@ const MONTHS = [
 ];
 
 const DEFAULT_DATA = {
+  config: {
+    // Início padrão da cobrança/controle de inadimplência: Ago/2025
+    cobrancaInicio: '2025-08',
+  },
   associados: [
-    { nome: 'Adenildo Batista dos Santos', apelido: 'Guilito', pagamentos: seedPayments('Pendente') },
-    { nome: 'Adilson Jose dos Santos', apelido: 'Dica', pagamentos: seedPayments('Pendente') },
-    { nome: 'Adolfo Gabriel', apelido: 'Adolfo', pagamentos: seedPayments('D') },
-    { nome: 'Alan Celestino Pereira', apelido: 'Messi', pagamentos: seedPayments('Pendente') },
-    { nome: 'Albert Paulo', apelido: 'N9', pagamentos: seedPayments('Pendente') },
-    { nome: 'Aldo de Jesus da Encarnação', apelido: 'Aldo', pagamentos: seedPayments('Pendente') },
+    { nome: 'Adenildo Batista dos Santos', apelido: 'Guilito', pagamentosByYear: { '2026': seedPayments('Pendente') } },
+    { nome: 'Adilson Jose dos Santos', apelido: 'Dica', pagamentosByYear: { '2026': seedPayments('Pendente') } },
+    { nome: 'Adolfo Gabriel', apelido: 'Adolfo', pagamentosByYear: { '2026': seedPayments('D') } },
+    { nome: 'Alan Celestino Pereira', apelido: 'Messi', pagamentosByYear: { '2026': seedPayments('Pendente') } },
+    { nome: 'Albert Paulo', apelido: 'N9', pagamentosByYear: { '2026': seedPayments('Pendente') } },
+    { nome: 'Aldo de Jesus da Encarnação', apelido: 'Aldo', pagamentosByYear: { '2026': seedPayments('Pendente') } },
   ],
   jogadores: [
     { nome: 'Jogador Exemplo', time: 'Brasil', gols: 2, amarelos: 1, vermelhos: 0, suspensoes: 0 },
@@ -133,6 +142,94 @@ function applyAdminGate() {
   }
 }
 
+function currentYear() {
+  return new Date().getFullYear();
+}
+
+function pad2(n) {
+  const v = String(Math.trunc(Number(n) || 0));
+  return v.length === 1 ? `0${v}` : v;
+}
+
+function parseYearMonth(s) {
+  const m = String(s || '').trim().match(/^(\d{4})-(\d{2})$/);
+  if (!m) return null;
+  const y = Number(m[1]);
+  const mm = Number(m[2]);
+  if (!Number.isFinite(y) || !Number.isFinite(mm) || mm < 1 || mm > 12) return null;
+  return { year: y, month: mm };
+}
+
+function fmtYearMonth(year, month) {
+  return `${Math.trunc(Number(year) || currentYear())}-${pad2(month)}`;
+}
+
+function monthKeyFromNumber(month) {
+  const idx = Math.max(1, Math.min(12, Math.trunc(Number(month) || 1))) - 1;
+  return MONTHS[idx].key;
+}
+
+function monthLabelFromNumber(month) {
+  const idx = Math.max(1, Math.min(12, Math.trunc(Number(month) || 1))) - 1;
+  return MONTHS[idx].label;
+}
+
+function iterateMonthsInclusive(startYM, endYM) {
+  const out = [];
+  const start = parseYearMonth(startYM);
+  const end = parseYearMonth(endYM);
+  if (!start || !end) return out;
+  let y = start.year;
+  let m = start.month;
+  while (y < end.year || (y === end.year && m <= end.month)) {
+    out.push({ year: y, month: m, key: monthKeyFromNumber(m), label: monthLabelFromNumber(m) });
+    m++;
+    if (m > 12) {
+      m = 1;
+      y++;
+    }
+    if (out.length > 240) break;
+  }
+  return out;
+}
+
+function ensureAssociadoPaymentsByYear(a) {
+  if (!a || typeof a !== 'object') return;
+  if (!a.pagamentosByYear || typeof a.pagamentosByYear !== 'object') {
+    a.pagamentosByYear = {};
+  }
+  const hasLegacy = a.pagamentos && typeof a.pagamentos === 'object';
+  const hasAnyYear = Object.keys(a.pagamentosByYear || {}).length > 0;
+  if (hasLegacy && !hasAnyYear) {
+    a.pagamentosByYear[String(currentYear())] = a.pagamentos;
+    delete a.pagamentos;
+  }
+}
+
+function getPagamentoRaw(a, year, monthKey) {
+  if (!a) return '';
+  ensureAssociadoPaymentsByYear(a);
+  const y = String(year ?? currentYear());
+  const bucket = a.pagamentosByYear?.[y];
+  return bucket?.[monthKey];
+}
+
+function setPagamentoRaw(a, year, monthKey, raw) {
+  if (!a) return;
+  ensureAssociadoPaymentsByYear(a);
+  const y = String(year ?? currentYear());
+  if (!a.pagamentosByYear[y]) a.pagamentosByYear[y] = seedPayments('');
+  a.pagamentosByYear[y][monthKey] = raw;
+}
+
+function normalizeDataModel(data) {
+  if (!data || typeof data !== 'object') return data;
+  if (!data.config || typeof data.config !== 'object') data.config = {};
+  if (!data.config.cobrancaInicio) data.config.cobrancaInicio = '2025-08';
+  for (const a of data.associados ?? []) ensureAssociadoPaymentsByYear(a);
+  return data;
+}
+
 async function apiFetchJson(path, options = {}) {
   const url = `${API_BASE}${path.startsWith('/') ? '' : '/'}${path}`;
   const headers = new Headers(options.headers || {});
@@ -193,7 +290,7 @@ async function apiLoginWithPassword(password) {
 
 async function apiLoadAllData() {
   const json = await apiFetchJson('/data', { method: 'GET' });
-  return mergeDefaults(json, DEFAULT_DATA);
+  return normalizeDataModel(mergeDefaults(json, DEFAULT_DATA));
 }
 
 async function apiSaveAllData(data) {
@@ -219,7 +316,7 @@ async function apiAddComment(postId, nome, texto) {
 
 async function loadDataPreferApi() {
   try {
-    const data = await apiLoadAllData();
+    const data = normalizeDataModel(await apiLoadAllData());
     setData(data);
     return data;
   } catch (err) {
@@ -228,12 +325,13 @@ async function loadDataPreferApi() {
     } else {
       console.warn('Falha ao carregar via API, usando dados locais.', err);
     }
-    return getData();
+    return normalizeDataModel(getData());
   }
 }
 
 async function saveDataPreferApi(state) {
   try {
+    state.data = normalizeDataModel(state.data);
     await apiSaveAllData(state.data);
     setData(state.data);
     toast('Salvo');
@@ -242,9 +340,15 @@ async function saveDataPreferApi(state) {
     console.error('Falha ao salvar via API.', err);
     setData(state.data);
     if (err?.status === 503 || String(err?.message || '') === 'db_unavailable') {
-      alert('O servidor está rodando, mas o banco (Postgres) não está configurado.\n\nConfigure DATABASE_URL (Railway/Postgres) e reinicie o servidor.\n\nOs dados foram salvos apenas neste navegador.');
+      toastOncePerSession(
+        LOCAL_FALLBACK_NOTICE_KEY,
+        'Servidor sem Postgres configurado: os dados ficam salvos neste navegador.'
+      );
     } else {
-      alert('Não consegui salvar no servidor.\n\nSe você está em modo local, inicie o servidor (npm run dev).\n\nOs dados foram salvos apenas neste navegador.');
+      toastOncePerSession(
+        LOCAL_FALLBACK_NOTICE_KEY,
+        'Não consegui salvar no servidor: os dados ficam salvos neste navegador.'
+      );
     }
     toast('Salvo localmente');
     return false;
@@ -433,11 +537,12 @@ function isPaymentPending(raw) {
 }
 
 function computeMensalidadeByMonth(associados) {
+  const y = currentYear();
   const byMonth = new Map();
   for (const m of MONTHS) byMonth.set(m.label, 0);
   for (const a of associados ?? []) {
     for (const m of MONTHS) {
-      const val = a?.pagamentos?.[m.key];
+      const val = getPagamentoRaw(a, y, m.key);
       byMonth.set(m.label, (byMonth.get(m.label) || 0) + paymentAmount(val));
     }
   }
@@ -553,7 +658,11 @@ function bindGlobalActions(state) {
         post.comentarios.push({ nome, texto, criadoEm: new Date().toISOString() });
         setData(state.data);
         renderPage(state);
-        alert('Não consegui enviar seu comentário para o servidor agora.\n\nEle foi salvo apenas neste navegador.');
+        toastOncePerSession(
+          COMMENT_FALLBACK_NOTICE_KEY,
+          'Não consegui enviar comentários ao servidor agora. Eles ficam salvos neste navegador.'
+        );
+        toast('Comentário salvo localmente');
       }
       return;
     }
@@ -912,6 +1021,7 @@ function csvEscape(value) {
 
 function bindAssociadosFilter(state) {
   if (document.body.getAttribute('data-page') !== 'associados') return;
+  const ano = document.getElementById('associados-filter-ano');
   const mes = document.getElementById('associados-filter-mes');
   const pend = document.getElementById('associados-filter-pendentes');
   const qNome = document.getElementById('associados-search-nome');
@@ -923,6 +1033,7 @@ function bindAssociadosFilter(state) {
   // default: mês atual
   const now = new Date();
   const idx = Math.max(0, Math.min(11, now.getMonth()));
+  if (ano && !String(ano.value || '').trim()) ano.value = String(now.getFullYear());
   mes.value = MONTHS[idx].label;
 
   const resetAndRender = () => {
@@ -930,6 +1041,7 @@ function bindAssociadosFilter(state) {
     renderPage(state);
   };
 
+  if (ano) ano.addEventListener('change', resetAndRender);
   mes.addEventListener('change', resetAndRender);
   pend.addEventListener('change', resetAndRender);
 
@@ -950,17 +1062,64 @@ function bindAssociadosFilter(state) {
   }
 }
 
+function bindInadimplentesFilter(state) {
+  if (document.body.getAttribute('data-page') !== 'associados') return;
+  const ano = document.getElementById('inadimplentes-filter-ano');
+  const mes = document.getElementById('inadimplentes-filter-mes');
+  if (!ano || !mes) return;
+
+  const onChange = () => {
+    if (!isAdmin()) return;
+    const y = Number(String(ano.value || '').trim());
+    const year = Number.isFinite(y) && y > 0 ? Math.trunc(y) : currentYear();
+    const label = String(mes.value || 'Ago');
+    const idx = MONTHS.findIndex((m) => m.label === label);
+    const month = idx >= 0 ? (idx + 1) : 8;
+    state.data = normalizeDataModel(state.data);
+    state.data.config.cobrancaInicio = fmtYearMonth(year, month);
+    renderInadimplentes(state);
+    scheduleConfigAutoSave(state);
+  };
+
+  ano.addEventListener('change', onChange);
+  mes.addEventListener('change', onChange);
+}
+
 function getAssociadosFilter() {
+  const ano = document.getElementById('associados-filter-ano');
   const mes = document.getElementById('associados-filter-mes');
   const pend = document.getElementById('associados-filter-pendentes');
   const qNome = document.getElementById('associados-search-nome');
   const qApelido = document.getElementById('associados-search-apelido');
+  const y = Number(String(ano?.value || '').trim());
   return {
+    ano: Number.isFinite(y) && y > 0 ? Math.trunc(y) : currentYear(),
     mes: mes?.value || 'Jan',
     pendentesOnly: Boolean(pend?.checked),
     nome: qNome?.value || '',
     apelido: qApelido?.value || '',
   };
+}
+
+function getInadimplentesFilter() {
+  const ano = document.getElementById('inadimplentes-filter-ano');
+  const mes = document.getElementById('inadimplentes-filter-mes');
+  const y = Number(String(ano?.value || '').trim());
+  return {
+    ano: Number.isFinite(y) && y > 0 ? Math.trunc(y) : currentYear(),
+    mes: mes?.value || 'Jan',
+  };
+}
+
+let configAutoSaveTimer = null;
+function scheduleConfigAutoSave(state) {
+  if (!isAdmin()) return;
+  if (configAutoSaveTimer) clearTimeout(configAutoSaveTimer);
+  configAutoSaveTimer = setTimeout(async () => {
+    configAutoSaveTimer = null;
+    const ok = await saveDataPreferApi(state);
+    if (ok) toastOncePerSession(CONFIG_AUTOSAVE_TOAST_KEY, 'Configuração de inadimplência salva');
+  }, 600);
 }
 
 function associadosMatchesSearch(a, filter) {
@@ -1372,10 +1531,20 @@ function toast(message) {
   }, 1200);
 }
 
+function toastOncePerSession(key, message) {
+  try {
+    if (sessionStorage.getItem(key) === '1') return;
+    sessionStorage.setItem(key, '1');
+  } catch {
+    // ignora
+  }
+  toast(message);
+}
+
 function addRow(state, table) {
   switch (table) {
     case 'associados':
-      state.data.associados.push({ nome: 'Novo associado', apelido: '', pagamentos: seedPayments('') });
+      state.data.associados.push({ nome: 'Novo associado', apelido: '', pagamentosByYear: { [String(currentYear())]: seedPayments('') } });
       break;
     case 'jogadores':
       state.data.jogadores.push({ nome: 'Novo jogador', time: '', gols: 0, amarelos: 0, vermelhos: 0, suspensoes: 0 });
@@ -1447,7 +1616,9 @@ function renderAssociados(state) {
   const tbody = table.querySelector('tbody');
   tbody.innerHTML = '';
 
+  state.data = normalizeDataModel(state.data);
   const filter = getAssociadosFilter();
+  const year = filter.ano;
   const monthKey = MONTHS.find((m) => m.label === filter.mes)?.key;
 
   const all = (state.data.associados ?? [])
@@ -1455,7 +1626,7 @@ function renderAssociados(state) {
     .filter((a) => {
       if (!filter.pendentesOnly) return true;
       if (!monthKey) return true;
-      const v = a?.pagamentos?.[monthKey];
+      const v = getPagamentoRaw(a, year, monthKey);
       return isPaymentPending(v);
     });
 
@@ -1500,13 +1671,12 @@ function renderAssociados(state) {
     for (const m of MONTHS) {
       const td = document.createElement('td');
       td.classList.add('col-mes');
-      const val = normalizePagamentoCell(a.pagamentos?.[m.key]);
+      const val = normalizePagamentoCell(getPagamentoRaw(a, year, m.key));
       setEditableCell(td, {
         value: val,
         onCommit: (v) => {
-          if (!a.pagamentos) a.pagamentos = seedPayments('');
           const normalized = normalizePagamentoCell(v);
-          a.pagamentos[m.key] = normalized;
+          setPagamentoRaw(a, year, m.key, normalized);
           td.textContent = normalized;
           // Recalcula classes sem exigir recarregar
           applyPaymentClass(td, normalized);
@@ -1536,6 +1706,86 @@ function renderAssociados(state) {
   });
 }
 
+function renderInadimplentes(state) {
+  const table = document.querySelector('table[data-table="inadimplentes"]');
+  if (!table) return;
+  const tbody = table.querySelector('tbody');
+  tbody.innerHTML = '';
+
+  const resumo = document.querySelector('[data-slot="inadimplentes-resumo"]');
+  state.data = normalizeDataModel(state.data);
+
+  const configYM = String(state.data?.config?.cobrancaInicio || '2025-08');
+  const parsed = parseYearMonth(configYM) || { year: 2025, month: 8 };
+
+  const anoEl = document.getElementById('inadimplentes-filter-ano');
+  const mesEl = document.getElementById('inadimplentes-filter-mes');
+  if (anoEl) {
+    anoEl.value = String(parsed.year);
+    anoEl.disabled = !isAdmin();
+  }
+  if (mesEl) {
+    mesEl.value = monthLabelFromNumber(parsed.month);
+    mesEl.disabled = !isAdmin();
+  }
+
+  const now = new Date();
+  const endYM = fmtYearMonth(now.getFullYear(), now.getMonth() + 1);
+  const months = iterateMonthsInclusive(configYM, endYM);
+
+  const itens = (state.data.associados ?? [])
+    .map((a) => {
+      let firstIdx = -1;
+      let mesesEmAberto = 0;
+      let totalDevido = 0;
+
+      for (let i = 0; i < months.length; i++) {
+        const m = months[i];
+        const raw = getPagamentoRaw(a, m.year, m.key);
+        const pago = paymentAmount(raw);
+        const devido = Math.max(0, MENSALIDADE - pago);
+        if (devido > 0) {
+          if (firstIdx < 0) firstIdx = i;
+          mesesEmAberto++;
+          totalDevido += devido;
+        }
+      }
+
+      if (mesesEmAberto <= 0) return null;
+      return {
+        nome: a?.nome ?? '—',
+        apelido: a?.apelido ?? '',
+        desde: firstIdx >= 0 ? `${months[firstIdx].label}/${months[firstIdx].year}` : `${monthLabelFromNumber(parsed.month)}/${parsed.year}`,
+        mesesEmAberto,
+        totalDevido,
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => (b.totalDevido - a.totalDevido) || (b.mesesEmAberto - a.mesesEmAberto) || String(a.nome).localeCompare(String(b.nome), 'pt-BR'));
+
+  let soma = 0;
+  for (const it of itens) {
+    soma += it.totalDevido;
+    const tr = document.createElement('tr');
+    tr.appendChild(el('td', { text: it.nome }));
+    tr.appendChild(el('td', { text: it.apelido || '—' }));
+    tr.appendChild(el('td', { text: it.desde }));
+    tr.appendChild(el('td', { text: String(it.mesesEmAberto) }));
+    const tdTotal = el('td', { text: money(it.totalDevido) });
+    tdTotal.classList.add('is-bad');
+    tr.appendChild(tdTotal);
+    tbody.appendChild(tr);
+  }
+
+  if (resumo) {
+    if (!itens.length) {
+      resumo.textContent = `Nenhum inadimplente encontrado a partir de ${monthLabelFromNumber(parsed.month)}/${parsed.year}.`;
+    } else {
+      resumo.textContent = `Total inadimplentes: ${itens.length} • Total devido: ${money(soma)} • A partir de ${monthLabelFromNumber(parsed.month)}/${parsed.year} • Mensalidade: ${money(MENSALIDADE)}`;
+    }
+  }
+}
+
 function applyPaymentClass(td, raw) {
   td.classList.remove('pay--pendente', 'pay--pago');
   const norm = normalizeText(raw);
@@ -1556,17 +1806,19 @@ function applyPaymentClass(td, raw) {
 
 function exportAssociadosPdf(state) {
   if (document.body.getAttribute('data-page') !== 'associados') return;
+  state.data = normalizeDataModel(state.data);
   const filter = getAssociadosFilter();
+  const year = filter.ano;
   const month = filter.mes;
   const monthKey = MONTHS.find((m) => m.label === month)?.key;
   const list = (state.data.associados ?? []).filter((a) => {
     if (!filter.pendentesOnly) return true;
     if (!monthKey) return true;
-    return isPaymentPending(a?.pagamentos?.[monthKey]);
+    return isPaymentPending(getPagamentoRaw(a, year, monthKey));
   });
 
   const pendentes = monthKey
-    ? list.filter((a) => isPaymentPending(a?.pagamentos?.[monthKey]))
+    ? list.filter((a) => isPaymentPending(getPagamentoRaw(a, year, monthKey)))
     : [];
 
   const totalDevido = pendentes.length * MENSALIDADE;
@@ -1575,7 +1827,7 @@ function exportAssociadosPdf(state) {
     .map((a) => {
       const nome = escapeHtml(a?.nome ?? '');
       const apelido = escapeHtml(a?.apelido ?? '');
-      const status = monthKey ? normalizePagamentoCell(a?.pagamentos?.[monthKey]) : '';
+      const status = monthKey ? normalizePagamentoCell(getPagamentoRaw(a, year, monthKey)) : '';
       const pending = monthKey ? isPaymentPending(status) : false;
       return `
         <tr>
@@ -1586,7 +1838,7 @@ function exportAssociadosPdf(state) {
     })
     .join('');
 
-  const title = filter.pendentesOnly ? `Pendentes — ${month}` : `Associados — ${month}`;
+  const title = filter.pendentesOnly ? `Pendentes — ${month}/${year}` : `Associados — ${month}/${year}`;
   const subtitle = filter.pendentesOnly
     ? `Total pendentes: ${pendentes.length} • Total devido: ${money(totalDevido)} • Mensalidade: ${money(MENSALIDADE)}`
     : `Mensalidade: ${money(MENSALIDADE)}`;
@@ -2066,7 +2318,10 @@ function summarizeSaldo(state) {
 
 function renderPage(state) {
   const page = document.body.getAttribute('data-page');
-  if (page === 'associados') renderAssociados(state);
+  if (page === 'associados') {
+    renderAssociados(state);
+    renderInadimplentes(state);
+  }
   if (page === 'jogadores') renderJogadores(state);
   if (page === 'gastos') renderGastos(state);
   if (page === 'saldo') {
@@ -2258,6 +2513,7 @@ function injectToastStyles() {
   bindGlobalActions(state);
   bindAdminControls(state);
   bindAssociadosFilter(state);
+  bindInadimplentesFilter(state);
   bindGastosControls(state);
   bindJogadoresImport(state);
   bindAssociadosImport(state);
