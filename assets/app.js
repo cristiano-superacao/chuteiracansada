@@ -56,6 +56,8 @@ const DEFAULT_DATA = {
   config: {
     // Início padrão da cobrança/controle de inadimplência: Jan/2026
     cobrancaInicio: '2026-01',
+    // Lista de feriados (YYYY-MM-DD) que não contam como dia útil
+    feriados: [],
   },
   associados: [
     { nome: 'Adenildo Batista dos Santos', apelido: 'Guilito', pagamentosByYear: { '2026': seedPayments('Pendente') } },
@@ -180,19 +182,60 @@ function clampInadimplenciaStartYM(ym) {
   return compareYearMonth(ym, INADIMPLENCIA_MIN_START_YM) < 0 ? INADIMPLENCIA_MIN_START_YM : ym;
 }
 
-function isBusinessDay(d) {
-  const day = d.getDay();
-  return day !== 0 && day !== 6;
+function normalizeHolidayIsoDate(s) {
+  const m = String(s || '').trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return null;
+  const y = Number(m[1]);
+  const mm = Number(m[2]);
+  const dd = Number(m[3]);
+  if (!Number.isFinite(y) || !Number.isFinite(mm) || !Number.isFinite(dd)) return null;
+  if (mm < 1 || mm > 12) return null;
+  if (dd < 1 || dd > 31) return null;
+  const d = new Date(y, mm - 1, dd);
+  if (Number.isNaN(d.getTime())) return null;
+  if (d.getFullYear() !== y || (d.getMonth() + 1) !== mm || d.getDate() !== dd) return null;
+  return `${y}-${pad2(mm)}-${pad2(dd)}`;
 }
 
-function fifthBusinessDayOfMonth(year, month) {
+function parseFeriadosList(text) {
+  const raw = String(text || '').trim();
+  if (!raw) return [];
+  const parts = raw
+    .split(/[\n,;]+/g)
+    .map((x) => String(x).trim())
+    .filter(Boolean);
+  const set = new Set();
+  for (const p of parts) {
+    const iso = normalizeHolidayIsoDate(p);
+    if (iso) set.add(iso);
+  }
+  return [...set].sort();
+}
+
+function feriadosToText(list) {
+  if (!Array.isArray(list) || list.length === 0) return '';
+  return list.map((x) => String(x)).join(',');
+}
+
+function isBusinessDay(d, holidaySet) {
+  const day = d.getDay();
+  if (day === 0 || day === 6) return false;
+  if (holidaySet && holidaySet.has(fmtIsoDate(d))) return false;
+  return true;
+}
+
+function fmtIsoDate(d) {
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+}
+
+function fifthBusinessDayOfMonth(year, month, holidaySet) {
   const y = Math.trunc(Number(year) || currentYear());
   const m = Math.max(1, Math.min(12, Math.trunc(Number(month) || 1)));
   let count = 0;
   for (let day = 1; day <= 31; day++) {
     const d = new Date(y, m - 1, day);
     if (d.getMonth() !== (m - 1)) break;
-    if (isBusinessDay(d)) {
+    if (isBusinessDay(d, holidaySet)) {
       count++;
       if (count === 5) return d;
     }
@@ -204,11 +247,11 @@ function startOfLocalDay(d) {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate());
 }
 
-function inadimplenciaEndYMForNow(nowDate = new Date()) {
+function inadimplenciaEndYMForNow(nowDate = new Date(), holidaySet) {
   const now = nowDate instanceof Date ? nowDate : new Date();
   const y = now.getFullYear();
   const m = now.getMonth() + 1;
-  const fifth = fifthBusinessDayOfMonth(y, m);
+  const fifth = fifthBusinessDayOfMonth(y, m, holidaySet);
 
   // Só considera o mês atual como "em atraso" após o 5º dia útil.
   if (fifth && startOfLocalDay(now).getTime() < startOfLocalDay(fifth).getTime()) {
@@ -284,6 +327,11 @@ function normalizeDataModel(data) {
   if (!data || typeof data !== 'object') return data;
   if (!data.config || typeof data.config !== 'object') data.config = {};
   data.config.cobrancaInicio = clampInadimplenciaStartYM(data.config.cobrancaInicio || INADIMPLENCIA_MIN_START_YM);
+  if (!Array.isArray(data.config.feriados)) data.config.feriados = [];
+  data.config.feriados = data.config.feriados
+    .map(normalizeHolidayIsoDate)
+    .filter(Boolean);
+  data.config.feriados = [...new Set(data.config.feriados)].sort();
   for (const a of data.associados ?? []) ensureAssociadoPaymentsByYear(a);
   return data;
 }
@@ -1124,6 +1172,7 @@ function bindInadimplentesFilter(state) {
   if (document.body.getAttribute('data-page') !== 'associados') return;
   const ano = document.getElementById('inadimplentes-filter-ano');
   const mes = document.getElementById('inadimplentes-filter-mes');
+  const feriados = document.getElementById('inadimplentes-config-feriados');
   const prev = document.getElementById('inadimplentes-page-prev');
   const next = document.getElementById('inadimplentes-page-next');
   if (!ano || !mes) return;
@@ -1145,6 +1194,19 @@ function bindInadimplentesFilter(state) {
 
   ano.addEventListener('change', onChange);
   mes.addEventListener('change', onChange);
+
+  if (feriados) {
+    const onHolidaysChange = () => {
+      if (!isAdmin()) return;
+      state.data = normalizeDataModel(state.data);
+      state.data.config.feriados = parseFeriadosList(feriados.value);
+      inadimplentesCurrentPage = 1;
+      renderPage(state);
+      scheduleConfigAutoSave(state);
+    };
+    feriados.addEventListener('change', onHolidaysChange);
+    feriados.addEventListener('blur', onHolidaysChange);
+  }
 
   if (prev) {
     prev.addEventListener('click', () => {
@@ -1798,6 +1860,7 @@ function renderInadimplentes(state) {
 
   const anoEl = document.getElementById('inadimplentes-filter-ano');
   const mesEl = document.getElementById('inadimplentes-filter-mes');
+  const feriadosEl = document.getElementById('inadimplentes-config-feriados');
   if (anoEl) {
     anoEl.value = String(parsed.year);
     anoEl.disabled = !isAdmin();
@@ -1806,9 +1869,14 @@ function renderInadimplentes(state) {
     mesEl.value = monthLabelFromNumber(parsed.month);
     mesEl.disabled = !isAdmin();
   }
+  if (feriadosEl) {
+    feriadosEl.value = feriadosToText(state.data?.config?.feriados);
+  }
+
+  const holidaySet = new Set((state.data?.config?.feriados || []).map((x) => String(x)));
 
   const now = new Date();
-  const endYM = inadimplenciaEndYMForNow(now);
+  const endYM = inadimplenciaEndYMForNow(now, holidaySet);
   const months = compareYearMonth(endYM, configYM) < 0 ? [] : iterateMonthsInclusive(configYM, endYM);
 
   const itens = (state.data.associados ?? [])
