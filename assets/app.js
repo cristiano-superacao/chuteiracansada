@@ -1,5 +1,11 @@
 /* Chuteira Cansada — UI (frontend) + persistência via API (backend) */
 
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/service-worker.js').catch(() => {});
+  });
+}
+
 const STORAGE_KEY = 'chuteiraCansada.v1';
 
 const ADMIN_SESSION_KEY = 'chuteiraCansada.adminSession.v1';
