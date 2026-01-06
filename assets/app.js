@@ -22,6 +22,10 @@ const MENSALIDADE = 30;
 
 const INADIMPLENCIA_MIN_START_YM = '2026-01';
 
+const CAMPEONATO_MAX_RODADAS = 10;
+const CAMPEONATO_JOGOS_POR_RODADA = 3;
+const CAMPEONATO_HORARIOS_PADRAO = ['19:30', '20:30', '21:30'];
+
 const XLSX_CDN_URLS = [
   'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js',
   'https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js',
@@ -751,6 +755,35 @@ function isVisibleJogoForVisitor(j) {
   return isMeaningfulText(j.casa) && isMeaningfulText(j.fora);
 }
 
+function sanitizeScoreText(s) {
+  const raw = String(s ?? '').trim();
+  if (!raw) return '';
+  const digits = raw.replace(/[^0-9]/g, '');
+  return digits.slice(0, 2);
+}
+
+function parsePlacarParts(placar) {
+  const s = String(placar ?? '').trim();
+  if (!s) return { a: '', b: '' };
+
+  // formatos aceitos: "2-1", "2 x 1", "2X1" etc.
+  const m = s.match(/(\d{1,2})\s*[-xX]\s*(\d{1,2})/);
+  if (m) return { a: sanitizeScoreText(m[1]), b: sanitizeScoreText(m[2]) };
+
+  const only = s.replace(/\s+/g, '');
+  const m2 = only.match(/^(\d{1,2})(\d{1,2})$/);
+  if (m2) return { a: sanitizeScoreText(m2[1]), b: sanitizeScoreText(m2[2]) };
+
+  return { a: '', b: '' };
+}
+
+function formatPlacarFromParts(a, b) {
+  const aa = sanitizeScoreText(a);
+  const bb = sanitizeScoreText(b);
+  if (!aa && !bb) return '';
+  return `${aa || '0'}-${bb || '0'}`;
+}
+
 function isBlankGasto(g) {
   if (!g || typeof g !== 'object') return true;
   const valor = parseMoney(g.valor);
@@ -908,6 +941,24 @@ async function ensureXlsxLoaded() {
   throw err;
 }
 
+function buildCampeonatoJogosSkeleton(rodadas = CAMPEONATO_MAX_RODADAS) {
+  const jogos = [];
+  for (let r = 1; r <= rodadas; r++) {
+    for (let i = 0; i < CAMPEONATO_JOGOS_POR_RODADA; i++) {
+      jogos.push({
+        rodada: String(r),
+        data: '',
+        hora: CAMPEONATO_HORARIOS_PADRAO[i] || '',
+        casa: '',
+        placar: '',
+        fora: '',
+        local: ''
+      });
+    }
+  }
+  return jogos;
+}
+
 function bindGlobalActions(state) {
   document.addEventListener('click', async (e) => {
     const btn = e.target.closest('[data-action]');
@@ -925,6 +976,7 @@ function bindGlobalActions(state) {
       'import-gastos',
       'add-gasto-padrao',
       'add-jogo',
+      'rebuild-jogos',
       'add-video',
       'add-imagem',
       'add-post',
@@ -974,14 +1026,59 @@ function bindGlobalActions(state) {
       if (!state.data.campeonato) state.data.campeonato = { jogos: [], videos: [], imagens: [], posts: [] };
       state.data.campeonato.jogos = state.data.campeonato.jogos ?? [];
       const existing = state.data.campeonato.jogos;
-      const maxRodada = Math.max(
-        0,
-        ...existing
-          .map((j) => Number(String(j?.rodada || '').trim()))
-          .filter((n) => Number.isFinite(n))
-      );
-      state.data.campeonato.jogos.push({ rodada: String(maxRodada + 1), data: '', hora: '', casa: '', placar: '', fora: '', local: '' });
+      const rounds = existing
+        .map((j) => Number(String(j?.rodada || '').trim()))
+        .filter((n) => Number.isFinite(n) && n > 0)
+        .map((n) => Math.trunc(n));
+      const maxRodada = rounds.length ? Math.max(...rounds) : 0;
+
+      const countByRound = new Map();
+      for (const j of existing) {
+        const r = Number(String(j?.rodada || '').trim());
+        if (!Number.isFinite(r) || r <= 0) continue;
+        const key = String(Math.trunc(r));
+        countByRound.set(key, (countByRound.get(key) || 0) + 1);
+      }
+
+      let target = null;
+      for (let r = 1; r <= Math.max(1, maxRodada); r++) {
+        const key = String(r);
+        const c = countByRound.get(key) || 0;
+        if (c < CAMPEONATO_JOGOS_POR_RODADA) {
+          target = key;
+          break;
+        }
+      }
+      if (!target) target = String(maxRodada + 1);
+
+      const targetNum = Number(target);
+      if (!Number.isFinite(targetNum) || targetNum <= 0) {
+        toast('Rodada inválida');
+        return;
+      }
+      if (targetNum > CAMPEONATO_MAX_RODADAS) {
+        toast(`Limite: ${CAMPEONATO_MAX_RODADAS} rodadas`);
+        return;
+      }
+
+      const pos = (countByRound.get(target) || 0) % CAMPEONATO_JOGOS_POR_RODADA;
+      const horaPadrao = CAMPEONATO_HORARIOS_PADRAO[pos] || '';
+
+      state.data.campeonato.jogos.push({ rodada: target, data: '', hora: horaPadrao, casa: '', placar: '', fora: '', local: '' });
       renderPage(state);
+      return;
+    }
+
+    if (action === 'rebuild-jogos') {
+      const ok = confirm(
+        `Isso vai reconstruir a tabela de jogos com ${CAMPEONATO_MAX_RODADAS} rodadas e ${CAMPEONATO_JOGOS_POR_RODADA} jogos por rodada.\n\nOs jogos atuais serão substituídos. Continuar?`
+      );
+      if (!ok) return;
+
+      if (!state.data.campeonato) state.data.campeonato = { jogos: [], videos: [], imagens: [], posts: [] };
+      state.data.campeonato.jogos = buildCampeonatoJogosSkeleton(CAMPEONATO_MAX_RODADAS);
+      renderPage(state);
+      toast('Tabela reconstruída');
       return;
     }
 
@@ -2749,7 +2846,8 @@ function renderCampeonato(state) {
   if (roundsSlot) {
     roundsSlot.innerHTML = '';
     const allJogos = state.data.campeonato.jogos ?? [];
-    const jogos = isAdmin() ? allJogos : allJogos.filter((j) => isVisibleJogoForVisitor(j));
+    const admin = isAdmin();
+    const jogos = admin ? allJogos : allJogos.filter((j) => isVisibleJogoForVisitor(j));
 
     if (!jogos.length) {
       roundsSlot.appendChild(el('div', { class: 'muted', text: 'Nenhum jogo cadastrado.' }));
@@ -2772,50 +2870,90 @@ function renderCampeonato(state) {
 
     const grid = el('div', { class: 'cup-grid' });
     for (const roundKey of rounds) {
-      const games = byRound.get(roundKey);
+      const games = (byRound.get(roundKey) || []).slice().sort((a, b) => {
+        const ad = String(a?.data || '').localeCompare(String(b?.data || ''));
+        if (ad !== 0) return ad;
+        return String(a?.hora || '').localeCompare(String(b?.hora || ''));
+      });
       const card = el('div', { class: 'cup-card' });
-      const header = el('div', { class: 'cup-card__round' }, [el('strong', { text: `${roundKey}º` })]);
+      const header = el('div', { class: 'cup-card__round' }, [el('strong', { text: `Rodada ${roundKey}º` })]);
       card.appendChild(header);
 
       for (const g of games) {
-        const idx = jogos.indexOf(g);
-        const row = el('div', { class: 'cup-row' });
+        const idx = allJogos.indexOf(g);
+        const row = el('div', { class: `cup-row ${admin ? 'cup-row--admin' : ''}`.trim() });
 
-        const hora = el('div', { class: 'cup-cell cup-cell--hora' });
-        if (isAdmin()) {
-          hora.contentEditable = 'true';
-          hora.textContent = g?.hora || '';
-          hora.addEventListener('blur', () => { g.hora = hora.textContent.trim(); });
+        const dt = el('div', { class: 'cup-dt' });
+        const dtDate = el('div', { class: 'cup-dt__date' });
+        const dtTime = el('div', { class: 'cup-dt__time' });
+
+        if (admin) {
+          dtDate.contentEditable = 'true';
+          dtTime.contentEditable = 'true';
+          dtDate.textContent = g?.data || '';
+          dtTime.textContent = g?.hora || '';
+          dtDate.addEventListener('blur', () => { g.data = trimText(dtDate.textContent); });
+          dtTime.addEventListener('blur', () => { g.hora = trimText(dtTime.textContent); });
         } else {
-          hora.textContent = g?.hora || '—';
+          dtDate.textContent = g?.data || '—';
+          dtTime.textContent = g?.hora || '';
         }
+        dt.appendChild(dtDate);
+        dt.appendChild(dtTime);
 
         const casa = el('div', { class: 'cup-cell cup-cell--team' });
-        if (isAdmin()) {
+        if (admin) {
           casa.contentEditable = 'true';
           casa.textContent = g?.casa || '';
-          casa.addEventListener('blur', () => { g.casa = casa.textContent.trim(); });
+          casa.addEventListener('blur', () => { g.casa = trimText(casa.textContent); });
         } else {
           casa.textContent = g?.casa || '—';
         }
 
+        const parts = parsePlacarParts(g?.placar);
+        const score1 = el('div', { class: 'cup-cell cup-cell--score' });
+        const score2 = el('div', { class: 'cup-cell cup-cell--score' });
         const vs = el('div', { class: 'cup-cell cup-cell--vs', text: 'x' });
 
+        const commitPlacar = () => {
+          g.placar = formatPlacarFromParts(score1.textContent, score2.textContent);
+        };
+
+        if (admin) {
+          score1.contentEditable = 'true';
+          score2.contentEditable = 'true';
+          score1.textContent = parts.a;
+          score2.textContent = parts.b;
+          score1.addEventListener('blur', () => {
+            score1.textContent = sanitizeScoreText(score1.textContent);
+            commitPlacar();
+          });
+          score2.addEventListener('blur', () => {
+            score2.textContent = sanitizeScoreText(score2.textContent);
+            commitPlacar();
+          });
+        } else {
+          score1.textContent = parts.a || '';
+          score2.textContent = parts.b || '';
+        }
+
         const fora = el('div', { class: 'cup-cell cup-cell--team' });
-        if (isAdmin()) {
+        if (admin) {
           fora.contentEditable = 'true';
           fora.textContent = g?.fora || '';
-          fora.addEventListener('blur', () => { g.fora = fora.textContent.trim(); });
+          fora.addEventListener('blur', () => { g.fora = trimText(fora.textContent); });
         } else {
           fora.textContent = g?.fora || '—';
         }
 
-        row.appendChild(hora);
+        row.appendChild(dt);
         row.appendChild(casa);
+        row.appendChild(score1);
         row.appendChild(vs);
+        row.appendChild(score2);
         row.appendChild(fora);
 
-        if (isAdmin()) {
+        if (admin) {
           const btnDel = el('button', {
             class: 'icon-btn cup-del',
             type: 'button',
