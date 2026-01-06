@@ -279,138 +279,111 @@ a{color:inherit;text-decoration:none}
     padding:6px 8px 10px;
   }
 
-  /* Layout de cartelas de rodadas (imagem 2) */
+  /* Layout de cartelas de rodadas (imagem 2 + adaptação para tabela imagem 1) */
   body[data-page="campeonato"] .cup-rounds{
     width:100%;
   }
   body[data-page="campeonato"] .cup-grid{
     display:grid;
-    grid-template-columns:repeat(auto-fill, minmax(280px,1fr));
-    gap:1rem;
+    grid-template-columns:repeat(auto-fill, minmax(400px, 1fr)); /* Aumentei min-width para caber a tabela */
+    gap:1.5rem;
     width:100%;
   }
   body[data-page="campeonato"] .cup-card{
-    border:2px solid var(--primary);
-    border-radius:10px;
+    border:3px solid var(--primary);
+    border-radius:12px;
     background:#fff;
     overflow:hidden;
-    box-shadow:0 2px 8px rgba(0,119,182,0.15), 0 1px 3px rgba(0,119,182,0.1);
-    transition:box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
-  }
-  body[data-page="campeonato"] .cup-card:hover{
-    box-shadow:0 4px 16px rgba(0,119,182,0.25), 0 2px 8px rgba(0,119,182,0.15);
-    transform:translateY(-2px);
-    border-color:var(--secondary);
+    box-shadow:0 3px 10px rgba(0,119,182,0.2);
+    /* padding: 8px; Removido padding interno para header colar */
   }
   body[data-page="campeonato"] .cup-card__round{
     background:linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
     color:#fff;
     text-align:center;
-    padding:0.7rem;
-    font-size:16px;
+    padding:1rem;
+    font-size:18px;
     font-weight:700;
     text-transform:uppercase;
-    letter-spacing:0.5px;
-    border-bottom:1px solid rgba(255,255,255,0.2);
-    box-shadow:0 2px 4px rgba(0,0,0,0.15);
+    letter-spacing:0.8px;
   }
-  body[data-page="campeonato"] .cup-row{
-    display:grid;
-    grid-template-columns: 1fr 44px 24px 44px 1fr;
-    align-items:center;
-    gap:0.45rem;
-    padding:0.7rem 0.6rem;
-    border-bottom:1px solid rgba(0,0,0,0.06);
-    min-height:52px;
-    transition:background-color 0.15s ease;
+  
+  /* Tabela de jogos para substituir o Grid, permitindo largura adaptável */
+  .cup-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 4px 8px; /* Espaço entre as celulas (efeito caixinha) */
+    padding: 0 4px 4px 4px;
+    table-layout: auto; /* Fundamental para "adaptar ao tamanho do texto" */
   }
-  body[data-page="campeonato"] .cup-row:hover{
-    background-color:rgba(0,119,182,0.04);
+  .cup-table td {
+    border: 2px solid var(--primary);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 15px;
+    vertical-align: middle;
+    background: #fff;
+    color: var(--text);
+    white-space: nowrap; /* Não quebrar linhas se possível */
   }
-  body[data-page="campeonato"] .cup-row.cup-row--admin{
-    grid-template-columns: 1fr 44px 24px 44px 1fr 36px;
+  /* Células editáveis */
+  .cup-table td[contenteditable="true"] {
+    background: #fffacd;
+    border-style: dashed;
+    cursor: text;
   }
-  body[data-page="campeonato"] .cup-row > .cup-dt{grid-column:1 / -1;}
-  body[data-page="campeonato"] .cup-row.cup-row--admin > .cup-dt{grid-column:1 / -2;}
-  body[data-page="campeonato"] .cup-row > .cup-cell{grid-row:2;}
-  body[data-page="campeonato"] .cup-row > .cup-del{grid-row:1;justify-self:end;}
-  body[data-page="campeonato"] .cup-row:last-child{
-    border-bottom:none;
+  
+  /* Colunas específicas */
+  .cup-col-time {
+    width: 1%;
+    text-align: center;
+    font-weight: 800;
   }
-  body[data-page="campeonato"] .cup-cell{
-    font-size:14px;
-    text-align:center;
-    padding:0.3rem;
-    border-radius:6px;
+  .cup-col-team {
+    /* width: auto; => Ocupa espaço necessário pelo texto */
+    font-weight: 600;
+    text-align: left;
+    min-width: 80px; /* Mínimo para não sumir */
   }
-  body[data-page="campeonato"] .cup-cell[contenteditable="true"]{
-    background:#fffacd;
-    border:1px dashed #ccc;
-    cursor:text;
-    min-height:32px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
+  /* Alinhamento dos times: Mandante à direita? Visitante à esquerda? 
+     Imagem 1: [Time 1] X [Time 2]. Texto centralizado ou padrão. 
+     Vou deixar alinhado ao centro ou esquerda padrão. */
+  .cup-col-team.team-home { text-align: right; }
+  .cup-col-team.team-away { text-align: left; }
+  
+  .cup-col-score {
+    width: 40px;
+    text-align: center;
+    font-weight: 900;
+    font-size: 18px;
+    background: rgba(0,119,182,0.05);
   }
-  body[data-page="campeonato"] .cup-cell--team{
-    font-weight:600;
-    text-align:left;
-    padding-left:0.4rem;
+  .cup-col-x {
+    width: 20px;
+    text-align: center;
+    border: none !important; /* Sem borda no X? Ou com? Imagem 1 tem borda. */
+    /* Se Imagem 1 tem borda, removemos border:none */
+    font-weight: 700;
+    color: var(--secondary);
+    background: transparent !important;
   }
-  body[data-page="campeonato"] .cup-cell--score{
-    font-weight:900;
-    color:var(--text);
-  }
-  body[data-page="campeonato"] .cup-cell--vs{
-    font-weight:700;
-    color:var(--secondary);
-  }
-  body[data-page="campeonato"] .cup-dt{
-    display:flex;
-    flex-direction:row;
-    gap:2px;
-    text-align:left;
-    align-items:center;
-    justify-content:space-between;
-  }
-  body[data-page="campeonato"] .cup-dt__date,
-  body[data-page="campeonato"] .cup-dt__time{
-    font-size:12px;
-    line-height:1.2;
-    padding:0.25rem 0.4rem;
-    border-radius:6px;
-    border:1px solid rgba(0,119,182,0.15);
-    background:rgba(0,119,182,0.03);
-  }
-  body[data-page="campeonato"] .cup-dt__time{font-weight:800;color:var(--primary)}
-  body[data-page="campeonato"] .cup-dt__date[contenteditable="true"],
-  body[data-page="campeonato"] .cup-dt__time[contenteditable="true"]{
-    background:#fffacd;
-    border:1px dashed #ccc;
-    cursor:text;
-  }
-  body[data-page="campeonato"] .cup-del{
-    height:32px;
-    padding:0;
-    font-size:14px;
+  .cup-col-del {
+    width: 32px;
+    border: none !important;
+    background: transparent !important;
+    text-align: center;
+    cursor: pointer;
   }
 
   @media (max-width:720px){
     body[data-page="campeonato"] .cup-grid{
       grid-template-columns:1fr;
     }
-    body[data-page="campeonato"] .cup-card__round{
-      font-size:15px;
+    /* No mobile, tabela pode quebrar ou rolar. Vamos permitir scroll x se necessário ou ajustar fonte */
+    .cup-table td {
+        padding: 6px 4px;
+        font-size: 13px;
     }
-    body[data-page="campeonato"] .cup-row{
-      grid-template-columns: 1fr 42px 22px 42px 1fr;
-      gap:0.35rem;
-      padding:0.55rem;
-    }
-    body[data-page="campeonato"] .cup-row.cup-row--admin{
-      grid-template-columns: 1fr 42px 22px 42px 1fr 36px;
-    }
-    body[data-page="campeonato"] .cup-cell{
-      font-size:13px;
-    }
+    .cup-col-time { font-size: 12px; }
   }
+

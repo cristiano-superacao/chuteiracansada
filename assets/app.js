@@ -2871,104 +2871,143 @@ function renderCampeonato(state) {
     const grid = el('div', { class: 'cup-grid' });
     for (const roundKey of rounds) {
       const games = (byRound.get(roundKey) || []).slice().sort((a, b) => {
+        // Ordena por Data (y-m-d) e depois Hora
         const ad = String(a?.data || '').localeCompare(String(b?.data || ''));
         if (ad !== 0) return ad;
         return String(a?.hora || '').localeCompare(String(b?.hora || ''));
       });
+
+      // Tenta achar data comum para o cabeçalho
+      const dates = [...new Set(games.map(g => g.data).filter(d => d && d !== '—'))];
+      const commonDate = dates.length === 1 ? dates[0] : null;
+
       const card = el('div', { class: 'cup-card' });
-      const header = el('div', { class: 'cup-card__round' }, [el('strong', { text: `Rodada ${roundKey}º` })]);
+      const headerText = commonDate ? `Rodada ${roundKey}º (${commonDate})` : `Rodada ${roundKey}º`;
+      const header = el('div', { class: 'cup-card__round' }, [el('strong', { text: headerText })]);
       card.appendChild(header);
+
+      const table = el('table', { class: 'cup-table' });
+      const tbody = el('tbody');
 
       for (const g of games) {
         const idx = allJogos.indexOf(g);
-        const row = el('div', { class: `cup-row ${admin ? 'cup-row--admin' : ''}`.trim() });
+        const tr = el('tr');
 
-        const dt = el('div', { class: 'cup-dt' });
-        const dtDate = el('div', { class: 'cup-dt__date' });
-        const dtTime = el('div', { class: 'cup-dt__time' });
-
-        if (admin) {
-          dtDate.contentEditable = 'true';
-          dtTime.contentEditable = 'true';
-          dtDate.textContent = g?.data || '';
-          dtTime.textContent = g?.hora || '';
-          dtDate.addEventListener('blur', () => { g.data = trimText(dtDate.textContent); });
-          dtTime.addEventListener('blur', () => { g.hora = trimText(dtTime.textContent); });
-        } else {
-          dtDate.textContent = g?.data || '—';
-          dtTime.textContent = g?.hora || '';
-        }
-        dt.appendChild(dtDate);
-        dt.appendChild(dtTime);
-
-        const casa = el('div', { class: 'cup-cell cup-cell--team' });
-        if (admin) {
-          casa.contentEditable = 'true';
-          casa.textContent = g?.casa || '';
-          casa.addEventListener('blur', () => { g.casa = trimText(casa.textContent); });
-        } else {
-          casa.textContent = g?.casa || '—';
+        // COLUNA: Hora (e Data se admin ou se divergente)
+        const tdTime = el('td', { class: 'cup-col-time' });
+        
+        // Wrapper para Time e Date
+        const timeVal = el('div', { text: g?.hora || '' });
+        // Se a data for diferente da comum, ou se não houver comum, mostra.
+        // Se for admin, mostra sempre para permitir edição? Ou esconde se igual?
+        // Para simplificar a visualização "Imagem 1", mostramos apenas HORA.
+        // A Data fica editável abaixo apenas para admin.
+        const dateVal = el('div', { text: g?.data || '', style: 'font-size:11px; font-weight:400; margin-top:2px; color:#555' });
+        
+        // Se Data Comum existe e é igual à data do jogo, e NÃO é admin, esconde a data.
+        if (!admin && commonDate && g.data === commonDate) {
+            dateVal.style.display = 'none';
         }
 
+        if (admin) {
+          timeVal.contentEditable = 'true';
+          dateVal.contentEditable = 'true';
+          // Placeholder visuals
+          if (!timeVal.textContent) timeVal.textContent = 'HH:MM';
+          if (!dateVal.textContent) dateVal.textContent = 'AAAA-MM-DD';
+
+          timeVal.addEventListener('blur', () => { g.hora = trimText(timeVal.textContent); });
+          dateVal.addEventListener('blur', () => { g.data = trimText(dateVal.textContent); });
+          
+          timeVal.style.borderBottom = '1px dashed #ccc'; // Hint that they are separate
+        } else {
+             if (!g.hora) timeVal.textContent = ''; // ou '--:--'
+        }
+        
+        tdTime.appendChild(timeVal);
+        tdTime.appendChild(dateVal);
+        tr.appendChild(tdTime);
+
+        // COLUNA: Mandante
+        const tdHome = el('td', { class: 'cup-col-team team-home' });
+        if (admin) {
+          tdHome.contentEditable = 'true';
+          tdHome.textContent = g?.casa || '';
+          tdHome.addEventListener('blur', () => { g.casa = trimText(tdHome.textContent); });
+        } else {
+          tdHome.textContent = g?.casa || '—';
+        }
+        tr.appendChild(tdHome);
+
+        // Placar
         const parts = parsePlacarParts(g?.placar);
-        const score1 = el('div', { class: 'cup-cell cup-cell--score' });
-        const score2 = el('div', { class: 'cup-cell cup-cell--score' });
-        const vs = el('div', { class: 'cup-cell cup-cell--vs', text: 'x' });
+        // COLUNA: Score 1
+        const tdS1 = el('td', { class: 'cup-col-score' });
+        // COLUNA: X
+        const tdVs = el('td', { class: 'cup-col-x', text: 'x' });
+        // COLUNA: Score 2
+        const tdS2 = el('td', { class: 'cup-col-score' });
 
         const commitPlacar = () => {
-          g.placar = formatPlacarFromParts(score1.textContent, score2.textContent);
+          g.placar = formatPlacarFromParts(tdS1.textContent, tdS2.textContent);
         };
 
         if (admin) {
-          score1.contentEditable = 'true';
-          score2.contentEditable = 'true';
-          score1.textContent = parts.a;
-          score2.textContent = parts.b;
-          score1.addEventListener('blur', () => {
-            score1.textContent = sanitizeScoreText(score1.textContent);
+          tdS1.contentEditable = 'true';
+          tdS2.contentEditable = 'true';
+          tdS1.textContent = parts.a;
+          tdS2.textContent = parts.b;
+          tdS1.addEventListener('blur', () => {
+            tdS1.textContent = sanitizeScoreText(tdS1.textContent);
             commitPlacar();
           });
-          score2.addEventListener('blur', () => {
-            score2.textContent = sanitizeScoreText(score2.textContent);
+          tdS2.addEventListener('blur', () => {
+            tdS2.textContent = sanitizeScoreText(tdS2.textContent);
             commitPlacar();
           });
         } else {
-          score1.textContent = parts.a || '';
-          score2.textContent = parts.b || '';
+          tdS1.textContent = parts.a || '';
+          tdS2.textContent = parts.b || '';
         }
 
-        const fora = el('div', { class: 'cup-cell cup-cell--team' });
+        tr.appendChild(tdS1);
+        tr.appendChild(tdVs);
+        tr.appendChild(tdS2);
+
+        // COLUNA: Visitante
+        const tdAway = el('td', { class: 'cup-col-team team-away' });
         if (admin) {
-          fora.contentEditable = 'true';
-          fora.textContent = g?.fora || '';
-          fora.addEventListener('blur', () => { g.fora = trimText(fora.textContent); });
+          tdAway.contentEditable = 'true';
+          tdAway.textContent = g?.fora || '';
+          tdAway.addEventListener('blur', () => { g.fora = trimText(tdAway.textContent); });
         } else {
-          fora.textContent = g?.fora || '—';
+          tdAway.textContent = g?.fora || '—';
         }
+        tr.appendChild(tdAway);
 
-        row.appendChild(dt);
-        row.appendChild(casa);
-        row.appendChild(score1);
-        row.appendChild(vs);
-        row.appendChild(score2);
-        row.appendChild(fora);
-
+        // Ações (Delete)
         if (admin) {
-          const btnDel = el('button', {
-            class: 'icon-btn cup-del',
-            type: 'button',
-            'data-action': 'remove-row',
-            'data-table': 'campeonato.jogos',
-            'data-index': String(idx),
-            title: 'Remover'
-          });
-          btnDel.textContent = iconTrash();
-          row.appendChild(btnDel);
+            const tdDel = el('td', { class: 'cup-col-del' });
+            const btnDel = el('button', {
+             class: 'icon-btn',
+             type: 'button',
+             'data-action': 'remove-row',
+             'data-table': 'campeonato', // verifica se isso bate com a lógica de deleção global
+             'data-index': String(idx),
+             title: 'Excluir jogo',
+             style: 'color: red;' 
+            });
+            // SVG Icon Trash
+            btnDel.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>';
+            
+            tdDel.appendChild(btnDel);
+            tr.appendChild(tdDel);
         }
 
-        card.appendChild(row);
+        tbody.appendChild(tr);
       }
-
+      table.appendChild(tbody);
+      card.appendChild(table);
       grid.appendChild(card);
     }
     roundsSlot.appendChild(grid);
