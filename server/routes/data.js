@@ -418,6 +418,289 @@ router.put('/campeonato', requireAdmin, async (req, res) => {
   }
 });
 
+// CRUD por módulo (admin) — útil para integrações futuras
+router.post('/associados', requireAdmin, async (req, res) => {
+  const nome = String(req.body?.nome ?? '').trim() || '—';
+  const apelido = String(req.body?.apelido ?? '').trim();
+  const pagamentos = req.body?.pagamentos && typeof req.body.pagamentos === 'object' ? req.body.pagamentos : {};
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const ins = await client.query('INSERT INTO associados (nome, apelido) VALUES ($1,$2) RETURNING id', [nome, apelido]);
+    const id = ins.rows[0].id;
+    for (const mk of MONTH_KEYS) {
+      const norm = normalizePagamentoCell(pagamentos[mk]);
+      await client.query(
+        'INSERT INTO associados_pagamentos (associado_id, mes_key, raw, valor) VALUES ($1,$2,$3,$4)',
+        [id, mk, norm.raw, norm.valor]
+      );
+    }
+    await client.query('COMMIT');
+    res.json({ ok: true, id });
+  } catch (err) {
+    try { await client.query('ROLLBACK'); } catch { /* ignore */ }
+    console.error(err);
+    res.status(500).json({ error: 'failed_to_create' });
+  } finally {
+    client.release();
+  }
+});
+
+router.delete('/associados/:id', requireAdmin, async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id) || id <= 0) return res.status(400).json({ error: 'invalid_id' });
+  try {
+    await pool.query('DELETE FROM associados WHERE id=$1', [id]);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'failed_to_delete' });
+  }
+});
+
+router.post('/jogadores', requireAdmin, async (req, res) => {
+  try {
+    const ins = await pool.query(
+      'INSERT INTO jogadores (nome, time, gols, amarelos, vermelhos, suspensoes) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id',
+      [
+        String(req.body?.nome ?? '').trim() || '—',
+        String(req.body?.time ?? '').trim(),
+        Number(req.body?.gols) || 0,
+        Number(req.body?.amarelos) || 0,
+        Number(req.body?.vermelhos) || 0,
+        Number(req.body?.suspensoes) || 0,
+      ]
+    );
+    res.json({ ok: true, id: ins.rows[0].id });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'failed_to_create' });
+  }
+});
+
+router.delete('/jogadores/:id', requireAdmin, async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id) || id <= 0) return res.status(400).json({ error: 'invalid_id' });
+  try {
+    await pool.query('DELETE FROM jogadores WHERE id=$1', [id]);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'failed_to_delete' });
+  }
+});
+
+router.post('/gastos', requireAdmin, async (req, res) => {
+  try {
+    const ins = await pool.query(
+      'INSERT INTO gastos (mes, data, descricao, valor) VALUES ($1,$2,$3,$4) RETURNING id',
+      [
+        String(req.body?.mes ?? '—'),
+        String(req.body?.data ?? ''),
+        String(req.body?.descricao ?? ''),
+        parseMoney(req.body?.valor),
+      ]
+    );
+    res.json({ ok: true, id: ins.rows[0].id });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'failed_to_create' });
+  }
+});
+
+router.delete('/gastos/:id', requireAdmin, async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id) || id <= 0) return res.status(400).json({ error: 'invalid_id' });
+  try {
+    await pool.query('DELETE FROM gastos WHERE id=$1', [id]);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'failed_to_delete' });
+  }
+});
+
+router.post('/entradas', requireAdmin, async (req, res) => {
+  try {
+    const ins = await pool.query(
+      'INSERT INTO entradas (mes, data, origem, valor) VALUES ($1,$2,$3,$4) RETURNING id',
+      [
+        String(req.body?.mes ?? '—'),
+        String(req.body?.data ?? ''),
+        String(req.body?.origem ?? ''),
+        parseMoney(req.body?.valor),
+      ]
+    );
+    res.json({ ok: true, id: ins.rows[0].id });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'failed_to_create' });
+  }
+});
+
+router.delete('/entradas/:id', requireAdmin, async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id) || id <= 0) return res.status(400).json({ error: 'invalid_id' });
+  try {
+    await pool.query('DELETE FROM entradas WHERE id=$1', [id]);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'failed_to_delete' });
+  }
+});
+
+router.post('/times', requireAdmin, async (req, res) => {
+  try {
+    const ins = await pool.query(
+      'INSERT INTO times (time, pg, j, v, e, der, gf, gs, sg, ca, cv) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING id',
+      [
+        String(req.body?.time ?? '—'),
+        Number(req.body?.pg) || 0,
+        Number(req.body?.j) || 0,
+        Number(req.body?.v) || 0,
+        Number(req.body?.e) || 0,
+        Number(req.body?.der) || 0,
+        Number(req.body?.gf) || 0,
+        Number(req.body?.gs) || 0,
+        Number(req.body?.sg) || 0,
+        Number(req.body?.ca) || 0,
+        Number(req.body?.cv) || 0,
+      ]
+    );
+    res.json({ ok: true, id: ins.rows[0].id });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'failed_to_create' });
+  }
+});
+
+router.delete('/times/:id', requireAdmin, async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id) || id <= 0) return res.status(400).json({ error: 'invalid_id' });
+  try {
+    await pool.query('DELETE FROM times WHERE id=$1', [id]);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'failed_to_delete' });
+  }
+});
+
+router.post('/campeonato/jogos', requireAdmin, async (req, res) => {
+  try {
+    const ins = await pool.query(
+      'INSERT INTO campeonato_jogos (rodada, data, hora, casa, placar, fora, local) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id',
+      [
+        String(req.body?.rodada ?? '—'),
+        String(req.body?.data ?? ''),
+        String(req.body?.hora ?? ''),
+        String(req.body?.casa ?? ''),
+        String(req.body?.placar ?? ''),
+        String(req.body?.fora ?? ''),
+        String(req.body?.local ?? ''),
+      ]
+    );
+    res.json({ ok: true, id: ins.rows[0].id });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'failed_to_create' });
+  }
+});
+
+router.delete('/campeonato/jogos/:id', requireAdmin, async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id) || id <= 0) return res.status(400).json({ error: 'invalid_id' });
+  try {
+    await pool.query('DELETE FROM campeonato_jogos WHERE id=$1', [id]);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'failed_to_delete' });
+  }
+});
+
+router.post('/campeonato/videos', requireAdmin, async (req, res) => {
+  const url = String(req.body?.url ?? '').trim();
+  if (!url) return res.status(400).json({ error: 'invalid_url' });
+  try {
+    const ins = await pool.query('INSERT INTO campeonato_videos (url) VALUES ($1) RETURNING id', [url]);
+    res.json({ ok: true, id: ins.rows[0].id });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'failed_to_create' });
+  }
+});
+
+router.delete('/campeonato/videos/:id', requireAdmin, async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id) || id <= 0) return res.status(400).json({ error: 'invalid_id' });
+  try {
+    await pool.query('DELETE FROM campeonato_videos WHERE id=$1', [id]);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'failed_to_delete' });
+  }
+});
+
+router.post('/campeonato/imagens', requireAdmin, async (req, res) => {
+  const url = String(req.body?.url ?? '').trim();
+  const legenda = String(req.body?.legenda ?? '').trim();
+  if (!url) return res.status(400).json({ error: 'invalid_url' });
+  try {
+    const ins = await pool.query('INSERT INTO campeonato_imagens (url, legenda) VALUES ($1,$2) RETURNING id', [url, legenda]);
+    res.json({ ok: true, id: ins.rows[0].id });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'failed_to_create' });
+  }
+});
+
+router.delete('/campeonato/imagens/:id', requireAdmin, async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id) || id <= 0) return res.status(400).json({ error: 'invalid_id' });
+  try {
+    await pool.query('DELETE FROM campeonato_imagens WHERE id=$1', [id]);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'failed_to_delete' });
+  }
+});
+
+router.post('/campeonato/posts', requireAdmin, async (req, res) => {
+  const id = String(req.body?.id ?? '').trim() || `post-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  const rodada = String(req.body?.rodada ?? '—');
+  const titulo = String(req.body?.titulo ?? '').trim();
+  const texto = String(req.body?.texto ?? '').trim();
+  if (!titulo || !texto) return res.status(400).json({ error: 'invalid_post' });
+
+  try {
+    await pool.query(
+      'INSERT INTO campeonato_posts (id, rodada, titulo, texto, criado_em) VALUES ($1,$2,$3,$4,NOW())',
+      [id, rodada, titulo, texto]
+    );
+    res.json({ ok: true, id });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'failed_to_create' });
+  }
+});
+
+router.delete('/campeonato/posts/:id', requireAdmin, async (req, res) => {
+  const id = String(req.params.id || '').trim();
+  if (!id) return res.status(400).json({ error: 'invalid_id' });
+  try {
+    await pool.query('DELETE FROM campeonato_posts WHERE id=$1', [id]);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'failed_to_delete' });
+  }
+});
+
 router.post('/campeonato/posts/:id/comentarios', async (req, res) => {
   const postId = String(req.params.id || '').trim();
   const nome = String(req.body?.nome ?? 'Visitante').trim() || 'Visitante';
