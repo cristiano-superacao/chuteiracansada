@@ -2064,6 +2064,8 @@ function renderAssociados(state) {
   const tbody = table.querySelector('tbody');
   tbody.innerHTML = '';
 
+  const admin = isAdmin();
+
   state.data = normalizeDataModel(state.data);
   const filter = getAssociadosFilter();
   const year = filter.ano;
@@ -2079,10 +2081,14 @@ function renderAssociados(state) {
     });
 
   const total = all.length;
-  const totalPages = Math.max(1, Math.ceil(total / ASSOCIADOS_PAGE_SIZE));
+
+  // Visitante deve conseguir ver a lista completa (sem ficar preso na 1ª página).
+  // Admin mantém paginação para facilitar edição/performance.
+  const pageSize = admin ? ASSOCIADOS_PAGE_SIZE : Number.POSITIVE_INFINITY;
+  const totalPages = Number.isFinite(pageSize) ? Math.max(1, Math.ceil(total / pageSize)) : 1;
   associadosCurrentPage = Math.max(1, Math.min(associadosCurrentPage, totalPages));
-  const start = (associadosCurrentPage - 1) * ASSOCIADOS_PAGE_SIZE;
-  const end = Math.min(total, start + ASSOCIADOS_PAGE_SIZE);
+  const start = admin ? ((associadosCurrentPage - 1) * pageSize) : 0;
+  const end = admin ? Math.min(total, start + pageSize) : total;
   const associados = all.slice(start, end);
 
   const info = document.getElementById('associados-page-info');
@@ -2090,10 +2096,16 @@ function renderAssociados(state) {
   const next = document.getElementById('associados-page-next');
   if (info) {
     const showing = total ? `Mostrando ${start + 1}-${end} de ${total}` : 'Nenhum resultado';
-    info.textContent = `${showing} • Página ${associadosCurrentPage} de ${totalPages}`;
+    info.textContent = admin ? `${showing} • Página ${associadosCurrentPage} de ${totalPages}` : showing;
   }
-  if (prev) prev.disabled = associadosCurrentPage <= 1;
-  if (next) next.disabled = associadosCurrentPage >= totalPages;
+  if (prev) {
+    prev.disabled = !admin || associadosCurrentPage <= 1;
+    prev.hidden = !admin;
+  }
+  if (next) {
+    next.disabled = !admin || associadosCurrentPage >= totalPages;
+    next.hidden = !admin;
+  }
 
   associados.forEach((a, visualIdx) => {
     const idx = state.data.associados.indexOf(a);
