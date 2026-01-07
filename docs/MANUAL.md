@@ -2,25 +2,92 @@
 
 Este manual explica como usar o site no dia a dia.
 
+## ✨ Funcionalidades Principais
+
+### Tema Claro/Escuro/Sistema
+
+**Alternar tema:**
+1. Clique no botão de tema no topo (com ícone ☀️/🌙/💻)
+2. Escolha entre:
+   - **Claro**: tema sempre claro
+   - **Escuro**: tema sempre escuro
+   - **Sistema**: acompanha a preferência do seu dispositivo
+
+A preferência é salva e mantida entre visitas.
+
+### Feedback Visual
+
+**Progress Bar (barra de progresso):**
+- Aparece no topo durante carregamentos
+- Indica que a requisição está em andamento
+- Desaparece automaticamente ao concluir
+
+**Skeleton Loading:**
+- Tabelas mostram um efeito de "shimmer" durante carregamento
+- Indica que os dados estão sendo buscados
+
+**Toasts (notificações):**
+- Mensagens que aparecem no canto da tela
+- Confirmam ações realizadas (salvar, deletar, etc.)
+- Desaparecem automaticamente após alguns segundos
+
+### Navegação
+
+- Link ativo destacado automaticamente no menu
+- Use `Tab` para navegar pelo teclado
+- Link "Pular para conteúdo" (visível ao pressionar `Tab`)
+
 ## Mobile e instalação (PWA)
 
-O site é responsivo e foi otimizado para telas pequenas.
+O site é totalmente responsivo e otimizado para telas pequenas.
 
-### Dicas no celular
+### Melhorias mobile
 
-- O menu no topo pode ser rolado horizontalmente.
-- Filtros e botões ficam em coluna para facilitar toque.
-- Tabelas largas podem ser roladas na horizontal.
+**Navegação:**
+- Menu pode ser rolado horizontalmente
+- Máscaras visuais indicam mais itens disponíveis
+
+**Botões e controles:**
+- Touch targets de 44x44px (padrão de acessibilidade)
+- Espaçamento adequado para toques precisos
+
+**Tabelas:**
+- Scroll horizontal para tabelas largas
+- Primeira coluna (nome) fica fixa ao rolar
+- Última coluna (ações) também fica fixa
+- Listras sutis melhoram a leitura
+
+**Filtros e ações:**
+- Layout em grid 2 colunas
+- Botões primários ocupam largura total
+- Campos organizados verticalmente
+
+**Animações:**
+- Reduzidas automaticamente se o sistema tiver `prefers-reduced-motion`
 
 ### Instalar no celular (Adicionar à tela inicial)
 
-Android/Chrome:
+**Benefícios:**
+- Ícone próprio na tela inicial
+- Abre em tela cheia (sem barra do navegador)
+- Funciona offline (páginas cacheadas)
+- Atualizações automáticas
 
-- Abra o site → menu do navegador → **Instalar app** / **Adicionar à tela inicial**.
+**Android/Chrome:**
 
-iPhone/iPad (Safari):
+1. Abra o site no Chrome
+2. Toque no menu (3 pontos verticais)
+3. Selecione **"Instalar app"** ou **"Adicionar à tela inicial"**
+4. Confirme a instalação
+5. O ícone aparecerá na tela inicial
 
-- Abra o site → **Compartilhar** → **Adicionar à Tela de Início**.
+**iPhone/iPad (Safari):**
+
+1. Abra o site no Safari
+2. Toque no botão **"Compartilhar"** (🔼 na barra inferior)
+3. Role para baixo e toque em **"Adicionar à Tela de Início"**
+4. Edite o nome se desejar
+5. Toque em **"Adicionar"**
 
 > Observação: a instalação funciona melhor em HTTPS (Railway). Em `localhost` também funciona para testes.
 
@@ -49,9 +116,28 @@ Para sair, clique em **“Sair (Admin)”**.
 
 ## Página: Associados
 
-- Objetivo: controlar mensalidades por mês (Jan–Dez).
-- Use os campos **Nome** e **Apelido** para pesquisar.
-- Use o seletor **Mês** + **Somente pendentes** para ver pendências do mês.
+**Objetivo:** controlar mensalidades por mês (Janeiro a Dezembro).
+
+### Filtros e pesquisa
+
+- **Nome/Apelido**: pesquisa instantânea enquanto digita
+- **Ano**: seleciona qual ano visualizar
+- **Mês**: filtra pelo mês específico
+- **Somente pendentes**: mostra apenas associados com pendências
+
+### Paginação
+
+- Tabela exibe 10 associados por vez
+- Use botões **Anterior/Próxima** para navegar
+- Filtros afetam todas as páginas
+
+### Lista de Inadimplentes
+
+**Como funciona:**
+- Considera apenas meses após o 5º dia útil
+- Feriados podem ser configurados (admin)
+- Mostra total de meses em aberto
+- Calcula valor total devido (R$ 30/mês padrão)
 
 ### Editar pagamentos (admin)
 
@@ -111,8 +197,43 @@ Para sair, clique em **“Sair (Admin)”**.
 
 ## Offline e cache (PWA)
 
-- O app pode abrir mesmo com internet instável graças ao cache de páginas/arquivos.
-- Dados do servidor continuam dependendo da API; o cache não guarda respostas de `/api/*`.
+**Como funciona:**
+- Páginas e arquivos são cacheados automaticamente
+- Site abre mesmo com internet instável
+- Dados da API continuam precisando de conexão
+- Atualizações do site são aplicadas automaticamente
+
+**Indicadores visuais:**
+- Progress bar mostra quando está carregando
+- Skeleton loading em tabelas durante busca
+- Toasts confirmam quando ações são salvas
+
+**Fallback offline:**
+- Se o servidor estiver offline, dados são salvos localmente
+- Toast avisa "Salvou apenas localmente"
+- Sincroniza automaticamente quando voltar online
+
+## ♿ Acessibilidade
+
+### Navegação por teclado
+
+- `Tab`: próximo elemento
+- `Shift + Tab`: elemento anterior
+- `Enter`: ativar botão/link
+- `Esc`: fechar modais (futuro)
+
+### Leitores de tela
+
+- ARIA labels em todos os controles
+- Estados de carregamento anunciados
+- Toasts são lidos automaticamente
+- Tabelas com cabeçalhos descritivos
+
+### Preferências do sistema
+
+- **Tema**: detecta preferência de claro/escuro
+- **Movimento**: desabilita animações se configurado
+- **Contraste**: segue padrões WCAG 2.1 (nível AA)
 
 ## Solução de problemas
 
