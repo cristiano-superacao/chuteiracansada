@@ -1,14 +1,23 @@
 {
   "name": "chuteira-cansada",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "version": "2.0.0",
+  "description": "Sistema completo e profissional para gestão de campeonato de futebol e controle financeiro",
+  "main": "server/index.js",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
     "start": "node server/index.js",
     "dev": "node --watch server/index.js",
     "test": "echo \"no tests\""
   },
-  "keywords": [],
+  "keywords": [
+    "futebol",
+    "campeonato",
+    "gestao",
+    "financeiro",
+    "pwa"
+  ],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
