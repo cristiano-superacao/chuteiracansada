@@ -24,4 +24,22 @@ async function migrate() {
   }
 }
 
-module.exports = { migrate };
+async function migrateWithRetry(opts = {}) {
+  if (!dbEnabled) return;
+  const retries = Number(opts.retries ?? 15);
+  const delayMs = Number(opts.delayMs ?? 2000);
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      await migrate();
+      console.log(`Migrações aplicadas (tentativa ${attempt}/${retries}).`);
+      return;
+    } catch (err) {
+      const last = attempt === retries;
+      console.warn(`Migração falhou (tentativa ${attempt}/${retries}).`, err?.code || err?.message || err);
+      if (last) throw err;
+      await new Promise((r) => setTimeout(r, delayMs));
+    }
+  }
+}
+
+module.exports = { migrate, migrateWithRetry };

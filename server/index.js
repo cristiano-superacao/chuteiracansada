@@ -2,7 +2,7 @@ require('dotenv').config();
 
 const express = require('express');
 const path = require('path');
-const { migrate } = require('./migrate');
+const { migrateWithRetry } = require('./migrate');
 const { pool, dbEnabled } = require('./db');
 const { authRouter } = require('./routes/auth');
 const { dataRouter } = require('./routes/data');
@@ -48,13 +48,14 @@ app.get('/', (_req, res) => res.sendFile(path.join(rootDir, 'index.html')));
 const port = Number(process.env.PORT) || 3000;
 
 (async () => {
+  // Sobe o servidor imediatamente para responder health/status
+  app.listen(port, () => {
+    console.log(`Servidor rodando em http://localhost:${port}`);
+  });
+  // Executa migrações em background com retry para evitar crashloop enquanto o Postgres sobe
   try {
-    await migrate();
-    app.listen(port, () => {
-      console.log(`Servidor rodando em http://localhost:${port}`);
-    });
+    await migrateWithRetry({ retries: 20, delayMs: 2000 });
   } catch (err) {
-    console.error('Falha ao iniciar:', err);
-    process.exit(1);
+    console.error('Migrações falharam após várias tentativas. A API seguirá executando, mas operações de dados podem falhar até corrigir a conexão ao banco.', err);
   }
 })();
