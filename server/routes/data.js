@@ -44,6 +44,9 @@ function normalizePagamentoCell(raw) {
 async function fetchData() {
   const client = await pool.connect();
   try {
+    const configRes = await client.query('SELECT data FROM app_config WHERE id=1');
+    const config = configRes.rows?.[0]?.data && typeof configRes.rows[0].data === 'object' ? configRes.rows[0].data : {};
+
     const associadosRes = await client.query('SELECT id, nome, apelido FROM associados ORDER BY id ASC');
     const pagamentosRes = await client.query('SELECT associado_id, mes_key, raw FROM associados_pagamentos');
 
@@ -90,6 +93,7 @@ async function fetchData() {
     }));
 
     return {
+      config,
       associados,
       jogadores,
       gastos,
@@ -121,6 +125,8 @@ async function replaceAllData(data) {
   try {
     await client.query('BEGIN');
 
+    const config = data?.config && typeof data.config === 'object' ? data.config : {};
+
     await client.query('DELETE FROM associados_pagamentos');
     await client.query('DELETE FROM associados');
     await client.query('DELETE FROM jogadores');
@@ -132,6 +138,11 @@ async function replaceAllData(data) {
     await client.query('DELETE FROM campeonato_imagens');
     await client.query('DELETE FROM campeonato_comentarios');
     await client.query('DELETE FROM campeonato_posts');
+
+    await client.query(
+      "INSERT INTO app_config (id, data) VALUES (1, $1) ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data",
+      [config]
+    );
 
     // Associados + pagamentos
     const associados = Array.isArray(data?.associados) ? data.associados : [];

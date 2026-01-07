@@ -1,5 +1,11 @@
 -- Chuteira Cansada (PostgreSQL) — schema por módulo
 
+-- Configurações globais do app (JSON)
+CREATE TABLE IF NOT EXISTS app_config (
+  id SMALLINT PRIMARY KEY CHECK (id = 1),
+  data JSONB NOT NULL DEFAULT '{}'::jsonb
+);
+
 -- Associados
 CREATE TABLE IF NOT EXISTS associados (
   id BIGSERIAL PRIMARY KEY,
