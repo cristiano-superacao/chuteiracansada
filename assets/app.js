@@ -546,7 +546,6 @@ function applyTheme(pref = getThemePref()) {
     root.dataset.theme = theme;
   }
   updateThemeColorMeta(theme);
-  updateThemeToggleLabel(pref);
 }
 
 // Barra de progresso superior para requisições
@@ -590,33 +589,6 @@ function progressDone() {
   }, 220);
 }
 
-function updateThemeToggleLabel(pref) {
-  const btn = document.getElementById('theme-toggle');
-  if (!btn) return;
-  const label = pref === 'system' ? 'Tema: Sistema' : (pref === 'dark' ? 'Tema: Escuro' : 'Tema: Claro');
-  const icon = pref === 'system' ? '\uD83D\uDCBB' /* 💻 */ : (pref === 'dark' ? '\uD83C\uDF19' /* 🌙 */ : '\u2600\uFE0F' /* ☀️ */);
-  btn.textContent = `${icon} ${label}`;
-  btn.title = 'Alternar tema (Claro/Escuro/Sistema)';
-  btn.setAttribute('aria-label', `${label}. Clique para alternar.`);
-}
-
-function mountThemeToggle() {
-  const host = document.querySelector('.topbar__right');
-  if (!host) return;
-  if (document.getElementById('theme-toggle')) return;
-  const btn = document.createElement('button');
-  btn.id = 'theme-toggle';
-  btn.className = 'btn btn--ghost';
-  btn.type = 'button';
-  btn.addEventListener('click', () => {
-    const cur = getThemePref();
-    const next = cur === 'light' ? 'dark' : (cur === 'dark' ? 'system' : 'light');
-    setThemePref(next);
-    applyTheme(next);
-  });
-  host.insertBefore(btn, host.firstChild);
-  applyTheme(getThemePref());
-}
 
 async function apiLoginWithPassword(password) {
   const json = await apiFetchJson('/auth/login', { method: 'POST', body: JSON.stringify({ password }) });
@@ -3258,7 +3230,6 @@ function injectToastStyles() {
   // Suporte a tema (claro/escuro/sistema)
   initProgressBar();
   setupThemeColorMetaWatcher();
-  mountThemeToggle();
   bindGlobalActions(state);
   bindAdminControls(state);
   bindAssociadosFilter(state);
