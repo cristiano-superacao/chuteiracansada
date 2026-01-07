@@ -1,7 +1,13 @@
 const { Pool } = require('pg');
 
 function makePool() {
-  const connectionString = process.env.DATABASE_URL;
+  const connectionString =
+    process.env.DATABASE_URL ||
+    process.env.URL_DO_BANCO_DE_DADOS ||
+    process.env.DATABASE_PRIVATE_URL ||
+    process.env.POSTGRES_URL ||
+    process.env.PG_DATABASE_URL ||
+    process.env.PG_CONNECTION_STRING;
   const hasConnectionString = Boolean(connectionString && String(connectionString).trim());
   if (!hasConnectionString) {
     const makeErr = () => {
