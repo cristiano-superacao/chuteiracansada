@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0077b6" />
+  <title>Chuteira Cansada — Entreterimento</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/png" href="assets/icon-192.png" />
+  <link rel="apple-touch-icon" href="assets/icon-192.png" />
+  <link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body data-page="entreterimento">
+  <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+  <header class="topbar">
+    <div class="container topbar__inner">
+      <div class="brand">
+        <div class="brand__mark" aria-hidden="true"></div>
+        <div class="brand__text">
+          <div class="brand__title">Chuteira Cansada</div>
+          <div class="brand__subtitle">Gestão do campeonato e do caixa</div>
+        </div>
+      </div>
+
+      <div class="topbar__right">
+        <nav class="nav" aria-label="Navegação principal">
+          <a class="nav__link" href="index.html">Associados</a>
+          <a class="nav__link" href="jogadores.html">Jogadores</a>
+          <a class="nav__link" href="gastos.html">Gastos</a>
+          <a class="nav__link" href="saldo.html">Saldo</a>
+          <a class="nav__link" href="classificacao.html">Classificação</a>
+          <a class="nav__link" href="campeonato.html">Campeonato</a>
+          <a class="nav__link" href="entreterimento.html">Entreterimento</a>
+        </nav>
+        <button class="btn btn--ghost" type="button" id="admin-btn" aria-label="Admin"></button>
+      </div>
+    </div>
+  </header>
+
+  <main id="conteudo" class="container page">
+    <header class="page__header">
+      <h1 class="page__title">Entreterimento</h1>
+      <p class="page__subtitle">Vídeos, imagens e posts da rodada. Qualquer pessoa pode comentar.</p>
+    </header>
+
+    <div class="grid grid--even">
+      <section class="card" aria-label="Vídeos">
+        <div class="card__header">
+          <div>
+            <h2 class="card__title">Vídeos</h2>
+            <p class="card__hint">Cole links (ex: YouTube). O site incorpora automaticamente.</p>
+          </div>
+          <div class="actions" data-admin-only="1">
+            <label class="field">
+              <span class="field__label">Link do vídeo</span>
+              <input class="input" id="campeonato-video-url" type="url" placeholder="https://..." />
+            </label>
+            <button class="btn" type="button" data-action="add-video">Adicionar</button>
+          </div>
+        </div>
+        <div class="card__body" data-slot="campeonato-videos"></div>
+      </section>
+
+      <section class="card" aria-label="Imagens">
+        <div class="card__header">
+          <div>
+            <h2 class="card__title">Imagens</h2>
+            <p class="card__hint">Cole links de imagem (JPG/PNG/WebP). Exibição responsiva.</p>
+          </div>
+          <div class="actions" data-admin-only="1">
+            <label class="field">
+              <span class="field__label">Link da imagem</span>
+              <input class="input" id="campeonato-imagem-url" type="url" placeholder="https://..." />
+            </label>
+            <button class="btn" type="button" data-action="add-imagem">Adicionar</button>
+          </div>
+        </div>
+        <div class="card__body" data-slot="campeonato-imagens"></div>
+      </section>
+    </div>
+
+    <section class="card" aria-label="Entreterimento" style="margin-top:14px">
+      <div class="card__header">
+        <div>
+          <h2 class="card__title">Entreterimento</h2>
+          <p class="card__hint">Posts da rodada e comentários. Qualquer pessoa pode comentar.</p>
+        </div>
+        <div class="actions" data-admin-only="1">
+          <label class="field">
+            <span class="field__label">Título</span>
+            <input class="input" id="campeonato-post-titulo" type="text" placeholder="Resumo da rodada..." />
+          </label>
+          <label class="field">
+            <span class="field__label">Rodada</span>
+            <input class="input" id="campeonato-post-rodada" type="text" placeholder="1" style="min-width:100px" />
+          </label>
+          <label class="field" style="min-width:260px">
+            <span class="field__label">Texto</span>
+            <input class="input" id="campeonato-post-texto" type="text" placeholder="Escreva um comentário do admin..." style="min-width:260px" />
+          </label>
+          <button class="btn" type="button" data-action="add-post">Publicar</button>
+        </div>
+      </div>
+
+      <div class="card__body" data-slot="campeonato-posts"></div>
+
+      <div class="card__footer">
+        <span class="muted">Quando o servidor estiver online, tudo salva na nuvem (Postgres). Se falhar, usa fallback local.</span>
+        <button class="btn btn--primary" type="button" data-action="save" data-admin-only="1">Salvar alterações</button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer__inner">
+      <span class="muted">© 2026 Chuteira Cansada</span>
+      <span class="muted">Dados no servidor (Postgres) com fallback local</span>
+    </div>
+  </footer>
+
+  <script src="assets/app.js"></script>
+</body>
+</html>

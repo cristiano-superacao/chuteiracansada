@@ -8,7 +8,7 @@
   <link rel="manifest" href="manifest.json" />
   <link rel="icon" type="image/png" href="assets/icon-192.png" />
   <link rel="apple-touch-icon" href="assets/icon-192.png" />
-  <link rel="stylesheet" href="assets/styles.css?v=20260106-7" />
+  <link rel="stylesheet" href="assets/styles.css" />
 </head>
 <body data-page="campeonato">
   <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
@@ -29,7 +29,8 @@
           <a class="nav__link" href="gastos.html">Gastos</a>
           <a class="nav__link" href="saldo.html">Saldo</a>
           <a class="nav__link" href="classificacao.html">Classificação</a>
-          <a class="nav__link is-active" href="campeonato.html">Campeonato</a>
+          <a class="nav__link" href="campeonato.html">Campeonato</a>
+          <a class="nav__link" href="entreterimento.html">Entreterimento</a>
         </nav>
         <button class="btn btn--ghost" type="button" id="admin-btn" aria-label="Admin"></button>
       </div>
@@ -39,7 +40,7 @@
   <main id="conteudo" class="container page">
     <header class="page__header">
       <h1 class="page__title">Campeonato</h1>
-      <p class="page__subtitle">Tabela de jogos, vídeos, imagens e comentários da rodada.</p>
+      <p class="page__subtitle">Tabela de jogos e placares da rodada.</p>
     </header>
 
     <section class="card" aria-label="Tabela de jogos">
@@ -64,71 +65,7 @@
       </div>
     </section>
 
-    <div class="grid grid--even" style="margin-top:14px">
-      <section class="card" aria-label="Vídeos">
-        <div class="card__header">
-          <div>
-            <h2 class="card__title">Vídeos</h2>
-            <p class="card__hint">Cole links (ex: YouTube). O site incorpora automaticamente.</p>
-          </div>
-          <div class="actions" data-admin-only="1">
-            <label class="field">
-              <span class="field__label">Link do vídeo</span>
-              <input class="input" id="campeonato-video-url" type="url" placeholder="https://..." />
-            </label>
-            <button class="btn" type="button" data-action="add-video">Adicionar</button>
-          </div>
-        </div>
-        <div class="card__body" data-slot="campeonato-videos"></div>
-      </section>
-
-      <section class="card" aria-label="Imagens">
-        <div class="card__header">
-          <div>
-            <h2 class="card__title">Imagens</h2>
-            <p class="card__hint">Cole links de imagem (JPG/PNG/WebP). Exibição responsiva.</p>
-          </div>
-          <div class="actions" data-admin-only="1">
-            <label class="field">
-              <span class="field__label">Link da imagem</span>
-              <input class="input" id="campeonato-imagem-url" type="url" placeholder="https://..." />
-            </label>
-            <button class="btn" type="button" data-action="add-imagem">Adicionar</button>
-          </div>
-        </div>
-        <div class="card__body" data-slot="campeonato-imagens"></div>
-      </section>
-    </div>
-
-    <section class="card" aria-label="Entreterimento" style="margin-top:14px">
-      <div class="card__header">
-        <div>
-          <h2 class="card__title">Entreterimento</h2>
-          <p class="card__hint">Posts da rodada e comentários. Qualquer pessoa pode comentar.</p>
-        </div>
-        <div class="actions" data-admin-only="1">
-          <label class="field">
-            <span class="field__label">Título</span>
-            <input class="input" id="campeonato-post-titulo" type="text" placeholder="Resumo da rodada..." />
-          </label>
-          <label class="field">
-            <span class="field__label">Rodada</span>
-            <input class="input" id="campeonato-post-rodada" type="text" placeholder="1" style="min-width:100px" />
-          </label>
-          <label class="field" style="min-width:260px">
-            <span class="field__label">Texto</span>
-            <input class="input" id="campeonato-post-texto" type="text" placeholder="Escreva um comentário do admin..." style="min-width:260px" />
-          </label>
-          <button class="btn" type="button" data-action="add-post">Publicar</button>
-        </div>
-      </div>
-
-      <div class="card__body" data-slot="campeonato-posts"></div>
-
-      <div class="card__footer">
-        <span class="muted">Comentários são salvos neste navegador (localStorage).</span>
-      </div>
-    </section>
+    
   </main>
 
   <footer class="footer">
@@ -138,6 +75,6 @@
     </div>
   </footer>
 
-  <script src="assets/app.js?v=20260106-7"></script>
+  <script src="assets/app.js"></script>
 </body>
 </html>

@@ -667,12 +667,13 @@ async function loadDataPreferApi() {
   }
 }
 
-async function saveDataPreferApi(state) {
+async function saveDataPreferApi(state, options = {}) {
+  const showToast = options?.showToast !== false;
   try {
     state.data = normalizeDataModel(state.data);
     await apiSaveAllData(state.data);
     setData(state.data);
-    toast('Salvo');
+    if (showToast) toast('Salvo');
     return true;
   } catch (err) {
     console.error('Falha ao salvar via API.', err);
@@ -688,7 +689,7 @@ async function saveDataPreferApi(state) {
         'Não consegui salvar no servidor: os dados ficam salvos neste navegador.'
       );
     }
-    toast('Salvo localmente');
+    if (showToast) toast('Salvo localmente');
     return false;
   }
 }
@@ -1168,6 +1169,7 @@ function bindGlobalActions(state) {
 
       state.data.campeonato.jogos.push({ rodada: target, data: '', hora: horaPadrao, casa: '', placar: '', fora: '', local: '' });
       renderPage(state);
+      scheduleCampeonatoAutoSave(state);
       return;
     }
 
@@ -1180,6 +1182,7 @@ function bindGlobalActions(state) {
       if (!state.data.campeonato) state.data.campeonato = { jogos: [], videos: [], imagens: [], posts: [] };
       state.data.campeonato.jogos = buildCampeonatoJogosSkeleton(CAMPEONATO_MAX_RODADAS);
       renderPage(state);
+      scheduleCampeonatoAutoSave(state);
       toast('Tabela reconstruída');
       return;
     }
@@ -1198,6 +1201,7 @@ function bindGlobalActions(state) {
       state.data.campeonato.videos.unshift({ url });
       if (input) input.value = '';
       renderPage(state);
+      scheduleCampeonatoAutoSave(state);
       return;
     }
 
@@ -1215,6 +1219,7 @@ function bindGlobalActions(state) {
       state.data.campeonato.imagens.unshift({ url, legenda: '' });
       if (input) input.value = '';
       renderPage(state);
+      scheduleCampeonatoAutoSave(state);
       return;
     }
 
@@ -1239,6 +1244,7 @@ function bindGlobalActions(state) {
       if (x) x.value = '';
 
       renderPage(state);
+      scheduleCampeonatoAutoSave(state);
       return;
     }
 
@@ -1268,6 +1274,7 @@ function bindGlobalActions(state) {
       if (table === 'campeonato.jogos') {
         const arr = state.data?.campeonato?.jogos;
         if (Array.isArray(arr) && idx >= 0 && idx < arr.length) arr.splice(idx, 1);
+        scheduleCampeonatoAutoSave(state);
       } else {
         removeRow(state, table, idx);
       }
@@ -1667,9 +1674,21 @@ function scheduleConfigAutoSave(state) {
   if (configAutoSaveTimer) clearTimeout(configAutoSaveTimer);
   configAutoSaveTimer = setTimeout(async () => {
     configAutoSaveTimer = null;
-    const ok = await saveDataPreferApi(state);
+    const ok = await saveDataPreferApi(state, { showToast: false });
     if (ok) toastOncePerSession(CONFIG_AUTOSAVE_TOAST_KEY, 'Configuração de inadimplência salva');
   }, 600);
+}
+
+const CAMPEONATO_AUTOSAVE_TOAST_KEY = 'chuteiraCansada.campeonatoAutosaveToast.v1';
+let campeonatoAutoSaveTimer = null;
+function scheduleCampeonatoAutoSave(state) {
+  if (!isAdmin()) return;
+  if (campeonatoAutoSaveTimer) clearTimeout(campeonatoAutoSaveTimer);
+  campeonatoAutoSaveTimer = setTimeout(async () => {
+    campeonatoAutoSaveTimer = null;
+    const ok = await saveDataPreferApi(state, { showToast: false });
+    if (ok) toastOncePerSession(CAMPEONATO_AUTOSAVE_TOAST_KEY, 'Entreterimento salvo na nuvem');
+  }, 800);
 }
 
 function associadosMatchesSearch(a, filter) {
@@ -2926,6 +2945,7 @@ function renderPage(state) {
   }
   if (page === 'classificacao') renderTimes(state);
   if (page === 'campeonato') renderCampeonato(state);
+  if (page === 'entreterimento') renderCampeonato(state);
 }
 
 function toYouTubeEmbedUrl(url) {
