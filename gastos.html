@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="assets/styles.css" />
 </head>
 <body data-page="gastos">
+  <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
   <header class="topbar">
     <div class="container topbar__inner">
       <div class="brand">
@@ -35,7 +36,7 @@
     </div>
   </header>
 
-  <main class="container page">
+  <main id="conteudo" class="container page">
     <header class="page__header">
       <h1 class="page__title">Gastos</h1>
       <p class="page__subtitle">Registre gastos por mês, data e descrição.</p>
@@ -109,7 +110,7 @@
       </div>
 
       <div class="table-wrap">
-        <table class="table" data-table="gastos">
+        <table class="table table--striped table--sticky-first table--sticky-actions" data-table="gastos">
           <thead>
             <tr>
               <th class="w-140">Mês</th>

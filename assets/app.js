@@ -15,6 +15,7 @@ const LOCAL_FALLBACK_NOTICE_KEY = 'chuteiraCansada.localFallbackNotice.v1';
 const COMMENT_FALLBACK_NOTICE_KEY = 'chuteiraCansada.commentFallbackNotice.v1';
 
 const CONFIG_AUTOSAVE_TOAST_KEY = 'chuteiraCansada.configAutosaveToast.v1';
+const THEME_PREF_KEY = 'chuteiraCansada.themePref.v1'; // 'light' | 'dark' | 'system'
 
 const API_BASE = '/api';
 
@@ -467,30 +468,34 @@ function normalizeDataModel(data) {
 }
 
 async function apiFetchJson(path, options = {}) {
+  progressStart();
   const url = `${API_BASE}${path.startsWith('/') ? '' : '/'}${path}`;
   const headers = new Headers(options.headers || {});
   if (!headers.has('Accept')) headers.set('Accept', 'application/json');
   if (options.body && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
+  try {
+    const res = await fetch(url, { ...options, headers });
+    const text = await res.text();
+    const json = text
+      ? (() => {
+        try {
+          return JSON.parse(text);
+        } catch {
+          return null;
+        }
+      })()
+      : null;
 
-  const res = await fetch(url, { ...options, headers });
-  const text = await res.text();
-  const json = text
-    ? (() => {
-      try {
-        return JSON.parse(text);
-      } catch {
-        return null;
-      }
-    })()
-    : null;
-
-  if (!res.ok) {
-    const err = new Error((json && json.error) ? String(json.error) : `http_${res.status}`);
-    err.status = res.status;
-    err.body = json;
-    throw err;
+    if (!res.ok) {
+      const err = new Error((json && json.error) ? String(json.error) : `http_${res.status}`);
+      err.status = res.status;
+      err.body = json;
+      throw err;
+    }
+    return json;
+  } finally {
+    progressDone();
   }
-  return json;
 }
 
 async function refreshAdminFromToken() {
@@ -514,6 +519,103 @@ async function refreshAdminFromToken() {
   }
 
   applyAdminGate();
+}
+
+function getThemePref() {
+  const v = localStorage.getItem(THEME_PREF_KEY);
+  return v === 'light' || v === 'dark' || v === 'system' ? v : 'system';
+}
+
+function setThemePref(pref) {
+  localStorage.setItem(THEME_PREF_KEY, pref);
+}
+
+function effectiveTheme(pref = getThemePref()) {
+  if (pref === 'light') return 'light';
+  if (pref === 'dark') return 'dark';
+  const dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  return dark ? 'dark' : 'light';
+}
+
+function applyTheme(pref = getThemePref()) {
+  const theme = effectiveTheme(pref);
+  const root = document.documentElement;
+  if (pref === 'system') {
+    delete root.dataset.theme;
+  } else {
+    root.dataset.theme = theme;
+  }
+  updateThemeColorMeta(theme);
+  updateThemeToggleLabel(pref);
+}
+
+// Barra de progresso superior para requisições
+let __progress = { el: null, inflight: 0, t: 0 };
+function initProgressBar() {
+  if (__progress.el) return;
+  const el = document.createElement('div');
+  el.id = 'progress-bar';
+  el.className = 'progress-bar';
+  document.body.appendChild(el);
+  __progress.el = el;
+}
+function progressStart() {
+  initProgressBar();
+  __progress.inflight++;
+  const el = __progress.el;
+  if (!el) return;
+  document.body.setAttribute('aria-busy', 'true');
+  el.classList.add('is-active');
+  // Reinicia a barra e avança para ~70%
+  // Usa rAF duplo para garantir transições
+  el.style.width = '0%';
+  cancelAnimationFrame(__progress.t);
+  __progress.t = requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      el.style.width = '70%';
+    });
+  });
+}
+function progressDone() {
+  const el = __progress.el;
+  if (!el) return;
+  __progress.inflight = Math.max(0, __progress.inflight - 1);
+  if (__progress.inflight > 0) return;
+  el.style.width = '100%';
+  // Aguarda a animação e oculta
+  setTimeout(() => {
+    el.classList.remove('is-active');
+    el.style.width = '0%';
+    document.body.removeAttribute('aria-busy');
+  }, 220);
+}
+
+function updateThemeToggleLabel(pref) {
+  const btn = document.getElementById('theme-toggle');
+  if (!btn) return;
+  const label = pref === 'system' ? 'Tema: Sistema' : (pref === 'dark' ? 'Tema: Escuro' : 'Tema: Claro');
+  const icon = pref === 'system' ? '\uD83D\uDCBB' /* 💻 */ : (pref === 'dark' ? '\uD83C\uDF19' /* 🌙 */ : '\u2600\uFE0F' /* ☀️ */);
+  btn.textContent = `${icon} ${label}`;
+  btn.title = 'Alternar tema (Claro/Escuro/Sistema)';
+  btn.setAttribute('aria-label', `${label}. Clique para alternar.`);
+}
+
+function mountThemeToggle() {
+  const host = document.querySelector('.topbar__right');
+  if (!host) return;
+  if (document.getElementById('theme-toggle')) return;
+  const btn = document.createElement('button');
+  btn.id = 'theme-toggle';
+  btn.className = 'btn btn--ghost';
+  btn.type = 'button';
+  btn.addEventListener('click', () => {
+    const cur = getThemePref();
+    const next = cur === 'light' ? 'dark' : (cur === 'dark' ? 'system' : 'light');
+    setThemePref(next);
+    applyTheme(next);
+  });
+  host.insertBefore(btn, host.firstChild);
+  applyTheme(getThemePref());
 }
 
 async function apiLoginWithPassword(password) {
@@ -1971,6 +2073,8 @@ function toInt(value) {
 
 function toast(message) {
   const t = el('div', { class: 'toast', text: message });
+  t.setAttribute('role', 'status');
+  t.setAttribute('aria-live', 'polite');
   document.body.appendChild(t);
   setTimeout(() => t.classList.add('toast--show'), 10);
   setTimeout(() => {
@@ -3004,7 +3108,7 @@ function renderCampeonato(state) {
              class: 'icon-btn',
              type: 'button',
              'data-action': 'remove-row',
-             'data-table': 'campeonato', // verifica se isso bate com a lógica de deleção global
+             'data-table': 'campeonato.jogos',
              'data-index': String(idx),
              title: 'Excluir jogo',
              style: 'color: red;' 
@@ -3131,6 +3235,10 @@ function injectToastStyles() {
 (async function init() {
   injectToastStyles();
   const state = { data: structuredClone(DEFAULT_DATA) };
+  // Suporte a tema (claro/escuro/sistema)
+  initProgressBar();
+  setupThemeColorMetaWatcher();
+  mountThemeToggle();
   bindGlobalActions(state);
   bindAdminControls(state);
   bindAssociadosFilter(state);
@@ -3139,7 +3247,42 @@ function injectToastStyles() {
   bindJogadoresImport(state);
   bindAssociadosImport(state);
   bindGastosImport(state);
+  // Marca automaticamente o link ativo do menu
+  try {
+    let here = (location.pathname.split('/').pop() || '').toLowerCase();
+    // Quando acessado via raiz "/", considerar "index.html" como página atual
+    if (!here) here = 'index.html';
+    document.querySelectorAll('.nav .nav__link').forEach((a) => {
+      const href = (a.getAttribute('href') || '').toLowerCase();
+      const active = href && here && href === here;
+      a.classList.toggle('is-active', active);
+      if (active) a.setAttribute('aria-current', 'page');
+      else a.removeAttribute('aria-current');
+    });
+  } catch {}
   await refreshAdminFromToken();
   state.data = await loadDataPreferApi();
   renderPage(state);
 })();
+
+function updateThemeColorMeta(theme) {
+  const LIGHT = '#0077b6';
+  const DARK = '#111a2b';
+  let meta = document.querySelector('meta[name="theme-color"]');
+  if (!meta) {
+    meta = document.createElement('meta');
+    meta.setAttribute('name', 'theme-color');
+    document.head.appendChild(meta);
+  }
+  meta.setAttribute('content', theme === 'dark' ? DARK : LIGHT);
+}
+
+function setupThemeColorMetaWatcher() {
+  const applyFromPref = () => applyTheme(getThemePref());
+  applyFromPref();
+  if (window.matchMedia) {
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    if (typeof mq.addEventListener === 'function') mq.addEventListener('change', applyFromPref);
+    else if (typeof mq.addListener === 'function') mq.addListener(applyFromPref);
+  }
+}
