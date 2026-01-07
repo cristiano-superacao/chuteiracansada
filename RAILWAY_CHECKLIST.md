@@ -11,7 +11,7 @@ O site está no ar (`https://chuteiracansada.up.railway.app`), mas o Postgres **
 - `/api/health` retorna: `{"ok":true,"db":{"enabled":false,"connected":false}}`
 - `/api/data` retorna: **503 Service Unavailable**
 
-**Causa:** O serviço do app (`chuteiracansada`) não tem a variável `DATABASE_URL` configurada.
+**Causa:** O serviço do app (`chuteiracansada`) não tem a variável `DATABASE_URL` configurada ou está usando apenas a URL interna (`postgres.railway.internal`) sem fallback público.
 
 ---
 
@@ -33,11 +33,10 @@ Você deve ter 2 serviços:
 2. Vá em **Variáveis** (Variables)
 3. Clique em **"+ Nova variável"** ou **"Adicionar referência"**
 4. Configure:
-   - **Nome**: `DATABASE_URL`
-   - **Valor**: Clique em **"Adicionar referência de variável"**
-   - Selecione o serviço **Postgres**
-   - Escolha a variável: **`URL_DO_BANCO_DE_DADOS`** (recomendado)
-   - Se não houver essa opção, copie o valor de `URL_DO_BANCO_DE_DADOS` ou `PGDATABASE_URL` do Postgres e cole manualmente
+  - **Nome**: `DATABASE_PUBLIC_URL` (recomendado)
+  - **Valor**: **"Adicionar referência de variável"** → Serviço **Postgres** → **`DATABASE_PUBLIC_URL`** (proxy público)
+  - Opcional: também adicione `DATABASE_URL` referenciando **`DATABASE_URL`** (interno)
+  - Se ocorrer `ETIMEDOUT` usando a URL interna, prefira a variável pública
 
 #### 3.2 Criar Variáveis de Segurança
 No mesmo serviço `chuteiracansada`, adicione:
@@ -50,7 +49,10 @@ No mesmo serviço `chuteiracansada`, adicione:
 
 #### 3.3 Exemplo de Valores
 ```
-DATABASE_URL=${{Postgres.URL_DO_BANCO_DE_DADOS}}
+# Preferir a URL pública como fallback universal
+DATABASE_PUBLIC_URL=${{Postgres.DATABASE_PUBLIC_URL}}
+# (Opcional) manter também a interna
+DATABASE_URL=${{Postgres.DATABASE_URL}}
 ADMIN_PASSWORD=MinhaSenh@Forte123
 ADMIN_JWT_SECRET=a8f5f167f44f4964e6c998dee827110c
 NODE_ENV=production
@@ -60,6 +62,7 @@ NODE_ENV=production
 1. Ainda no serviço `chuteiracansada`, vá em **Implantações** (Deployments)
 2. Clique nos 3 pontinhos do último deploy → **Redeploy**
 3. Aguarde o build finalizar (1-3 minutos)
+4. Se ver erros `ETIMEDOUT` para Postgres nos logs, confira se `DATABASE_PUBLIC_URL` está configurada no serviço do app e tente redeploy
 
 ---
 

@@ -3,6 +3,7 @@ const { Pool } = require('pg');
 function makePool() {
   // 1) Tenta variáveis comuns de URL: compatível com Railway/Postgres
   const connectionString =
+    process.env.DATABASE_PUBLIC_URL ||
     process.env.DATABASE_URL ||
     process.env.RAILWAY_DATABASE_URL ||
     process.env.URL_DO_BANCO_DE_DADOS ||
@@ -18,6 +19,8 @@ function makePool() {
       pool: new Pool({
         connectionString,
         ssl: isProd ? { rejectUnauthorized: false } : undefined,
+        keepAlive: true,
+        connectionTimeoutMillis: Number(process.env.PG_CONN_TIMEOUT_MS || 8000),
       }),
       dbEnabled: true,
     };
@@ -40,6 +43,8 @@ function makePool() {
         database,
         port,
         ssl: isProd ? { rejectUnauthorized: false } : undefined,
+        keepAlive: true,
+        connectionTimeoutMillis: Number(process.env.PG_CONN_TIMEOUT_MS || 8000),
       }),
       dbEnabled: true,
     };
