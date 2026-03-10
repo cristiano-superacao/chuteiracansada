@@ -2,7 +2,8 @@ const fs = require('fs');
 const path = require('path');
 
 // Garante carregar o .env da raiz do projeto
-require('dotenv').config({ override: true, path: path.join(__dirname, '..', '.env') });
+// Não sobrescreve variáveis vindas do ambiente (ex.: Railway).
+require('dotenv').config({ override: false, path: path.join(__dirname, '..', '.env') });
 
 const { dbEnabled } = require('./db');
 const { replaceAllData } = require('./routes/data');

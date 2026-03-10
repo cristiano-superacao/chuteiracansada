@@ -7,22 +7,57 @@ const MONTH_KEYS = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set
 
 function parseMoney(raw) {
   if (raw == null) return 0;
-  if (typeof raw === 'number') return Number.isFinite(raw) ? raw : 0;
+  // NUMERIC(12,2) => |valor| < 10^10
+  const maxAbs = 9_999_999_999.99;
+
+  if (typeof raw === 'number') {
+    if (!Number.isFinite(raw)) return 0;
+    const clamped = Math.max(-maxAbs, Math.min(maxAbs, raw));
+    return Math.round(clamped * 100) / 100;
+  }
   const s = String(raw).trim();
   if (!s) return 0;
-  const cleaned = s
+
+  // Suporta formatos:
+  // - pt-BR: "1.234,56" / "R$ 1.234,56"
+  // - en-US/DB: "1234.56" (Postgres NUMERIC costuma vir como string com '.')
+  // - números/strings simples: "30", "-10"
+  let cleaned = s
     .replace(/R\$\s?/gi, '')
-    .replace(/\./g, '')
-    .replace(/,/g, '.')
-    .replace(/[^0-9.\-]/g, '');
+    .replace(/\s+/g, '')
+    .replace(/[^0-9,\.\-]/g, '');
+
+  const hasComma = cleaned.includes(',');
+  const hasDot = cleaned.includes('.');
+
+  if (hasComma && hasDot) {
+    // Assume "." como separador de milhar e "," como decimal.
+    cleaned = cleaned.replace(/\./g, '').replace(/,/g, '.');
+  } else if (hasComma && !hasDot) {
+    // Apenas vírgula: vírgula decimal.
+    cleaned = cleaned.replace(/,/g, '.');
+  } else if (hasDot && !hasComma) {
+    // Apenas ponto: pode ser decimal (DB) ou milhar ("1.234.567").
+    // Se houver mais de um ponto, mantém só o último como decimal.
+    const parts = cleaned.split('.');
+    if (parts.length > 2) {
+      const last = parts.pop();
+      cleaned = parts.join('') + '.' + last;
+    }
+  }
+
   const n = Number(cleaned);
-  return Number.isFinite(n) ? n : 0;
+  if (!Number.isFinite(n)) return 0;
+
+  if (Math.abs(n) > maxAbs) return 0;
+  return Math.round(n * 100) / 100;
 }
 
 function normalizePagamentoCell(raw) {
   if (raw == null) return { raw: 'Pendente', valor: 0 };
   if (typeof raw === 'number') {
-    return raw > 0 ? { raw: `R$ ${raw.toFixed(2)}`.replace('.', ','), valor: raw } : { raw: 'Pendente', valor: 0 };
+    const v = parseMoney(raw);
+    return v > 0 ? { raw: `R$ ${v.toFixed(2)}`.replace('.', ','), valor: v } : { raw: 'Pendente', valor: 0 };
   }
   const s = String(raw).trim();
   if (!s) return { raw: 'Pendente', valor: 0 };
@@ -129,6 +164,9 @@ async function replaceAllData(data) {
     const config = data?.config && typeof data.config === 'object' ? data.config : {};
 
     await client.query('DELETE FROM associados_pagamentos');
+    // Em instalações antigas, a FK users.associado_id pode não ter ON DELETE CASCADE.
+    // Deletar users primeiro evita violação de FK ao limpar associados.
+    await client.query('DELETE FROM users');
     await client.query('DELETE FROM associados');
     await client.query('DELETE FROM jogadores');
     await client.query('DELETE FROM gastos');
@@ -164,9 +202,10 @@ async function replaceAllData(data) {
       }
       for (const mk of MONTH_KEYS) {
         const norm = normalizePagamentoCell(pagamentos[mk]);
+        const safeValor = parseMoney(norm.valor);
         await client.query(
           'INSERT INTO associados_pagamentos (associado_id, mes_key, raw, valor) VALUES ($1,$2,$3,$4)',
-          [id, mk, norm.raw, norm.valor]
+          [id, mk, norm.raw, safeValor]
         );
       }
     }

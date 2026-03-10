@@ -1,5 +1,6 @@
 const path = require('path');
-require('dotenv').config({ override: true, path: path.join(__dirname, '..', '.env') });
+// Não sobrescreve variáveis vindas do ambiente (ex.: Railway).
+require('dotenv').config({ override: false, path: path.join(__dirname, '..', '.env') });
 
 function getArg(name) {
   const idx = process.argv.indexOf(name);

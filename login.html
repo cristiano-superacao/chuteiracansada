@@ -342,6 +342,24 @@
     const TOKEN_KEY = 'cc_token';
     const USER_KEY = 'cc_user';
 
+    async function readResponsePayload(response) {
+      const contentType = String(response.headers.get('content-type') || '').toLowerCase();
+      try {
+        if (contentType.includes('application/json')) {
+          return await response.json();
+        }
+        const text = await response.text();
+        // Tenta JSON mesmo sem content-type correto
+        try {
+          return JSON.parse(text);
+        } catch {
+          return { message: text };
+        }
+      } catch {
+        return {};
+      }
+    }
+
     // Captura parâmetros do callback do Google OAuth
     const urlParams = new URLSearchParams(window.location.search);
     const googleSuccess = urlParams.get('success');
@@ -387,13 +405,17 @@
         const response = await fetch(`${API_BASE}/api/auth/me`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
-        const data = await response.json();
+        const data = await readResponsePayload(response);
         
         if (data.authenticated && data.user) {
           redirectByRole(data.user.role);
+        } else if (!data.authenticated) {
+          // Token inválido/expirado: limpa para evitar loops e UX confusa
+          try { localStorage.removeItem(TOKEN_KEY); } catch {}
+          try { localStorage.removeItem(USER_KEY); } catch {}
         }
       } catch (err) {
-        console.error('Erro ao verificar autenticação:', err);
+        // Evita poluir o console em caso de falhas transitórias (rede/cache)
       }
     }
 
@@ -432,10 +454,24 @@
           body: JSON.stringify({ email, password })
         });
 
-        const data = await response.json();
+        const data = await readResponsePayload(response);
 
         if (!response.ok) {
-          throw new Error(data.error === 'invalid_credentials' ? 'E-mail ou senha incorretos' : 'Erro ao fazer login');
+          const code = String(data?.error || '');
+          if (code === 'invalid_credentials') {
+            throw new Error('E-mail ou senha incorretos');
+          }
+          if (code === 'missing_credentials') {
+            throw new Error('Preencha e-mail e senha');
+          }
+          if (code === 'server_misconfigured') {
+            throw new Error('Servidor não configurado para login (admin).');
+          }
+          throw new Error('Não foi possível entrar agora.');
+        }
+
+        if (!data || !data.token || !data.user) {
+          throw new Error('Resposta inválida do servidor.');
         }
 
         localStorage.setItem(TOKEN_KEY, data.token);
@@ -448,7 +484,7 @@
         }, 500);
 
       } catch (err) {
-        showAlert(err.message);
+        showAlert(String(err?.message || 'Erro ao fazer login'));
         btn.disabled = false;
         btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> <span>Entrar</span>';
       }
