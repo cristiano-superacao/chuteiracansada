@@ -10,7 +10,23 @@ CREATE TABLE IF NOT EXISTS app_config (
 CREATE TABLE IF NOT EXISTS associados (
   id BIGSERIAL PRIMARY KEY,
   nome TEXT NOT NULL,
-  apelido TEXT NOT NULL DEFAULT ''
+  apelido TEXT NOT NULL DEFAULT '',
+  email TEXT,
+  telefone TEXT,
+  foto_url TEXT,
+  ativo BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Usuários (autenticação)
+CREATE TABLE IF NOT EXISTS users (
+  id BIGSERIAL PRIMARY KEY,
+  email TEXT NOT NULL UNIQUE,
+  password_hash TEXT NOT NULL,
+  role TEXT NOT NULL CHECK (role IN ('admin', 'associado')),
+  associado_id BIGINT REFERENCES associados(id) ON DELETE CASCADE,
+  ativo BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS associados_pagamentos (

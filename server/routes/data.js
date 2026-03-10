@@ -1,6 +1,7 @@
 const express = require('express');
 const { pool } = require('../db');
 const { requireAdmin } = require('../middleware/requireAdmin');
+const { requireAuth } = require('../middleware/requireAuth');
 
 const MONTH_KEYS = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 
@@ -151,7 +152,16 @@ async function replaceAllData(data) {
       const apelido = String(a?.apelido ?? '').trim();
       const ins = await client.query('INSERT INTO associados (nome, apelido) VALUES ($1,$2) RETURNING id', [nome, apelido]);
       const id = ins.rows[0].id;
-      const pagamentos = a?.pagamentos && typeof a.pagamentos === 'object' ? a.pagamentos : {};
+      let pagamentos = a?.pagamentos && typeof a.pagamentos === 'object' ? a.pagamentos : {};
+      if (a?.pagamentosByYear && typeof a.pagamentosByYear === 'object') {
+        const years = Object.keys(a.pagamentosByYear);
+        const currentYear = String(new Date().getFullYear());
+        const preferredYear = years.includes(currentYear)
+          ? currentYear
+          : years.sort().slice(-1)[0];
+        const bucket = preferredYear ? a.pagamentosByYear?.[preferredYear] : null;
+        if (bucket && typeof bucket === 'object') pagamentos = bucket;
+      }
       for (const mk of MONTH_KEYS) {
         const norm = normalizePagamentoCell(pagamentos[mk]);
         await client.query(
@@ -290,27 +300,8 @@ function sendDbAware(res, err, fallbackStatus, payload) {
   return res.status(fallbackStatus).json(payload);
 }
 
-router.get('/data', async (_req, res) => {
-  try {
-    const data = await fetchData();
-    res.json(data);
-  } catch (err) {
-    console.error(err);
-    sendDbAware(res, err, 500, { error: 'failed_to_load' });
-  }
-});
-
-router.get('/associados', async (_req, res) => {
-  try {
-    const data = await fetchData();
-    res.json(data.associados);
-  } catch (err) {
-    console.error(err);
-    sendDbAware(res, err, 500, { error: 'failed_to_load' });
-  }
-});
-
-router.get('/jogadores', async (_req, res) => {
+// ===== Rotas autenticadas para o painel do associado (compat com inicio.html) =====
+router.get('/data/jogadores', requireAuth, async (_req, res) => {
   try {
     const data = await fetchData();
     res.json(data.jogadores);
@@ -320,27 +311,7 @@ router.get('/jogadores', async (_req, res) => {
   }
 });
 
-router.get('/gastos', async (_req, res) => {
-  try {
-    const data = await fetchData();
-    res.json(data.gastos);
-  } catch (err) {
-    console.error(err);
-    sendDbAware(res, err, 500, { error: 'failed_to_load' });
-  }
-});
-
-router.get('/entradas', async (_req, res) => {
-  try {
-    const data = await fetchData();
-    res.json(data.entradas);
-  } catch (err) {
-    console.error(err);
-    sendDbAware(res, err, 500, { error: 'failed_to_load' });
-  }
-});
-
-router.get('/times', async (_req, res) => {
+router.get('/data/times', requireAuth, async (_req, res) => {
   try {
     const data = await fetchData();
     res.json(data.times);
@@ -350,7 +321,101 @@ router.get('/times', async (_req, res) => {
   }
 });
 
-router.get('/campeonato', async (_req, res) => {
+router.get('/data/campeonato-jogos', requireAuth, async (_req, res) => {
+  try {
+    const data = await fetchData();
+    res.json(data.campeonato?.jogos || []);
+  } catch (err) {
+    console.error(err);
+    sendDbAware(res, err, 500, { error: 'failed_to_load' });
+  }
+});
+
+router.get('/data/associados/:id/pagamentos', requireAuth, async (req, res) => {
+  const associadoId = Number(req.params.id);
+  if (!Number.isFinite(associadoId) || associadoId <= 0) return res.status(400).json({ error: 'invalid_id' });
+
+  const role = String(req.user?.role || '');
+  const tokenAssociadoId = Number(req.user?.associadoId || req.user?.associado_id || 0);
+
+  // Associado só pode ver os próprios pagamentos
+  if (role !== 'admin' && (role !== 'associado' || tokenAssociadoId !== associadoId)) {
+    return res.status(403).json({ error: 'forbidden' });
+  }
+
+  try {
+    const rows = (await pool.query(
+      'SELECT associado_id, mes_key, raw, valor FROM associados_pagamentos WHERE associado_id=$1 ORDER BY mes_key ASC',
+      [associadoId]
+    )).rows;
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    sendDbAware(res, err, 500, { error: 'failed_to_load' });
+  }
+});
+
+router.get('/data', requireAdmin, async (_req, res) => {
+  try {
+    const data = await fetchData();
+    res.json(data);
+  } catch (err) {
+    console.error(err);
+    sendDbAware(res, err, 500, { error: 'failed_to_load' });
+  }
+});
+
+router.get('/associados', requireAdmin, async (_req, res) => {
+  try {
+    const data = await fetchData();
+    res.json(data.associados);
+  } catch (err) {
+    console.error(err);
+    sendDbAware(res, err, 500, { error: 'failed_to_load' });
+  }
+});
+
+router.get('/jogadores', requireAuth, async (_req, res) => {
+  try {
+    const data = await fetchData();
+    res.json(data.jogadores);
+  } catch (err) {
+    console.error(err);
+    sendDbAware(res, err, 500, { error: 'failed_to_load' });
+  }
+});
+
+router.get('/gastos', requireAdmin, async (_req, res) => {
+  try {
+    const data = await fetchData();
+    res.json(data.gastos);
+  } catch (err) {
+    console.error(err);
+    sendDbAware(res, err, 500, { error: 'failed_to_load' });
+  }
+});
+
+router.get('/entradas', requireAdmin, async (_req, res) => {
+  try {
+    const data = await fetchData();
+    res.json(data.entradas);
+  } catch (err) {
+    console.error(err);
+    sendDbAware(res, err, 500, { error: 'failed_to_load' });
+  }
+});
+
+router.get('/times', requireAuth, async (_req, res) => {
+  try {
+    const data = await fetchData();
+    res.json(data.times);
+  } catch (err) {
+    console.error(err);
+    sendDbAware(res, err, 500, { error: 'failed_to_load' });
+  }
+});
+
+router.get('/campeonato', requireAuth, async (_req, res) => {
   try {
     const data = await fetchData();
     res.json(data.campeonato);
@@ -735,6 +800,35 @@ router.post('/campeonato/posts/:id/comentarios', async (req, res) => {
   } catch (err) {
     console.error(err);
     sendDbAware(res, err, 500, { error: 'failed_to_comment' });
+  }
+});
+
+// Endpoints adicionais para dashboard do associado
+router.get('/associados/:id/pagamentos', async (req, res) => {
+  const associadoId = Number(req.params.id);
+  if (!associadoId || isNaN(associadoId)) {
+    return res.status(400).json({ error: 'invalid_associado_id' });
+  }
+
+  try {
+    const result = await pool.query(
+      'SELECT mes_key, raw, valor FROM associados_pagamentos WHERE associado_id = $1',
+      [associadoId]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    sendDbAware(res, err, 500, { error: 'failed_to_load' });
+  }
+});
+
+router.get('/campeonato-jogos', async (_req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM campeonato_jogos ORDER BY id ASC');
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    sendDbAware(res, err, 500, { error: 'failed_to_load' });
   }
 });
 

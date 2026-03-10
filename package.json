@@ -9,6 +9,8 @@
   "scripts": {
     "start": "node server/index.js",
     "dev": "node --watch server/index.js",
+    "seed": "node server/seed.js --yes",
+    "smoke": "node server/smoke.js",
     "test": "echo \"no tests\""
   },
   "keywords": [
@@ -22,9 +24,13 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "bcrypt": "^5.1.1",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
+    "express-session": "^1.18.1",
     "jsonwebtoken": "^9.0.3",
+    "passport": "^0.7.0",
+    "passport-google-oauth20": "^2.0.0",
     "pg": "^8.16.3"
   }
 }

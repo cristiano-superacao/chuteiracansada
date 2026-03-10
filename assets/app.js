@@ -8,6 +8,10 @@ if ('serviceWorker' in navigator) {
 
 const STORAGE_KEY = 'chuteiraCansada.v1';
 
+// Auth unificado (login.html): JWT + user em localStorage
+const AUTH_TOKEN_KEY = 'cc_token';
+const AUTH_USER_KEY = 'cc_user';
+
 const ADMIN_SESSION_KEY = 'chuteiraCansada.adminSession.v1';
 const ADMIN_TOKEN_KEY = 'chuteiraCansada.adminToken.v1';
 
@@ -123,21 +127,227 @@ const DEFAULT_DATA = {
 };
 
 function isAdmin() {
+  const u = getStoredUser();
+  if (u && typeof u === 'object' && u.role) return String(u.role) === 'admin';
+  // Fallback legado
   return sessionStorage.getItem(ADMIN_SESSION_KEY) === '1';
 }
 
+function getStoredUser() {
+  try {
+    const raw = localStorage.getItem(AUTH_USER_KEY);
+    if (!raw) return null;
+    const obj = JSON.parse(raw);
+    return obj && typeof obj === 'object' ? obj : null;
+  } catch {
+    return null;
+  }
+}
+
 function getAdminToken() {
+  // Preferência: novo token do login.html
+  const t = localStorage.getItem(AUTH_TOKEN_KEY);
+  if (t && String(t).trim()) return String(t);
+  // Fallback legado
   return sessionStorage.getItem(ADMIN_TOKEN_KEY) || '';
 }
 
 function setAdminToken(token) {
-  if (token) sessionStorage.setItem(ADMIN_TOKEN_KEY, token);
-  else sessionStorage.removeItem(ADMIN_TOKEN_KEY);
+  const t = String(token || '').trim();
+  if (t) {
+    localStorage.setItem(AUTH_TOKEN_KEY, t);
+    // Mantém compatibilidade com trechos legados
+    sessionStorage.setItem(ADMIN_TOKEN_KEY, t);
+  } else {
+    localStorage.removeItem(AUTH_TOKEN_KEY);
+    sessionStorage.removeItem(ADMIN_TOKEN_KEY);
+  }
 }
 
 function setAdminSession(on) {
   if (on) sessionStorage.setItem(ADMIN_SESSION_KEY, '1');
   else sessionStorage.removeItem(ADMIN_SESSION_KEY);
+}
+
+function clearAuth() {
+  localStorage.removeItem(AUTH_TOKEN_KEY);
+  localStorage.removeItem(AUTH_USER_KEY);
+  sessionStorage.removeItem(ADMIN_TOKEN_KEY);
+  sessionStorage.removeItem(ADMIN_SESSION_KEY);
+}
+
+function roleLabel(role) {
+  const r = String(role || '').toLowerCase();
+  if (r === 'admin') return 'Administrador';
+  if (r === 'associado') return 'Associado';
+  return 'Visitante';
+}
+
+function displayNameFromUser(u) {
+  if (!u || typeof u !== 'object') return 'Usuário';
+  const apelido = String(u.apelido || '').trim();
+  if (apelido) return apelido;
+  const nome = String(u.nome || '').trim();
+  if (nome) return nome;
+  const email = String(u.email || '').trim();
+  if (email) return email;
+  return 'Usuário';
+}
+
+function ensureTopbarChrome() {
+  const appContent = document.querySelector('.app-content');
+  if (!appContent) return;
+
+  let topbar = appContent.querySelector(':scope > .topbar');
+  if (!topbar) {
+    topbar = document.createElement('header');
+    topbar.className = 'topbar';
+    const main = appContent.querySelector(':scope > main') || appContent.querySelector('main');
+    if (main) appContent.insertBefore(topbar, main);
+    else appContent.insertBefore(topbar, appContent.firstChild);
+  }
+
+  let inner = topbar.querySelector('.topbar__inner');
+  if (!inner) {
+    inner = document.createElement('div');
+    inner.className = 'topbar__inner';
+    topbar.textContent = '';
+    topbar.appendChild(inner);
+  }
+
+  const u = getStoredUser();
+  const name = displayNameFromUser(u);
+  const role = roleLabel(u?.role);
+  const subtitle = role === 'Administrador' ? 'Painel Administrativo' : (role === 'Associado' ? 'Área do Associado' : 'Portal do campeonato');
+
+  inner.innerHTML = `
+    <div class="brand" aria-label="Chuteira Cansada">
+      <div class="brand__mark" aria-hidden="true"></div>
+      <div class="brand__text">
+        <div class="brand__title">Chuteira Cansada</div>
+        <div class="brand__subtitle">${escapeHtml(subtitle)}</div>
+      </div>
+    </div>
+    <div class="topbar__right">
+      <div class="topbar__profile" aria-label="Perfil">
+        <div class="topbar__avatar" aria-hidden="true"></div>
+        <div class="topbar__profile-text">
+          <div class="topbar__profile-name">${escapeHtml(name)}</div>
+          <div class="topbar__profile-role">${escapeHtml(role)}</div>
+        </div>
+      </div>
+      <button type="button" class="topbar__btn" id="topbar-logout-btn" aria-label="Sair">Sair</button>
+    </div>
+  `;
+
+  const logoutTop = inner.querySelector('#topbar-logout-btn');
+  logoutTop?.addEventListener('click', () => {
+    clearAuth();
+    try { window.location.href = '/login.html'; } catch {}
+  });
+}
+
+function bindSidebarChrome() {
+  const sidebarToggle = document.getElementById('sidebar-toggle');
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebar-overlay');
+
+  if (!sidebarToggle || !sidebar || !overlay) return;
+
+  sidebarToggle.addEventListener('click', () => {
+    sidebar.classList.toggle('is-open');
+    overlay.classList.toggle('is-visible');
+  });
+
+  overlay.addEventListener('click', () => {
+    sidebar.classList.remove('is-open');
+    overlay.classList.remove('is-visible');
+  });
+
+  sidebar.querySelectorAll('a,button').forEach((el) => {
+    el.addEventListener('click', () => {
+      sidebar.classList.remove('is-open');
+      overlay.classList.remove('is-visible');
+    });
+  });
+}
+
+function bindLogoutButtons() {
+  const btn = document.getElementById('logout-btn');
+  if (!btn) return;
+  btn.addEventListener('click', () => {
+    clearAuth();
+    try { window.location.href = '/login.html'; } catch {}
+  });
+}
+
+async function enforcePageAuth() {
+  // login.html e outras páginas sem painel não precisam do gate
+  const here = (location.pathname.split('/').pop() || '').toLowerCase();
+  if (here === 'login.html') {
+    try {
+      window.__CC_AUTH_STATE = { ok: true, user: null, page: 'login' };
+      window.dispatchEvent(new CustomEvent('cc:auth-ready', { detail: window.__CC_AUTH_STATE }));
+    } catch {}
+    return true;
+  }
+
+  const page = String(document.body?.dataset?.page || '').toLowerCase();
+  // Se não for uma página do painel, não faz nada
+  if (!page) {
+    try {
+      window.__CC_AUTH_STATE = { ok: true, user: null, page: null };
+      window.dispatchEvent(new CustomEvent('cc:auth-ready', { detail: window.__CC_AUTH_STATE }));
+    } catch {}
+    return true;
+  }
+
+  const token = getAdminToken();
+  if (!token) {
+    try {
+      window.__CC_AUTH_STATE = { ok: false, user: null, page };
+      window.dispatchEvent(new CustomEvent('cc:auth-ready', { detail: window.__CC_AUTH_STATE }));
+    } catch {}
+    try { window.location.href = '/login.html'; } catch {}
+    return false;
+  }
+
+  try {
+    const me = await apiFetchJson('/auth/me', { headers: { Authorization: `Bearer ${token}` } });
+    const authed = Boolean(me?.authenticated);
+    const user = me?.user && typeof me.user === 'object' ? me.user : null;
+    if (!authed || !user) throw new Error('not_authenticated');
+
+    // Persistimos o user normalizado (mantém sidebar/topbar consistentes)
+    try { localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user)); } catch {}
+
+    // Regras por página
+    if (page === 'inicio') {
+      // Área do associado (admin pode acessar para suporte)
+      if (String(user.role) !== 'associado' && String(user.role) !== 'admin') throw new Error('forbidden');
+    } else {
+      // Demais páginas são do painel admin
+      if (String(user.role) !== 'admin') throw new Error('forbidden');
+    }
+
+    setAdminSession(String(user.role) === 'admin');
+    applyAdminGate();
+
+    try {
+      window.__CC_AUTH_STATE = { ok: true, user, page };
+      window.dispatchEvent(new CustomEvent('cc:auth-ready', { detail: window.__CC_AUTH_STATE }));
+    } catch {}
+    return true;
+  } catch (err) {
+    console.warn('Auth gate falhou:', err);
+    clearAuth();
+    try {
+      window.__CC_AUTH_STATE = { ok: false, user: null, page };
+      window.dispatchEvent(new CustomEvent('cc:auth-ready', { detail: window.__CC_AUTH_STATE }));
+    } catch {}
+    try { window.location.href = '/login.html'; } catch {}
+    return false;
+  }
 }
 
 function applyAdminGate() {
@@ -508,11 +718,15 @@ async function refreshAdminFromToken() {
 
   try {
     const me = await apiFetchJson('/auth/me', { headers: { Authorization: `Bearer ${token}` } });
-    if (me && me.admin) {
-      setAdminSession(true);
+    const authed = Boolean(me?.authenticated);
+    const user = me?.user && typeof me.user === 'object' ? me.user : null;
+
+    if (authed && user) {
+      localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
+      setAdminSession(String(user.role) === 'admin');
     } else {
       setAdminSession(false);
-      setAdminToken('');
+      clearAuth();
     }
   } catch {
     setAdminSession(false);
@@ -591,15 +805,22 @@ function progressDone() {
 
 
 async function apiLoginWithPassword(password) {
-  const json = await apiFetchJson('/auth/login', { method: 'POST', body: JSON.stringify({ password }) });
+  // Mantém compatibilidade com o "modo admin" legado via prompt
+  const json = await apiFetchJson('/auth/login', { method: 'POST', body: JSON.stringify({ email: 'admin@admin', password }) });
   const token = String(json?.token || '');
   if (!token) throw new Error('invalid_token');
+  if (json?.user) {
+    try {
+      localStorage.setItem(AUTH_USER_KEY, JSON.stringify(json.user));
+    } catch {}
+  }
   setAdminToken(token);
   await refreshAdminFromToken();
 }
 
 async function apiLoadAllData() {
-  const json = await apiFetchJson('/data', { method: 'GET' });
+  const token = getAdminToken();
+  const json = await apiFetchJson('/data', { method: 'GET', headers: token ? { Authorization: `Bearer ${token}` } : {} });
   return normalizeDataModel(mergeDefaults(json, DEFAULT_DATA));
 }
 
@@ -676,21 +897,21 @@ function bindAdminControls(state) {
   if (!btn) return;
 
   btn.addEventListener('click', async () => {
-    if (isAdmin()) {
-      setAdminSession(false);
-      setAdminToken('');
+    // Se já autenticado, o botão funciona como logout
+    if (getAdminToken()) {
+      clearAuth();
       applyAdminGate();
-      renderPage(state);
-      toast('Modo admin desativado');
+      try { window.location.href = '/login.html'; } catch {}
       return;
     }
 
+    // Caso ainda exista esse botão em alguma página antiga, mantém o prompt admin
     const pass = prompt('Senha do administrador:');
     if (pass == null) return;
     try {
       await apiLoginWithPassword(pass);
       renderPage(state);
-      toast('Modo admin ativado');
+      toast('Admin autenticado');
     } catch (err) {
       console.error(err);
       const code = String(err?.message || '');
@@ -699,7 +920,7 @@ function bindAdminControls(state) {
       } else if (code === 'invalid_credentials' || err?.status === 401) {
         alert('Senha incorreta.');
       } else {
-        alert('Não consegui fazer login agora.\n\nSe você está em modo local, inicie o servidor (npm run dev).');
+        alert('Não consegui fazer login agora.');
       }
     }
   });
@@ -3230,6 +3451,14 @@ function injectToastStyles() {
   // Suporte a tema (claro/escuro/sistema)
   initProgressBar();
   setupThemeColorMetaWatcher();
+
+  // Chrome comum (evita duplicidade entre páginas)
+  bindSidebarChrome();
+  bindLogoutButtons();
+  const authOk = await enforcePageAuth();
+  if (!authOk) return;
+  ensureTopbarChrome();
+
   bindGlobalActions(state);
   bindAdminControls(state);
   bindAssociadosFilter(state);
@@ -3257,8 +3486,8 @@ function injectToastStyles() {
 })();
 
 function updateThemeColorMeta(theme) {
-  const LIGHT = '#0077b6';
-  const DARK = '#111a2b';
+  const LIGHT = '#06AA48';
+  const DARK = '#028A3B';
   let meta = document.querySelector('meta[name="theme-color"]');
   if (!meta) {
     meta = document.createElement('meta');

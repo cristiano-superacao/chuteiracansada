@@ -1,0 +1,582 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#06AA48" />
+  <title>Chuteira Cansada — Dashboard</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/png" href="assets/icon-192.png" />
+  <link rel="apple-touch-icon" href="assets/icon-192.png" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="assets/styles.css" />
+  <style>
+    .dashboard-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      margin-bottom: 32px;
+    }
+
+    .info-card {
+      background: var(--bg-cards);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: var(--shadow-md);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      border-left: 4px solid var(--brand-1);
+    }
+
+    .info-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .info-card__header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .info-card__icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--brand-1), var(--brand-2));
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .info-card__title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-light);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .info-card__content {
+      margin-bottom: 12px;
+    }
+
+    .info-card__value {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--brand-1);
+      line-height: 1.2;
+    }
+
+    .info-card__label {
+      font-size: 13px;
+      color: var(--text-light);
+      margin-top: 4px;
+    }
+
+    .info-card__stats {
+      display: flex;
+      gap: 16px;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .stat-item {
+      flex: 1;
+      text-align: center;
+    }
+
+    .stat-item__value {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-dark);
+    }
+
+    .stat-item__label {
+      font-size: 11px;
+      color: var(--text-light);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 4px;
+    }
+
+    .info-card__detail {
+      font-size: 14px;
+      color: var(--text-dark);
+      margin: 8px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .info-card__detail-label {
+      color: var(--text-light);
+      font-weight: 500;
+    }
+
+    .info-card__detail-value {
+      font-weight: 600;
+    }
+
+    .welcome-section {
+      background: linear-gradient(135deg, var(--brand-1), var(--brand-2));
+      color: white;
+      padding: 32px;
+      border-radius: var(--radius);
+      margin-bottom: 32px;
+      box-shadow: var(--shadow-md);
+    }
+
+    .welcome-section h2 {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .welcome-section p {
+      font-size: 15px;
+      opacity: 0.9;
+    }
+
+    @media (max-width: 768px) {
+      .dashboard-cards {
+        grid-template-columns: 1fr;
+      }
+
+      .welcome-section {
+        padding: 24px;
+      }
+
+      .welcome-section h2 {
+        font-size: 22px;
+      }
+    }
+  </style>
+</head>
+<body data-page="inicio">
+  <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+  
+  <!-- Botão hamburger mobile -->
+  <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Menu">☰</button>
+  
+  <!-- Overlay mobile -->
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+  
+  <!-- Sidebar lateral -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar__header">
+      <div class="sidebar__logo" aria-hidden="true"></div>
+      <div class="sidebar__brand">
+        <h1 class="sidebar__title">Chuteira Cansada</h1>
+        <p class="sidebar__subtitle">Associado</p>
+      </div>
+    </div>
+    
+    <nav class="sidebar__nav" aria-label="Navegação principal">
+      <ul class="sidebar__menu">
+        <li class="sidebar__menu-item">
+          <a class="sidebar__link is-active" href="inicio.html">
+            <span class="sidebar__icon"><i class="fas fa-home"></i></span>
+            <span>Início</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+    
+    <div class="sidebar__footer">
+      <button class="btn btn--ghost" type="button" id="logout-btn" aria-label="Sair">
+        <i class="fas fa-sign-out-alt" style="margin-right:8px"></i> Sair
+      </button>
+    </div>
+  </aside>
+  
+  <!-- Conteúdo principal -->
+  <div class="app-content">
+    <main id="conteudo" class="container page">
+      <div class="welcome-section">
+        <h2 id="welcome-name">Bem-vindo(a)!</h2>
+        <p>Acompanhe suas estatísticas, próximos jogos e situação financeira</p>
+      </div>
+
+      <div class="dashboard-cards">
+        <!-- Card: Próximo Jogo -->
+        <div class="info-card">
+          <div class="info-card__header">
+            <div class="info-card__icon">
+              <i class="fas fa-calendar-check"></i>
+            </div>
+            <div>
+              <h3 class="info-card__title">Próximo Jogo</h3>
+            </div>
+          </div>
+          <div class="info-card__content">
+            <div class="info-card__detail">
+              <span class="info-card__detail-label">Data:</span>
+              <span class="info-card__detail-value" id="next-game-date">Carregando...</span>
+            </div>
+            <div class="info-card__detail">
+              <span class="info-card__detail-label">Hora:</span>
+              <span class="info-card__detail-value" id="next-game-time">—</span>
+            </div>
+            <div class="info-card__detail">
+              <span class="info-card__detail-label">Local:</span>
+              <span class="info-card__detail-value" id="next-game-location">—</span>
+            </div>
+            <div class="info-card__detail" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border-color)">
+              <span class="info-card__detail-label" style="font-size:16px;font-weight:600;color:var(--text-dark)" id="next-game-match">— vs —</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card: Minha Estatística -->
+        <div class="info-card">
+          <div class="info-card__header">
+            <div class="info-card__icon">
+              <i class="fas fa-chart-line"></i>
+            </div>
+            <div>
+              <h3 class="info-card__title">Minha Estatística</h3>
+            </div>
+          </div>
+          <div class="info-card__content">
+            <div class="info-card__stats">
+              <div class="stat-item">
+                <div class="stat-item__value" id="my-games">0</div>
+                <div class="stat-item__label">Jogos</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-item__value" id="my-goals">0</div>
+                <div class="stat-item__label">Gols</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-item__value" id="my-assists">0</div>
+                <div class="stat-item__label">Assist.</div>
+              </div>
+            </div>
+            <div class="info-card__stats">
+              <div class="stat-item">
+                <div class="stat-item__value" id="my-yellow">0</div>
+                <div class="stat-item__label">Amarelos</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-item__value" id="my-red">0</div>
+                <div class="stat-item__label">Vermelhos</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card: Classificação Atual -->
+        <div class="info-card">
+          <div class="info-card__header">
+            <div class="info-card__icon">
+              <i class="fas fa-medal"></i>
+            </div>
+            <div>
+              <h3 class="info-card__title">Meu Time</h3>
+            </div>
+          </div>
+          <div class="info-card__content">
+            <div class="info-card__value" id="my-team-name">—</div>
+            <div class="info-card__detail" style="margin-top:16px">
+              <span class="info-card__detail-label">Posição:</span>
+              <span class="info-card__detail-value" id="my-team-position">—</span>
+            </div>
+            <div class="info-card__detail">
+              <span class="info-card__detail-label">Pontos:</span>
+              <span class="info-card__detail-value" id="my-team-points">0</span>
+            </div>
+            <div class="info-card__detail">
+              <span class="info-card__detail-label">Vitórias:</span>
+              <span class="info-card__detail-value" id="my-team-wins">0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card: Situação Financeira -->
+        <div class="info-card">
+          <div class="info-card__header">
+            <div class="info-card__icon">
+              <i class="fas fa-money-bill-wave"></i>
+            </div>
+            <div>
+              <h3 class="info-card__title">Situação Financeira</h3>
+            </div>
+          </div>
+          <div class="info-card__content">
+            <div class="info-card__detail">
+              <span class="info-card__detail-label">Status Atual:</span>
+              <span class="status-badge status-badge--pago" id="payment-status">Em dia</span>
+            </div>
+            <div class="info-card__detail" style="margin-top:16px">
+              <span class="info-card__detail-label">Mensalidade:</span>
+              <span class="info-card__detail-value">R$ 30,00</span>
+            </div>
+            <div class="info-card__detail">
+              <span class="info-card__detail-label">Meses pagos (2025):</span>
+              <span class="info-card__detail-value" id="months-paid">0/12</span>
+            </div>
+            <div class="info-card__detail">
+              <span class="info-card__detail-label">Total pago:</span>
+              <span class="info-card__detail-value" id="total-paid">R$ 0,00</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabela de Últimos Jogos -->
+      <section class="card" aria-label="Últimos jogos">
+        <div class="card__header">
+          <div>
+            <h2 class="card__title">Últimos Jogos</h2>
+            <p class="card__hint">Acompanhe os resultados recentes do campeonato</p>
+          </div>
+        </div>
+        <div class="card__body">
+          <div class="table-wrapper">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Rodada</th>
+                  <th>Data</th>
+                  <th>Casa</th>
+                  <th>Placar</th>
+                  <th>Fora</th>
+                </tr>
+              </thead>
+              <tbody id="recent-games">
+                <tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-light)">Carregando...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="assets/app.js"></script>
+  <script>
+    const TOKEN_KEY = 'cc_token';
+    const USER_KEY = 'cc_user';
+    const MONTH_KEYS = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+
+    async function waitAuthUser() {
+      if (window.__CC_AUTH_STATE) {
+        return window.__CC_AUTH_STATE.ok ? window.__CC_AUTH_STATE.user : null;
+      }
+
+      await new Promise((resolve) => {
+        const onReady = () => resolve();
+        window.addEventListener('cc:auth-ready', onReady, { once: true });
+        if (window.__CC_AUTH_STATE) resolve();
+      });
+
+      return (window.__CC_AUTH_STATE && window.__CC_AUTH_STATE.ok) ? window.__CC_AUTH_STATE.user : null;
+    }
+
+    function getToken() {
+      return localStorage.getItem(TOKEN_KEY) || '';
+    }
+
+    async function apiGet(path) {
+      const token = getToken();
+      const response = await fetch(path, {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+      });
+      return response;
+    }
+
+    async function apiGetJson(path) {
+      const response = await apiGet(path);
+      const json = await response.json().catch(() => null);
+      if (!response.ok) {
+        const err = new Error((json && json.error) ? String(json.error) : `http_${response.status}`);
+        err.status = response.status;
+        err.body = json;
+        throw err;
+      }
+      return json;
+    }
+
+    function isMesPago(raw) {
+      const s = String(raw ?? '').trim();
+      if (!s) return false;
+      const norm = s
+        .trim()
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/\p{Diacritic}/gu, '');
+      if (norm.includes('pendente')) return false;
+      if (norm === '-' || norm === '—' || norm === 'r$ -' || norm === 'r$-' || norm === 'r$') return false;
+      return true;
+    }
+
+    // Carregar dados do dashboard
+    async function loadDashboard() {
+      const user = await waitAuthUser();
+      if (!user) return;
+
+      if (String(user.role) === 'admin') {
+        window.location.href = '/dashboard.html';
+        return;
+      }
+
+      // Atualizar nome de boas-vindas
+      document.getElementById('welcome-name').textContent = `Bem-vindo(a), ${user.nome}!`;
+
+      // Carregar próximo jogo
+      await loadNextGame();
+
+      // Carregar minhas estatísticas
+      await loadMyStats(user.associadoId);
+
+      // Carregar classificação do time
+      await loadMyTeam(user.associadoId);
+
+      // Carregar situação financeira
+      await loadFinancialStatus(user.associadoId);
+
+      // Carregar últimos jogos
+      await loadRecentGames();
+    }
+
+    async function loadNextGame() {
+      try {
+        const games = await apiGetJson('/api/data/campeonato-jogos');
+        
+        if (games && games.length > 0) {
+          const nextGame = games[0];
+          document.getElementById('next-game-date').textContent = nextGame.data || '—';
+          document.getElementById('next-game-time').textContent = nextGame.hora || '—';
+          document.getElementById('next-game-location').textContent = nextGame.local || '—';
+          document.getElementById('next-game-match').textContent = `${nextGame.casa} vs ${nextGame.fora}`;
+        } else {
+          document.getElementById('next-game-date').textContent = 'Nenhum jogo agendado';
+        }
+      } catch (err) {
+        console.error('Erro ao carregar próximo jogo:', err);
+      }
+    }
+
+    async function loadMyStats(associadoId) {
+      try {
+        const jogadores = await apiGetJson('/api/data/jogadores');
+        
+        // Encontrar jogador correspondente ao associado (por nome aproximado)
+        const user = JSON.parse(localStorage.getItem(USER_KEY));
+        const meuJogador = jogadores.find(j => 
+          j.nome.toLowerCase().includes(user.nome.toLowerCase()) ||
+          user.nome.toLowerCase().includes(j.nome.toLowerCase())
+        );
+
+        if (meuJogador) {
+          document.getElementById('my-games').textContent = meuJogador.jogos || 0;
+          document.getElementById('my-goals').textContent = meuJogador.gols || 0;
+          document.getElementById('my-assists').textContent = meuJogador.assistencias || 0;
+          document.getElementById('my-yellow').textContent = meuJogador.amarelos || 0;
+          document.getElementById('my-red').textContent = meuJogador.vermelhos || 0;
+        }
+      } catch (err) {
+        console.error('Erro ao carregar estatísticas:', err);
+      }
+    }
+
+    async function loadMyTeam(associadoId) {
+      try {
+        const times = await apiGetJson('/api/data/times');
+        
+        if (times && times.length > 0) {
+          // Por enquanto, pegar o primeiro time (depois pode vincular ao associado)
+          const myTeam = times[0];
+          document.getElementById('my-team-name').textContent = myTeam.time || '—';
+          document.getElementById('my-team-position').textContent = '1º';
+          document.getElementById('my-team-points').textContent = myTeam.pg || 0;
+          document.getElementById('my-team-wins').textContent = myTeam.v || 0;
+        }
+      } catch (err) {
+        console.error('Erro ao carregar time:', err);
+      }
+    }
+
+    async function loadFinancialStatus(associadoId) {
+      try {
+        const pagamentos = await apiGetJson(`/api/data/associados/${associadoId}/pagamentos`);
+
+        const currentMonthIdx = new Date().getMonth();
+        const paidByMonthKey = new Map();
+        let monthsPaid = 0;
+        let totalPaid = 0;
+
+        (pagamentos || []).forEach(p => {
+          const mk = String(p?.mes_key || '').trim().toLowerCase();
+          if (!mk) return;
+          const pago = isMesPago(p?.raw);
+          paidByMonthKey.set(mk, pago);
+          if (pago) {
+            monthsPaid++;
+            const v = Number(p?.valor);
+            if (Number.isFinite(v)) totalPaid += v;
+          }
+        });
+
+        document.getElementById('months-paid').textContent = `${monthsPaid}/12`;
+        document.getElementById('total-paid').textContent = `R$ ${totalPaid.toFixed(2).replace('.', ',')}`;
+
+        const requiredKeys = MONTH_KEYS.slice(0, currentMonthIdx + 1);
+        const allPaidSoFar = requiredKeys.every(k => paidByMonthKey.get(k) === true);
+        const paidPrevMonths = requiredKeys.slice(0, -1).every(k => paidByMonthKey.get(k) === true);
+        const paidCurrent = paidByMonthKey.get(MONTH_KEYS[currentMonthIdx]) === true;
+
+        const statusBadge = document.getElementById('payment-status');
+        if (allPaidSoFar) {
+          statusBadge.className = 'status-badge status-badge--pago';
+          statusBadge.textContent = 'Em dia';
+        } else if (!paidCurrent && paidPrevMonths) {
+          statusBadge.className = 'status-badge status-badge--pendente';
+          statusBadge.textContent = 'Pendente';
+        } else {
+          statusBadge.className = 'status-badge status-badge--atrasado';
+          statusBadge.textContent = 'Atrasado';
+        }
+      } catch (err) {
+        console.error('Erro ao carregar situação financeira:', err);
+      }
+    }
+
+    async function loadRecentGames() {
+      try {
+        const games = await apiGetJson('/api/data/campeonato-jogos');
+        
+        const tbody = document.getElementById('recent-games');
+        tbody.innerHTML = '';
+
+        if (!games || games.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-light)">Nenhum jogo registrado</td></tr>';
+          return;
+        }
+
+        games.slice(0, 5).forEach(game => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${game.rodada || '—'}</td>
+            <td>${game.data || '—'}</td>
+            <td>${game.casa || '—'}</td>
+            <td style="font-weight:600;text-align:center">${game.placar || '—'}</td>
+            <td>${game.fora || '—'}</td>
+          `;
+          tbody.appendChild(row);
+        });
+      } catch (err) {
+        console.error('Erro ao carregar jogos recentes:', err);
+      }
+    }
+
+    // Inicializar
+    loadDashboard();
+  </script>
+</body>
+</html>

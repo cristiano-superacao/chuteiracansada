@@ -3,41 +3,52 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#0077b6" />
+  <meta name="theme-color" content="#06AA48" />
   <title>Chuteira Cansada — Gastos</title>
   <link rel="manifest" href="manifest.json" />
   <link rel="icon" type="image/png" href="assets/icon-192.png" />
   <link rel="apple-touch-icon" href="assets/icon-192.png" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link rel="stylesheet" href="assets/styles.css" />
 </head>
 <body data-page="gastos">
   <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
-  <header class="topbar">
-    <div class="container topbar__inner">
+  
+  <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle menu">☰</button>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+  
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar__header">
       <div class="brand">
         <div class="brand__mark" aria-hidden="true"></div>
         <div class="brand__text">
           <div class="brand__title">Chuteira Cansada</div>
-          <div class="brand__subtitle">Gestão do campeonato e do caixa</div>
+          <div class="brand__subtitle">Admin</div>
         </div>
       </div>
-
-      <div class="topbar__right">
-        <nav class="nav" aria-label="Navegação principal">
-          <a class="nav__link" href="index.html">Associados</a>
-          <a class="nav__link" href="jogadores.html">Jogadores</a>
-          <a class="nav__link" href="gastos.html">Gastos</a>
-          <a class="nav__link" href="saldo.html">Saldo</a>
-          <a class="nav__link" href="classificacao.html">Classificação</a>
-          <a class="nav__link" href="campeonato.html">Campeonato</a>
-          <a class="nav__link" href="entreterimento.html">Entreterimento</a>
-        </nav>
-        <button class="btn btn--ghost" type="button" id="admin-btn" aria-label="Admin"></button>
-      </div>
     </div>
-  </header>
-
-  <main id="conteudo" class="container page">
+    
+    <nav class="sidebar__nav" aria-label="Navegação principal">
+      <ul class="sidebar__menu">
+        <li><a class="sidebar__link" href="dashboard.html"><span class="sidebar__icon"><i class="fas fa-tachometer-alt"></i></span> Dashboard</a></li>
+        <li><a class="sidebar__link" href="dashboard.html"><span class="sidebar__icon"><i class="fas fa-users"></i></span> Associados</a></li>
+        <li><a class="sidebar__link" href="jogadores.html"><span class="sidebar__icon"><i class="fas fa-futbol"></i></span> Jogadores</a></li>
+        <li><a class="sidebar__link is-active" href="gastos.html"><span class="sidebar__icon"><i class="fas fa-money-bill-wave"></i></span> Gastos</a></li>
+        <li><a class="sidebar__link" href="saldo.html"><span class="sidebar__icon"><i class="fas fa-chart-line"></i></span> Saldo</a></li>
+        <li><a class="sidebar__link" href="classificacao.html"><span class="sidebar__icon"><i class="fas fa-trophy"></i></span> Classificação</a></li>
+        <li><a class="sidebar__link" href="campeonato.html"><span class="sidebar__icon"><i class="fas fa-calendar-alt"></i></span> Campeonato</a></li>
+        <li><a class="sidebar__link" href="entreterimento.html"><span class="sidebar__icon"><i class="fas fa-gamepad"></i></span> Entretenimento</a></li>
+        <li><a class="sidebar__link" href="#"><span class="sidebar__icon"><i class="fas fa-cog"></i></span> Configurações</a></li>
+      </ul>
+    </nav>
+    
+    <div class="sidebar__footer">
+      <button class="btn btn--ghost" type="button" id="logout-btn" aria-label="Sair"><i class="fas fa-sign-out-alt" style="margin-right:8px"></i> Sair</button>
+    </div>
+  </aside>
+  
+  <div class="app-content">
+    <main id="conteudo" class="container page">
     <header class="page__header">
       <h1 class="page__title">Gastos</h1>
       <p class="page__subtitle">Registre gastos por mês, data e descrição.</p>
@@ -149,5 +160,6 @@
   <input id="import-gastos-file" type="file" accept=".xlsx,.xls,.csv" hidden />
 
   <script src="assets/app.js?v=20260106-8"></script>
+  </div>
 </body>
 </html>
