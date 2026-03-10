@@ -27,7 +27,7 @@ npx railway open
 
 **Opção B - Manual:**
 - Nome: `DATABASE_PUBLIC_URL`
-- Valor: `postgresql://postgres:NeRmjhBFpXBTjyPFQGtzPiDhNqzFGAWR@shinkansen.proxy.rlwy.net:32414/railway`
+- Valor: `postgresql://postgres:<SENHA>@<HOST>:<PORTA>/railway`
 
 ### 4️⃣ Alterar NODE_ENV
 - Localize a variável **NODE_ENV**

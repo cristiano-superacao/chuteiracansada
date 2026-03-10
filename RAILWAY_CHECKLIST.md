@@ -53,8 +53,8 @@ No mesmo serviço `chuteiracansada`, adicione:
 DATABASE_PUBLIC_URL=${{Postgres.DATABASE_PUBLIC_URL}}
 # (Opcional) manter também a interna
 DATABASE_URL=${{Postgres.DATABASE_URL}}
-ADMIN_PASSWORD=MinhaSenh@Forte123
-ADMIN_JWT_SECRET=a8f5f167f44f4964e6c998dee827110c
+ADMIN_PASSWORD=<DEFINA_UMA_SENHA_FORTE>
+ADMIN_JWT_SECRET=<GERE_UM_SEGREDO_LONGO_E_ALEATORIO>
 NODE_ENV=production
 ```
 
@@ -82,10 +82,14 @@ Acesse: https://chuteiracansada.up.railway.app/api/health
 }
 ```
 
-### Teste 2: API de Dados
-Acesse: https://chuteiracansada.up.railway.app/api/data
+### Teste 2: API de Dados (admin-only)
+O endpoint agregado **`/api/data`** é **admin-only** (precisa de JWT no header `Authorization: Bearer ...`).
 
-**✅ Esperado:** JSON com dados (não 503)
+**✅ Validação recomendada (automática):**
+- Rode localmente contra o Railway:
+  - `npm run smoke -- --baseUrl https://chuteiracansada.up.railway.app`
+
+**✅ O que o smoke valida:** login admin, endpoints principais (GET/PUT), comentário público e assets/páginas.
 
 ### Teste 3: Login Admin
 1. Abra: https://chuteiracansada.up.railway.app
@@ -145,10 +149,16 @@ Ao conectar o Postgres, o app roda `server/schema.sql` e cria:
 ### Rotas da API
 - `POST /api/auth/login` → gera JWT (8h)
 - `GET /api/auth/me` → valida token
-- `GET /api/data` → carrega tudo (público)
+- `GET /api/data` → carrega tudo (admin-only)
 - `PUT /api/data` → salva tudo (admin-only)
+- `GET /api/data/jogadores` → leitura autenticada (admin/associado)
+- `GET /api/data/times` → leitura autenticada (admin/associado)
+- `GET /api/data/campeonato-jogos` → leitura autenticada (admin/associado)
+- `GET /api/data/associados/:id/pagamentos` → admin ou o próprio associado
 - `POST /api/campeonato/posts/:id/comentarios` → cria comentário (público)
-- CRUD individual: `/api/associados`, `/api/jogadores`, etc. (admin-only)
+- CRUD/consulta por módulo:
+  - `/api/associados`, `/api/gastos`, `/api/entradas` → admin-only
+  - `/api/jogadores`, `/api/times`, `/api/campeonato` → autenticado
 
 ---
 
@@ -158,6 +168,22 @@ Ao conectar o Postgres, o app roda `server/schema.sql` e cria:
 2. **Domínio:** Adicione domínio próprio (Settings → Domains)
 3. **Monitoramento:** Ative alertas de uptime/downtime
 4. **Seed Data:** Importe dados iniciais via "Importar Excel" na página Associados
+
+---
+
+## 🌱 Seed (opcional, destrutivo)
+
+O seed **APAGA e recria** os dados do banco (usa `server/seed.json`).
+
+- Rodar local (aponta para o `DATABASE_URL`/`DATABASE_PUBLIC_URL` do `.env`):
+  - `npm run seed`
+
+- Rodar no Railway (somente se você souber o que está fazendo):
+  - Via Railway CLI: `railway run npm run seed`
+  - Ou via Shell/console do serviço do app e executar `npm run seed`
+
+Depois, valide com:
+- `npm run smoke -- --baseUrl https://chuteiracansada.up.railway.app`
 
 ---
 

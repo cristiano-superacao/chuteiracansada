@@ -24,6 +24,18 @@ Sistema completo e profissional para gestão de campeonato de futebol e controle
 - ⚡ **Cache inteligente**: carregamento rápido offline
 - 🔄 **Service Worker**: atualizações automáticas
 
+### 🔐 Autenticação e Controle de Acesso
+- **Dois tipos de usuário**: Admin e Associado
+- **Login tradicional**: Email + senha com bcrypt
+- **Login com Google OAuth**: Associados podem entrar com Gmail do celular
+- **JWT tokens**: Sessões seguras de 8 horas
+- **Dashboards separados**: Interface específica por role
+- **Proteção de rotas**: Verificação de autenticação em todas as páginas
+
+> 📖 **Documentação completa**: 
+> - [AUTH_README.md](AUTH_README.md) - Autenticação tradicional
+> - [GOOGLE_OAUTH.md](GOOGLE_OAUTH.md) - Configurar login com Google
+
 ## Visão geral
 
 - **Frontend**: HTML/CSS/JS (arquivos na raiz + `assets/`).
@@ -35,7 +47,7 @@ Sistema completo e profissional para gestão de campeonato de futebol e controle
 ## 🎨 Design System
 
 ### Tema e Cores
-- **Light**: fundo azul claro (#f7fbff), textos escuros
+- **Light**: fundo claro neutro, textos escuros (paleta estilo portal esportivo)
 - **Dark**: fundo escuro (#0c1424), textos claros
 - **Sistema**: detecta automaticamente preferência do OS
 - Persistência em `localStorage` e atualização de `theme-color` dinâmica
@@ -65,10 +77,17 @@ Sistema completo e profissional para gestão de campeonato de futebol e controle
 
 Crie um arquivo `.env` na raiz (use `.env.example` como base):
 
+**Obrigatórias:**
 - `DATABASE_URL` = URL do Postgres
 - `ADMIN_PASSWORD` = senha do admin (você define)
 - `ADMIN_JWT_SECRET` = segredo do JWT (string longa)
-- `PORT` = (opcional) porta do servidor
+- `SESSION_SECRET` = segredo para sessões (string longa)
+
+**Opcionais:**
+- `PORT` = porta do servidor (padrão: 3000)
+- `GOOGLE_CLIENT_ID` = ID do cliente Google OAuth (para login com Gmail)
+- `GOOGLE_CLIENT_SECRET` = Secret do cliente Google OAuth
+- `GOOGLE_CALLBACK_URL` = URL de callback do OAuth (ex: `https://seu-dominio.com/api/oauth/google/callback`)
 
 > Dica: se `DATABASE_URL` ficar vazio, o servidor sobe em **modo fallback** (sem Postgres). Nesse modo, os endpoints de dados retornam `503` e o site usa **localStorage** como armazenamento.
 
@@ -79,6 +98,8 @@ No diretório do projeto:
 - Instalar dependências: `npm install`
 - Subir servidor (com watch): `npm run dev`
 - Subir servidor (produção): `npm start`
+- (Opcional) Aplicar seed no banco (destrutivo): `npm run seed`
+- (Recomendado) Smoke test de funcionalidades: `npm run smoke`
 - Abrir: `http://localhost:3000`
 
 O servidor:

@@ -17,6 +17,9 @@ Thumbs.db
 # Tool artifacts
 .playwright-mcp/
 
+# Local Railway config (may contain secrets)
+.railway-config.ps1
+
 # Runtime
 *.pid
 *.seed

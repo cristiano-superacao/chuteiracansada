@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configurar Railway - Instruções Finais</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 800px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 { color: #667eea; margin-bottom: 30px; font-size: 2em; }
+        .step {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .step-number {
+            background: #667eea;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .code {
+            background: #2d3748;
+            color: #68d391;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+        .warning {
+            background: #fff5f5;
+            border-left: 4px solid #fc8181;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .success {
+            background: #f0fff4;
+            border-left: 4px solid #68d391;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 1.1em;
+            cursor: pointer;
+            margin: 10px 5px;
+            transition: all 0.3s;
+        }
+        button:hover { background: #5568d3; transform: translateY(-2px); }
+        .button-success { background: #48bb78; }
+        .button-success:hover { background: #38a169; }
+        a { color: #667eea; text-decoration: none; font-weight: bold; }
+        a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Configuração Final do Railway</h1>
+        
+        <div class="warning">
+            <strong>⚠️ AÇÃO NECESSÁRIA</strong><br>
+            A API do Railway não permite configurar variáveis via comando. Você precisa fazer manualmente (leva 2 minutos).
+        </div>
+
+        <div class="step">
+            <span class="step-number">1</span>
+            <strong>Abrir Painel Railway</strong>
+            <button onclick="window.open('https://railway.app/dashboard', '_blank')">
+                Abrir Painel
+            </button>
+        </div>
+
+        <div class="step">
+            <span class="step-number">2</span>
+            <strong>Clicar na aba "Variables"</strong><br>
+            <small>No painel do serviço <code>chuteiracansada</code></small>
+        </div>
+
+        <div class="step">
+            <span class="step-number">3</span>
+            <strong>Adicionar DATABASE_PUBLIC_URL</strong><br>
+            <ol style="margin-left: 40px; margin-top: 10px;">
+                <li>Clique em <strong>"+ New Variable"</strong></li>
+                <li>Nome: <code>DATABASE_PUBLIC_URL</code></li>
+                <li>Clique no botão <strong>"Reference"</strong></li>
+                <li>Selecione: <strong>Postgres</strong> → <strong>DATABASE_PUBLIC_URL</strong></li>
+                <li>Clique em <strong>"Add"</strong></li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <span class="step-number">4</span>
+            <strong>Alterar NODE_ENV</strong><br>
+            <ol style="margin-left: 40px; margin-top: 10px;">
+                <li>Localize a variável existente <strong>NODE_ENV</strong></li>
+                <li>Clique nela</li>
+                <li>Altere de <code>development</code> para <code>production</code></li>
+                <li>Salve</li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <span class="step-number">5</span>
+            <strong>Aguardar Redeploy Automático</strong><br>
+            <small>O Railway fará redeploy automaticamente (30-60 segundos)</small>
+        </div>
+
+        <div class="success">
+            <strong>✅ VALIDAÇÃO</strong><br>
+            Após o redeploy, teste o health check:
+            <div class="code">https://chuteiracansada.up.railway.app/api/health</div>
+            <button class="button-success" onclick="window.open('https://chuteiracansada.up.railway.app/api/health', '_blank')">
+                Testar Health Check
+            </button>
+            <br><br>
+            <strong>Resposta esperada:</strong>
+            <div class="code">{"ok": true, "db": {"enabled": true, "connected": true}}</div>
+        </div>
+
+        <hr style="margin: 30px 0; border: none; border-top: 2px solid #e2e8f0;">
+
+        <h3 style="color: #667eea; margin: 20px 0;">📚 Recursos Úteis</h3>
+        <ul style="margin-left: 20px; line-height: 2;">
+            <li><a href="file:///C:/Users/Superação/Desktop/Sistema/Chuteira%20Cansada/CONFIGURACAO_FINAL.md" target="_blank">CONFIGURACAO_FINAL.md</a> - Guia completo</li>
+            <li><a href="file:///C:/Users/Superação/Desktop/Sistema/Chuteira%20Cansada/RAILWAY_CHECKLIST.md" target="_blank">RAILWAY_CHECKLIST.md</a> - Checklist detalhado</li>
+            <li><a href="https://chuteiracansada.up.railway.app" target="_blank">Site em Produção</a></li>
+        </ul>
+
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #e2e8f0; text-align: center; color: #718096;">
+            <strong>Layout responsivo e profissional mantido</strong> ✅
+        </div>
+    </div>
+</body>
+</html>

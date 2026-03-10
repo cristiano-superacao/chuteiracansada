@@ -6,7 +6,8 @@ Este arquivo configura o deploy automático no Railway.
 
 Configure no Railway Dashboard:
 
-- `DATABASE_URL` - URL do PostgreSQL (fornecida automaticamente pelo Railway)
+- `DATABASE_PUBLIC_URL` - URL pública/proxy do PostgreSQL (recomendado no Railway)
+- `DATABASE_URL` - URL interna do PostgreSQL (opcional)
 - `ADMIN_PASSWORD` - Senha do administrador
 - `ADMIN_JWT_SECRET` - Chave secreta para JWT (string longa e aleatória)
 - `PORT` - (opcional) Railway define automaticamente
@@ -31,3 +32,7 @@ Após o deploy, verifique:
 - URL do app fornecida pelo Railway
 - Logs de inicialização (migrations, servidor)
 - Health check em `/api/health`
+
+Opcional (recomendado):
+- Smoke test: `npm run smoke -- --baseUrl https://SEU_DOMINIO`
+- Seed (destrutivo): `railway run npm run seed`
