@@ -6,6 +6,19 @@ const { pool, dbEnabled } = require('../db');
 
 const router = express.Router();
 
+function requestWantsHtml(req) {
+  const accept = String(req.headers.accept || '').toLowerCase();
+  if (accept.includes('text/html')) return true;
+
+  const secFetchDest = String(req.headers['sec-fetch-dest'] || '').toLowerCase();
+  if (secFetchDest === 'document') return true;
+
+  const secFetchMode = String(req.headers['sec-fetch-mode'] || '').toLowerCase();
+  if (secFetchMode === 'navigate') return true;
+
+  return false;
+}
+
 // Configuração do Passport Google OAuth
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
   passport.use(new GoogleStrategy({
@@ -77,9 +90,13 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
 // Rota de autenticação Google
 router.get('/google', (req, res, next) => {
   if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
-    return res.status(503).json({ 
+    if (requestWantsHtml(req)) {
+      return res.redirect(302, '/login.html?error=google_not_configured');
+    }
+
+    return res.status(503).json({
       error: 'google_not_configured',
-      message: 'Autenticação com Google não configurada. Entre em contato com o administrador.' 
+      message: 'Autenticação com Google não configurada. Entre em contato com o administrador.'
     });
   }
 

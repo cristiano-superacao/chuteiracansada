@@ -18,14 +18,19 @@ router.post('/login', async (req, res) => {
   }
 
   // Login admin via env (mantém compatibilidade com admin@admin)
-  if (email && email === adminEmail && adminPassword) {
+  if (email && email === adminEmail) {
+    if (!adminPassword) {
+      return res.status(500).json({ error: 'server_misconfigured' });
+    }
+
     if (password === adminPassword) {
       const token = jwt.sign({ userId: 0, role: 'admin', email: adminEmail }, secret, { expiresIn: '8h' });
-      return res.json({ 
-        token, 
-        user: { id: 0, email: adminEmail, role: 'admin', nome: 'Administrador' } 
+      return res.json({
+        token,
+        user: { id: 0, email: adminEmail, role: 'admin', nome: 'Administrador' }
       });
     }
+
     return res.status(401).json({ error: 'invalid_credentials' });
   }
 
