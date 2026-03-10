@@ -331,18 +331,9 @@
       <span>Entrar com Google</span>
     </a>
 
-    <div class="divider">
-      <span>Acesso rápido</span>
-    </div>
-
-    <button type="button" class="btn-primary" id="adminQuickLogin" style="background: var(--brand-2);">
-      <i class="fas fa-user-shield"></i>
-      <span>Login Admin (Desenvolvimento)</span>
-    </button>
-
     <div class="help-text">
       <i class="fas fa-info-circle"></i>
-      Entre em contato com o administrador para obter suas credenciais
+      Use seu e-mail e senha para entrar
     </div>
   </div>
 
@@ -463,12 +454,6 @@
       }
     });
 
-    // Login rápido admin (apenas desenvolvimento)
-    document.getElementById('adminQuickLogin').addEventListener('click', async () => {
-      document.getElementById('email').value = 'admin@admin';
-      document.getElementById('password').value = 'admin123';
-      document.getElementById('loginForm').dispatchEvent(new Event('submit'));
-    });
   </script>
 </body>
 </html>

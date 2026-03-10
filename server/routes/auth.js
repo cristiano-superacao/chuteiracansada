@@ -10,18 +10,20 @@ router.post('/login', async (req, res) => {
   const email = String(req.body?.email ?? '').trim().toLowerCase();
   const password = String(req.body?.password ?? '');
   const secret = process.env.ADMIN_JWT_SECRET;
+  const adminEmail = String(process.env.ADMIN_EMAIL || 'admin@admin').trim().toLowerCase();
+  const adminPassword = process.env.ADMIN_PASSWORD;
 
   if (!secret) {
     return res.status(500).json({ error: 'server_misconfigured' });
   }
 
-  // Login admin legado (mantém compatibilidade)
-  if (email === 'admin@admin' && process.env.ADMIN_PASSWORD) {
-    if (password === process.env.ADMIN_PASSWORD) {
-      const token = jwt.sign({ userId: 0, role: 'admin', email: 'admin@admin' }, secret, { expiresIn: '8h' });
+  // Login admin via env (mantém compatibilidade com admin@admin)
+  if (email && email === adminEmail && adminPassword) {
+    if (password === adminPassword) {
+      const token = jwt.sign({ userId: 0, role: 'admin', email: adminEmail }, secret, { expiresIn: '8h' });
       return res.json({ 
         token, 
-        user: { id: 0, email: 'admin@admin', role: 'admin', nome: 'Administrador' } 
+        user: { id: 0, email: adminEmail, role: 'admin', nome: 'Administrador' } 
       });
     }
     return res.status(401).json({ error: 'invalid_credentials' });
@@ -79,6 +81,7 @@ router.get('/me', async (req, res) => {
   const auth = req.headers.authorization || '';
   const token = auth.startsWith('Bearer ') ? auth.slice('Bearer '.length).trim() : '';
   const secret = process.env.ADMIN_JWT_SECRET;
+  const adminEmail = String(process.env.ADMIN_EMAIL || 'admin@admin').trim().toLowerCase();
   
   if (!token || !secret) {
     return res.json({ authenticated: false, user: null });
@@ -87,11 +90,11 @@ router.get('/me', async (req, res) => {
   try {
     const payload = jwt.verify(token, secret);
     
-    // Admin legado
+    // Admin via env
     if (payload.role === 'admin' && payload.userId === 0) {
       return res.json({ 
         authenticated: true, 
-        user: { id: 0, email: 'admin@admin', role: 'admin', nome: 'Administrador' } 
+        user: { id: 0, email: String(payload.email || adminEmail), role: 'admin', nome: 'Administrador' } 
       });
     }
 
