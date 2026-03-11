@@ -1042,6 +1042,7 @@ function renderJogadorPortal(payload) {
   const jogador = payload?.jogador || {};
   const hist = payload?.historico || {};
   const classif = payload?.classificacaoTime || null;
+  const mensalidades = payload?.mensalidades || {};
 
   const byId = (id) => document.getElementById(id);
   const setText = (id, value) => {
@@ -1087,6 +1088,43 @@ function renderJogadorPortal(payload) {
 
   mountJogos('jgd-ultimos-jogos', hist.ultimosJogos);
   mountJogos('jgd-proximos-jogos', hist.proximosJogos);
+
+  const monthLabel = (key) => {
+    const k = String(key || '').toLowerCase();
+    const found = MONTHS.find((m) => m.key === k);
+    return found ? found.label : String(key || '—').toUpperCase();
+  };
+
+  const associado = mensalidades?.associado || null;
+  const resumo = mensalidades?.resumo || {};
+  const pagamentos = Array.isArray(mensalidades?.pagamentos) ? mensalidades.pagamentos : [];
+
+  setText('jgd-mens-associado', associado ? (associado.apelido || associado.nome || associado.email || '—') : 'Não vinculado');
+  setText('jgd-mens-mes-atual', monthLabel(resumo.mesAtual));
+  setText('jgd-mens-status', resumo.statusMesAtual || '—');
+  setText('jgd-mens-valor', fmtMoney(Number(resumo.valorMesAtual) || 0));
+  setText('jgd-mens-pendentes', Number(resumo.pendentes) || 0);
+  setText('jgd-mens-total', fmtMoney(Number(resumo.totalPagoAno) || 0));
+
+  const lista = byId('jgd-mens-lista');
+  if (lista) {
+    lista.innerHTML = '';
+    if (!pagamentos.length) {
+      lista.appendChild(el('div', { class: 'muted', text: 'Nenhum dado de mensalidade encontrado.' }));
+    } else {
+      const grid = el('div', { class: 'player-billing-grid' });
+      pagamentos.forEach((p) => {
+        const raw = String(p?.raw || '').trim() || 'Pendente';
+        const valor = Number(p?.valor) || 0;
+        grid.appendChild(el('article', { class: 'player-billing-item' }, [
+          el('div', { class: 'player-billing-item__mes', text: monthLabel(p?.mesKey) }),
+          el('div', { class: 'player-billing-item__status', text: raw }),
+          el('div', { class: 'player-billing-item__valor', text: fmtMoney(valor) }),
+        ]));
+      });
+      lista.appendChild(grid);
+    }
+  }
 }
 
 async function loadDataPreferApi() {

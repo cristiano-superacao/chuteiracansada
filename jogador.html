@@ -9,7 +9,7 @@
   <link rel="icon" type="image/png" href="assets/icon-192.png" />
   <link rel="apple-touch-icon" href="assets/icon-192.png" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-  <link rel="stylesheet" href="assets/styles.css?v=20260311-18" />
+  <link rel="stylesheet" href="assets/styles.css?v=20260311-19" />
 </head>
 <body data-page="jogador">
   <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
@@ -66,9 +66,43 @@
           <div id="jgd-proximos-jogos" class="stack"></div>
         </article>
       </section>
+
+      <section class="card" aria-label="Mensalidades do associado vinculado">
+        <div class="card__header">
+          <div>
+            <h2 class="card__title">Mensalidades</h2>
+            <p class="card__hint">Dados espelhados da área de associados para acompanhamento financeiro do jogador.</p>
+          </div>
+          <div class="player-hero__identity">
+            <p><strong>Associado vinculado:</strong> <span id="jgd-mens-associado">—</span></p>
+            <p><strong>Mês atual:</strong> <span id="jgd-mens-mes-atual">—</span></p>
+          </div>
+        </div>
+
+        <div class="player-kpis player-kpis--billing" aria-label="Indicadores de mensalidade">
+          <article class="player-kpi">
+            <p class="player-kpi__label">Status do mês</p>
+            <p class="player-kpi__value" id="jgd-mens-status">—</p>
+          </article>
+          <article class="player-kpi">
+            <p class="player-kpi__label">Valor no mês</p>
+            <p class="player-kpi__value" id="jgd-mens-valor">R$ 0,00</p>
+          </article>
+          <article class="player-kpi">
+            <p class="player-kpi__label">Pendências no ano</p>
+            <p class="player-kpi__value" id="jgd-mens-pendentes">0</p>
+          </article>
+          <article class="player-kpi">
+            <p class="player-kpi__label">Total pago no ano</p>
+            <p class="player-kpi__value" id="jgd-mens-total">R$ 0,00</p>
+          </article>
+        </div>
+
+        <div id="jgd-mens-lista" class="player-billing-list"></div>
+      </section>
     </main>
   </div>
 
-  <script src="assets/app.js?v=20260311-20"></script>
+  <script src="assets/app.js?v=20260311-21"></script>
 </body>
 </html>

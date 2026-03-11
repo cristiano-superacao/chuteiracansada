@@ -613,6 +613,85 @@ router.get('/data/jogador/me', requireAuth, async (req, res) => {
       .slice()
       .sort((a, b) => parseDateTimeForSort(b.data, b.hora) - parseDateTimeForSort(a.data, a.hora));
 
+    const jogadorEmail = String(jogador.email || '').trim();
+    const jogadorNome = String(jogador.nome || '').trim();
+    const associadoRes = await pool.query(
+      `SELECT id, nome, apelido, email
+       FROM associados
+       WHERE ($1 <> '' AND LOWER(TRIM(email)) = LOWER(TRIM($1)))
+          OR LOWER(TRIM(nome)) = LOWER(TRIM($2))
+          OR LOWER(TRIM(apelido)) = LOWER(TRIM($2))
+       ORDER BY
+         CASE
+           WHEN $1 <> '' AND LOWER(TRIM(email)) = LOWER(TRIM($1)) THEN 0
+           WHEN LOWER(TRIM(nome)) = LOWER(TRIM($2)) THEN 1
+           WHEN LOWER(TRIM(apelido)) = LOWER(TRIM($2)) THEN 2
+           ELSE 9
+         END,
+         id ASC
+       LIMIT 1`,
+      [jogadorEmail, jogadorNome]
+    );
+
+    let mensalidades = {
+      associado: null,
+      pagamentos: [],
+      resumo: {
+        mesAtual: MONTH_KEYS[new Date().getMonth()],
+        statusMesAtual: 'Não vinculado',
+        valorMesAtual: 0,
+        pendentes: 0,
+        totalPagoAno: 0,
+      },
+    };
+
+    if (associadoRes.rowCount > 0) {
+      const associado = associadoRes.rows[0];
+      const pagamentosRes = await pool.query(
+        `SELECT mes_key, raw, valor
+         FROM associados_pagamentos
+         WHERE associado_id = $1`,
+        [associado.id]
+      );
+
+      const byKey = new Map();
+      for (const p of pagamentosRes.rows) {
+        const mk = String(p.mes_key || '').trim().toLowerCase();
+        if (!mk) continue;
+        byKey.set(mk, {
+          mesKey: mk,
+          raw: String(p.raw || '').trim() || 'Pendente',
+          valor: parseMoney(p.valor),
+        });
+      }
+
+      const pagamentos = MONTH_KEYS.map((mk) => byKey.get(mk) || { mesKey: mk, raw: 'Pendente', valor: 0 });
+      const mesAtual = MONTH_KEYS[new Date().getMonth()];
+      const itemMesAtual = pagamentos.find((p) => p.mesKey === mesAtual) || { raw: 'Pendente', valor: 0 };
+      const totalPagoAno = pagamentos.reduce((acc, p) => acc + (Number(p.valor) || 0), 0);
+      const pendentes = pagamentos.filter((p) => {
+        const raw = String(p.raw || '').trim().toLowerCase();
+        return (Number(p.valor) || 0) <= 0 && (raw.includes('pendente') || raw === '-' || raw === '' || raw === 'r$');
+      }).length;
+
+      mensalidades = {
+        associado: {
+          id: associado.id,
+          nome: associado.nome,
+          apelido: associado.apelido,
+          email: associado.email,
+        },
+        pagamentos,
+        resumo: {
+          mesAtual,
+          statusMesAtual: String(itemMesAtual.raw || 'Pendente'),
+          valorMesAtual: Number(itemMesAtual.valor) || 0,
+          pendentes,
+          totalPagoAno,
+        },
+      };
+    }
+
     const now = Date.now();
     const ultimosJogos = jogosOrdenados
       .filter((j) => {
@@ -632,6 +711,7 @@ router.get('/data/jogador/me', requireAuth, async (req, res) => {
     return res.json({
       jogador,
       classificacaoTime: classRes.rows?.[0] || null,
+      mensalidades,
       historico: {
         jogosDoTime: jogosOrdenados,
         ultimosJogos,
