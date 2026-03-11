@@ -3288,6 +3288,7 @@ function summarizeSaldo(state) {
       byMonth.get(mes).gastos += parseMoney(g.valor);
     }
 
+    // Cada linha compara: gastos vs (outras entradas + mensalidades dos associados).
     const rows = [...byMonth.values()];
     for (const r of rows) {
       const tr = document.createElement('tr');
