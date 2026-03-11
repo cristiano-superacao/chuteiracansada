@@ -1420,6 +1420,7 @@ function bindGlobalActions(state) {
       'import-associados',
       'import-gastos',
       'add-gasto-padrao',
+      'import-jogos',
       'add-jogo',
       'rebuild-jogos',
       'add-video',
@@ -1529,6 +1530,11 @@ function bindGlobalActions(state) {
       renderPage(state);
       scheduleCampeonatoAutoSave(state);
       toast('Tabela reconstruída');
+      return;
+    }
+
+    if (action === 'import-jogos') {
+      openCampeonatoImportPicker();
       return;
     }
 
@@ -2237,6 +2243,150 @@ function openAssociadosImportPicker(state) {
   }
   input.value = '';
   input.click();
+}
+
+function openCampeonatoImportPicker() {
+  if (document.body.getAttribute('data-page') !== 'campeonato') return;
+  const input = document.getElementById('import-jogos-file');
+  if (!input) {
+    alert('Não encontrei o seletor de arquivo desta página.');
+    return;
+  }
+  input.value = '';
+  input.click();
+}
+
+function bindCampeonatoImport(state) {
+  if (document.body.getAttribute('data-page') !== 'campeonato') return;
+  const input = document.getElementById('import-jogos-file');
+  if (!input) return;
+
+  input.addEventListener('change', async () => {
+    const file = input.files?.[0];
+    if (!file) return;
+
+    try {
+      const imported = await readCampeonatoJogosFromFile(file);
+      if (!imported.length) {
+        alert('Nenhum jogo encontrado na planilha.');
+        return;
+      }
+
+      const replace = confirm(
+        `Importei ${imported.length} jogo(s).\n\nOK = Substituir tabela atual\nCancelar = Adicionar na tabela atual`
+      );
+
+      if (!state.data.campeonato) state.data.campeonato = { jogos: [], videos: [], imagens: [], posts: [] };
+      const current = state.data.campeonato.jogos ?? [];
+      state.data.campeonato.jogos = replace ? imported : [...current, ...imported];
+
+      await saveDataPreferApi(state);
+      renderPage(state);
+      toast(`Importado: ${imported.length}`);
+    } catch (err) {
+      console.error(err);
+      if (err?.code === 'XLSX_LOAD_FAILED') {
+        alert(
+          'Não consegui carregar o leitor de Excel (XLSX).\n\nPossíveis causas: sem internet ou CDN bloqueado.\n\nSolução rápida: exporte a planilha como .CSV e importe.'
+        );
+      } else {
+        const msg = (err && (err.message || String(err))) ? String(err.message || err) : '';
+        alert(`Falha ao importar tabela de jogos.${msg ? `\n\nDetalhes: ${msg}` : ''}`);
+      }
+    } finally {
+      input.value = '';
+    }
+  });
+}
+
+async function readCampeonatoJogosFromFile(file) {
+  const name = (file.name || '').toLowerCase();
+  if (name.endsWith('.csv')) {
+    const text = await readFileTextSmart(file);
+    return readCampeonatoJogosFromCsv(text);
+  }
+
+  try {
+    await ensureXlsxLoaded();
+    const buf = await file.arrayBuffer();
+    const workbook = XLSX.read(buf, { type: 'array' });
+    const sheetName = workbook.SheetNames?.[0];
+    if (!sheetName) return [];
+    const sheet = workbook.Sheets[sheetName];
+    const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, blankrows: false });
+    return readCampeonatoJogosFromGrid(rows);
+  } catch (err) {
+    try {
+      const text = await readFileTextSmart(file);
+      const csvParsed = readCampeonatoJogosFromCsv(text);
+      if (csvParsed.length) return csvParsed;
+    } catch {
+      // ignora fallback
+    }
+    throw err;
+  }
+}
+
+function readCampeonatoJogosFromCsv(csvText) {
+  const lines = String(csvText)
+    .replace(/\r/g, '')
+    .split('\n')
+    .map((l) => l.trimEnd())
+    .filter((l) => l.length > 0);
+  const delim = detectCsvDelimiter(lines);
+  const grid = lines.map((l) => splitCsvLine(l, delim));
+  return readCampeonatoJogosFromGrid(grid);
+}
+
+function readCampeonatoJogosFromGrid(grid) {
+  if (!Array.isArray(grid) || grid.length === 0) return [];
+
+  const firstRow = grid[0] ?? [];
+  const header = firstRow.map(normalizeHeader);
+  const hasHeader = header.some((h) =>
+    h.includes('rodada') || h.includes('casa') || h.includes('fora') || h.includes('placar') || h.includes('hora')
+  );
+
+  const colIndex = (aliases, fallback) => {
+    for (const alias of aliases) {
+      const idx = header.findIndex((h) => h === alias || h.includes(alias));
+      if (idx >= 0) return idx;
+    }
+    return fallback;
+  };
+
+  const map = {
+    rodada: colIndex(['rodada'], 0),
+    data: colIndex(['data'], 1),
+    hora: colIndex(['hora', 'horario', 'horário'], 2),
+    casa: colIndex(['casa', 'time casa', 'mandante'], 3),
+    placar: colIndex(['placar', 'resultado'], 4),
+    fora: colIndex(['fora', 'time fora', 'visitante'], 5),
+    local: colIndex(['local', 'campo', 'estadio', 'estádio'], 6),
+  };
+
+  const start = hasHeader ? 1 : 0;
+  const out = [];
+
+  for (let r = start; r < grid.length; r++) {
+    const row = grid[r] ?? [];
+    const rawRodada = String(row[map.rodada] ?? '').trim();
+    const rodadaNum = Number(rawRodada);
+    const rodada = Number.isFinite(rodadaNum) && rodadaNum > 0 ? String(Math.trunc(rodadaNum)) : '1';
+
+    const data = String(row[map.data] ?? '').trim();
+    const hora = String(row[map.hora] ?? '').trim();
+    const casa = String(row[map.casa] ?? '').trim();
+    const placar = String(row[map.placar] ?? '').trim();
+    const fora = String(row[map.fora] ?? '').trim();
+    const local = String(row[map.local] ?? '').trim();
+
+    if (!casa && !fora && !placar && !data && !hora && !local) continue;
+
+    out.push({ rodada, data, hora, casa, placar, fora, local });
+  }
+
+  return out;
 }
 
 function bindJogadoresImport(state) {
@@ -4131,6 +4281,7 @@ function injectToastStyles() {
   bindJogadoresImport(state);
   bindAssociadosImport(state);
   bindGastosImport(state);
+  bindCampeonatoImport(state);
   // Marca automaticamente o link ativo do menu
   try {
     let here = (location.pathname.split('/').pop() || '').toLowerCase();
