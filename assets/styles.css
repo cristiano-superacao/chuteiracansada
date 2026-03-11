@@ -501,10 +501,10 @@ img{max-width:100%;height:auto}
 .jog-toolbar__group--actions .btn{min-width:170px}
 .jog-toolbar__group--filters .field{min-width:165px}
 
-.jogadores-table{table-layout:fixed;min-width:980px}
+.jogadores-table{table-layout:fixed;min-width:1220px}
 .jogadores-table th,.jogadores-table td{padding:10px 9px;font-size:13px}
-.jogadores-table thead th:nth-child(n+3):nth-child(-n+6),
-.jogadores-table tbody td:nth-child(n+3):nth-child(-n+6){text-align:center}
+.jogadores-table thead th:nth-child(n+4):nth-child(-n+7),
+.jogadores-table tbody td:nth-child(n+4):nth-child(-n+7){text-align:center}
 
 /* Dashboard de Gastos */
 .gst-overview{margin:-6px 0 14px}

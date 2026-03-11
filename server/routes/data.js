@@ -867,22 +867,50 @@ router.delete('/associados/:id', requireAdmin, async (req, res) => {
 });
 
 router.post('/jogadores', requireAdmin, async (req, res) => {
+  const client = await pool.connect();
   try {
-    const ins = await pool.query(
-      'INSERT INTO jogadores (nome, time, gols, amarelos, vermelhos, suspensoes) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id',
+    const nome = String(req.body?.nome ?? '').trim() || '—';
+    const email = normalizeJogadorEmail(req.body?.email);
+    const time = String(req.body?.time ?? '').trim();
+    const senha = String(req.body?.senha ?? '').trim();
+
+    await client.query('BEGIN');
+
+    const ins = await client.query(
+      'INSERT INTO jogadores (nome, email, time, gols, amarelos, vermelhos, suspensoes) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id',
       [
-        String(req.body?.nome ?? '').trim() || '—',
-        String(req.body?.time ?? '').trim(),
+        nome,
+        email,
+        time,
         Number(req.body?.gols) || 0,
         Number(req.body?.amarelos) || 0,
         Number(req.body?.vermelhos) || 0,
         Number(req.body?.suspensoes) || 0,
       ]
     );
-    res.json({ ok: true, id: ins.rows[0].id });
+
+    const jogadorId = ins.rows[0].id;
+    const fallbackEmail = buildJogadorFallbackEmail({ nome }, jogadorId);
+    const passwordHash = await bcrypt.hash(senha || getJogadorDefaultPassword(req.body || {}), 10);
+    const ensuredEmail = await upsertJogadorUser(client, {
+      jogadorId,
+      email: email || fallbackEmail,
+      fallbackEmail,
+      passwordHash,
+    });
+
+    if (!email) {
+      await client.query('UPDATE jogadores SET email = $1 WHERE id = $2', [ensuredEmail, jogadorId]);
+    }
+
+    await client.query('COMMIT');
+    res.json({ ok: true, id: jogadorId, email: ensuredEmail });
   } catch (err) {
+    try { await client.query('ROLLBACK'); } catch { /* ignore */ }
     console.error(err);
     sendDbAware(res, err, 500, { error: 'failed_to_create' });
+  } finally {
+    client.release();
   }
 });
 

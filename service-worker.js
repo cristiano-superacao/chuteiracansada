@@ -1,6 +1,6 @@
 ﻿/* Chuteira Cansada - Service Worker (PWA) */
 
-const CACHE_NAME = 'chuteira-cansada-v33';
+const CACHE_NAME = 'chuteira-cansada-v34';
 
 const PRECACHE_URLS = [
   '/',
@@ -12,8 +12,8 @@ const PRECACHE_URLS = [
   '/campeonato.html',
   '/entreterimento.html',
   '/jogador.html',
-  '/assets/styles.css?v=20260311-16',
-  '/assets/app.js?v=20260311-18',
+  '/assets/styles.css?v=20260311-17',
+  '/assets/app.js?v=20260311-19',
   '/manifest.json',
   '/assets/icon-192.png',
   '/assets/icon-512.png',

@@ -698,6 +698,7 @@ function normalizeDataModel(data) {
   data.jogadores.forEach((j) => {
     if (!j || typeof j !== 'object') return;
     j.nome = trimText(j.nome);
+    j.email = String(j.email || '').trim().toLowerCase();
     j.time = trimText(j.time);
     j.gols = Number(j.gols) || 0;
     j.amarelos = Number(j.amarelos) || 0;
@@ -706,7 +707,7 @@ function normalizeDataModel(data) {
   });
   data.jogadores = dedupeByKey(
     data.jogadores.filter((j) => !isBlankJogador(j)),
-    (j) => `${normalizeText(j?.nome)}|${normalizeText(j?.time)}|${j?.gols || 0}|${j?.amarelos || 0}|${j?.vermelhos || 0}|${j?.suspensoes || 0}`
+    (j) => `${normalizeText(j?.nome)}|${normalizeText(j?.email)}|${normalizeText(j?.time)}|${j?.gols || 0}|${j?.amarelos || 0}|${j?.vermelhos || 0}|${j?.suspensoes || 0}`
   );
 
   data.gastos.forEach((g) => {
@@ -1371,12 +1372,13 @@ function isBlankEntrada(e) {
 function isBlankJogador(j) {
   if (!j || typeof j !== 'object') return true;
   const nome = trimText(j.nome);
+  const email = String(j.email || '').trim();
   const time = trimText(j.time);
   const gols = Number(j.gols) || 0;
   const amarelos = Number(j.amarelos) || 0;
   const vermelhos = Number(j.vermelhos) || 0;
   const suspensoes = Number(j.suspensoes) || 0;
-  return !nome && !time && gols === 0 && amarelos === 0 && vermelhos === 0 && suspensoes === 0;
+  return !nome && !email && !time && gols === 0 && amarelos === 0 && vermelhos === 0 && suspensoes === 0;
 }
 
 function decodeArrayBufferSafe(buffer, encoding) {
@@ -1836,6 +1838,11 @@ function bindGlobalActions(state) {
       return;
     }
 
+    if (action === 'download-jogadores-template') {
+      downloadJogadoresTemplate();
+      return;
+    }
+
     if (action === 'download-jogos-template') {
       downloadCampeonatoJogosTemplate();
       return;
@@ -1898,6 +1905,16 @@ function downloadGastosTemplate() {
   const lines = [headers, example1, example2, example3, example4].map((row) => row.map(csvEscape).join(';'));
   const csv = lines.join('\r\n') + '\r\n';
   downloadTextFile('template-gastos-chuteira-cansada.csv', csv, 'text/csv;charset=utf-8');
+}
+
+function downloadJogadoresTemplate() {
+  // Template CSV alinhado à tabela de jogadores com coluna de login (email).
+  const headers = ['Nome', 'Email', 'Time', 'Gols', 'Amarelos', 'Vermelhos', 'Suspensões'];
+  const example1 = ['Carlos Silva', 'carlos.silva@jogador.chuteira.local', 'Brasil', '5', '1', '0', '0'];
+  const example2 = ['Andre Souza', 'andre.souza@jogador.chuteira.local', 'Argentina', '3', '2', '0', '0'];
+  const lines = [headers, example1, example2].map((row) => row.map(csvEscape).join(';'));
+  const csv = lines.join('\r\n') + '\r\n';
+  downloadTextFile('template-jogadores-chuteira-cansada.csv', csv, 'text/csv;charset=utf-8');
 }
 
 function downloadCampeonatoJogosTemplate() {
@@ -2884,6 +2901,7 @@ function readJogadoresFromGrid(grid) {
 
   const map = {
     nome: colIndex(['nome', 'jogador'], 0),
+    email: colIndex(['email', 'e-mail', 'login'], -1),
     time: colIndex(['time', 'equipe'], 1),
     gols: colIndex(['gols', 'gol'], 2),
     amarelos: colIndex(['amarelos', 'cartao amarelo', 'ca'], 3),
@@ -2897,6 +2915,7 @@ function readJogadoresFromGrid(grid) {
   for (let r = start; r < grid.length; r++) {
     const row = grid[r] ?? [];
     const nome = String(row[map.nome] ?? '').trim();
+    const email = map.email >= 0 ? String(row[map.email] ?? '').trim().toLowerCase() : '';
     const time = String(row[map.time] ?? '').trim();
     const gols = toInt(row[map.gols]);
     const amarelos = toInt(row[map.amarelos]);
@@ -2909,6 +2928,7 @@ function readJogadoresFromGrid(grid) {
 
     out.push({
       nome,
+      email,
       time,
       gols,
       amarelos,
@@ -2957,7 +2977,7 @@ function addRow(state, table) {
       state.data.associados.push({ nome: 'Novo associado', apelido: '', pagamentosByYear: { [String(currentYear())]: seedPayments('') } });
       break;
     case 'jogadores':
-      state.data.jogadores.push({ nome: 'Novo jogador', time: '', gols: 0, amarelos: 0, vermelhos: 0, suspensoes: 0 });
+      state.data.jogadores.push({ nome: 'Novo jogador', email: '', time: '', gols: 0, amarelos: 0, vermelhos: 0, suspensoes: 0 });
       break;
     case 'gastos':
       state.data.gastos.push({ mes: 'Jan', data: '', descricao: '', valor: 0 });
@@ -3429,6 +3449,17 @@ function renderJogadores(state) {
     const tdNome = document.createElement('td');
     setEditableCell(tdNome, { value: j.nome, onCommit: (v) => (j.nome = v || '—') });
 
+    const tdEmail = document.createElement('td');
+    setEditableCell(tdEmail, {
+      value: j.email || '',
+      validator: (raw) => {
+        const v = String(raw || '').trim();
+        if (!v) return true;
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+      },
+      onCommit: (v) => (j.email = String(v || '').trim().toLowerCase()),
+    });
+
     const tdTime = document.createElement('td');
     setEditableCell(tdTime, { value: j.time, onCommit: (v) => (j.time = v) });
 
@@ -3443,6 +3474,7 @@ function renderJogadores(state) {
     };
 
     tr.appendChild(tdNome);
+    tr.appendChild(tdEmail);
     tr.appendChild(tdTime);
     tr.appendChild(numberCell('gols'));
     tr.appendChild(numberCell('amarelos'));
