@@ -1830,11 +1830,24 @@ function downloadGastosTemplate() {
 }
 
 function downloadCampeonatoJogosTemplate() {
-  // Template CSV compatível com importação de jogos do campeonato
+  // Template CSV alinhado à estrutura do sistema: 10 rodadas x 3 jogos por rodada.
   const headers = ['Rodada', 'Data', 'Hora', 'Casa', 'Placar', 'Fora', 'Local'];
-  const example1 = ['1', '2026-01-05', '19:30', 'Brasil', '2-1', 'Argentina', 'Campo principal'];
-  const example2 = ['1', '2026-01-05', '20:30', 'Uruguai', '', 'Chile', 'Campo principal'];
-  const lines = [headers, example1, example2].map((row) => row.map(csvEscape).join(';'));
+  const rows = buildCampeonatoJogosSkeleton(CAMPEONATO_MAX_RODADAS).map((jogo) => [
+    jogo.rodada,
+    jogo.data,
+    jogo.hora,
+    jogo.casa,
+    jogo.placar,
+    jogo.fora,
+    jogo.local,
+  ]);
+
+  // Primeira rodada preenchida como referência de preenchimento.
+  rows[0] = ['1', '2026-01-05', '19:30', 'Brasil', '2-1', 'Argentina', 'Campo principal'];
+  rows[1] = ['1', '2026-01-05', '20:30', 'Uruguai', '', 'Chile', 'Campo principal'];
+  rows[2] = ['1', '2026-01-05', '21:30', 'Paraguai', '', 'Colômbia', 'Campo principal'];
+
+  const lines = [headers, ...rows].map((row) => row.map(csvEscape).join(';'));
   const csv = lines.join('\r\n') + '\r\n';
   downloadTextFile('template-jogos-campeonato-chuteira-cansada.csv', csv, 'text/csv;charset=utf-8');
 }

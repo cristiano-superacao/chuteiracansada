@@ -555,6 +555,7 @@ img{max-width:100%;height:auto}
 .card__header--campeonato{flex-direction:column;align-items:stretch;gap:14px}
 .cmp-toolbar{display:grid;grid-template-columns:1fr;gap:10px}
 .cmp-toolbar__group{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end}
+.cmp-toolbar__hint{margin:0;font-size:12px;line-height:1.35}
 .cmp-toolbar__group--filters .field{min-width:180px}
 .cmp-toolbar__group--actions .btn{min-width:170px}
 .card__footer--campeonato{gap:10px;flex-wrap:wrap}
