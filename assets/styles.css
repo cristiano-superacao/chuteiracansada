@@ -559,6 +559,16 @@ img{max-width:100%;height:auto}
 .cmp-toolbar__group--actions .btn{min-width:170px}
 .card__footer--campeonato{gap:10px;flex-wrap:wrap}
 
+@media (min-width: 1280px){
+  body[data-page="campeonato"] .container{max-width:1400px}
+  .cmp-toolbar{grid-template-columns:1fr auto;align-items:end}
+  .cmp-toolbar__group--actions{justify-content:flex-end}
+}
+
+@media (min-width: 1600px){
+  body[data-page="campeonato"] .container{max-width:1520px}
+}
+
 .entradas-table{table-layout:fixed;min-width:980px}
 .saldo-mensal-table{table-layout:fixed;min-width:860px}
 .saldo-mensal-table th:nth-child(2),
@@ -1095,6 +1105,10 @@ body[data-page="campeonato"] .cup-card__round{
   body[data-page="campeonato"] .cup-grid{grid-template-columns:repeat(3, minmax(0, 1fr))}
 }
 
+@media (min-width: 1600px){
+  body[data-page="campeonato"] .cup-grid{grid-template-columns:repeat(4, minmax(0, 1fr));gap:1.1rem}
+}
+
 /* Tabela de jogos para substituir o Grid, permitindo largura adaptável */
 .cup-table{
   width:100%;
@@ -1135,8 +1149,7 @@ body[data-page="campeonato"] .cup-card__round{
   .cup-col-x {
     width: 20px;
     text-align: center;
-    border: none !important; /* Sem borda no X? Ou com? Imagem 1 tem borda. */
-    /* Se Imagem 1 tem borda, removemos border:none */
+    border: none !important;
     font-weight: 700;
     color: var(--secondary);
     background: transparent !important;
