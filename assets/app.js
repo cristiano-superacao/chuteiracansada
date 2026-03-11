@@ -1843,6 +1843,11 @@ function bindGlobalActions(state) {
       return;
     }
 
+    if (action === 'download-jogadores-credentials') {
+      downloadJogadoresCredentials(state);
+      return;
+    }
+
     if (action === 'download-jogos-template') {
       downloadCampeonatoJogosTemplate();
       return;
@@ -1915,6 +1920,32 @@ function downloadJogadoresTemplate() {
   const lines = [headers, example1, example2].map((row) => row.map(csvEscape).join(';'));
   const csv = lines.join('\r\n') + '\r\n';
   downloadTextFile('template-jogadores-chuteira-cansada.csv', csv, 'text/csv;charset=utf-8');
+}
+
+function downloadJogadoresCredentials(state) {
+  const jogadores = Array.isArray(state?.data?.jogadores) ? state.data.jogadores : [];
+  const validos = jogadores
+    .filter((j) => String(j?.email || '').trim())
+    .slice()
+    .sort((a, b) => String(a?.nome || '').localeCompare(String(b?.nome || ''), 'pt-BR'));
+
+  if (!validos.length) {
+    alert('Nenhum jogador com email cadastrado para exportar.');
+    return;
+  }
+
+  const headers = ['Nome', 'Time', 'Email', 'Senha inicial (referência)', 'Observação'];
+  const rows = validos.map((j) => [
+    String(j?.nome || '').trim() || '—',
+    String(j?.time || '').trim(),
+    String(j?.email || '').trim().toLowerCase(),
+    '123456',
+    'Senha padrão se não foi alterada (ou definida por JOGADOR_DEFAULT_PASSWORD).',
+  ]);
+
+  const lines = [headers, ...rows].map((row) => row.map(csvEscape).join(';'));
+  const csv = lines.join('\r\n') + '\r\n';
+  downloadTextFile('credenciais-jogadores-chuteira-cansada.csv', csv, 'text/csv;charset=utf-8');
 }
 
 function downloadCampeonatoJogosTemplate() {
