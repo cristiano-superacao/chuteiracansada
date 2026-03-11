@@ -21,6 +21,7 @@ const COMMENT_FALLBACK_NOTICE_KEY = 'chuteiraCansada.commentFallbackNotice.v1';
 
 const CONFIG_AUTOSAVE_TOAST_KEY = 'chuteiraCansada.configAutosaveToast.v1';
 const THEME_PREF_KEY = 'chuteiraCansada.themePref.v1'; // 'light' | 'dark' | 'system'
+const CAMPEONATO_LAYOUT_PREF_KEY = 'chuteiraCansada.campeonatoLayout.v1'; // 'auto' | '2col'
 
 const API_BASE = '/api';
 
@@ -1887,9 +1888,27 @@ function bindCampeonatoControls(state) {
   if (document.body.getAttribute('data-page') !== 'campeonato') return;
   const rodada = document.getElementById('campeonato-filter-rodada');
   const search = document.getElementById('campeonato-search-time');
+  const layout = document.getElementById('campeonato-layout-mode');
+
+  if (layout && !layout.dataset.bound) {
+    layout.dataset.bound = '1';
+    try {
+      const saved = String(localStorage.getItem(CAMPEONATO_LAYOUT_PREF_KEY) || 'auto');
+      layout.value = saved === '2col' ? '2col' : 'auto';
+    } catch {
+      layout.value = 'auto';
+    }
+  }
+
   const rerender = () => renderPage(state);
   if (rodada) rodada.addEventListener('change', rerender);
   if (search) search.addEventListener('input', rerender);
+  if (layout) {
+    layout.addEventListener('change', () => {
+      try { localStorage.setItem(CAMPEONATO_LAYOUT_PREF_KEY, layout.value === '2col' ? '2col' : 'auto'); } catch {}
+      rerender();
+    });
+  }
 }
 
 function getGastosFilter() {
@@ -4085,9 +4104,12 @@ function renderCampeonato(state) {
       return String(a).localeCompare(String(b), 'pt-BR');
     });
 
+    const layoutModeEl = document.getElementById('campeonato-layout-mode');
+    const layoutMode = String(layoutModeEl?.value || 'auto');
+
     const grid = el('div', { class: 'cup-grid' });
-    // Quando há muitas rodadas, organiza em 2 colunas com 5 rodadas por coluna.
-    if (rounds.length >= 10) {
+    // Modo manual (2col) ou automático para muitas rodadas.
+    if (layoutMode === '2col' || (layoutMode === 'auto' && rounds.length >= 10)) {
       grid.classList.add('cup-grid--two-columns');
     }
     for (const roundKey of rounds) {
