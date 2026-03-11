@@ -43,7 +43,7 @@ npm start
 
 O sistema mantém compatibilidade com login admin legado. Use:
 
-- **Email**: `admin@admin`
+- **Email**: `(valor de ADMIN_EMAIL no .env)`
 - **Senha**: O valor definido em `ADMIN_PASSWORD` (padrão: `admin123`)
 
 ## 👥 Como Criar Usuários Associados
@@ -113,7 +113,7 @@ node server/seed-users.js
 
 ### Login Admin
 1. Acesse `/login.html`
-2. Email: `admin@admin`
+2. Email: `(valor de ADMIN_EMAIL no .env)`
 3. Senha: valor de `ADMIN_PASSWORD`
 4. Será redirecionado para `/dashboard.html`
 
@@ -180,7 +180,7 @@ bcrypt.hash(password, 10).then(hash => console.log(hash));
 {
   "userId": 1,
   "role": "admin",
-  "email": "admin@admin",
+  "email": "(valor de ADMIN_EMAIL no .env)",
   "associadoId": null,
   "iat": 1234567890,
   "exp": 1234596690
@@ -230,7 +230,7 @@ npm install bcrypt
 
 ### Erro: "invalid_credentials"
 - Verifique se email e senha estão corretos
-- Para admin, use `admin@admin` com senha do `.env`
+- Para admin, use o valor de `ADMIN_EMAIL` com a senha do `.env`
 
 ### Usuário não consegue acessar após login
 - Verificar se role está correto no banco ('admin' ou 'associado')

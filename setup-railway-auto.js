@@ -142,7 +142,7 @@ async function runSeed() {
   log('   (Isso pode levar 10-20 segundos)', 'cyan');
   
   try {
-    execSync('node server/seed-database.js', { 
+    execSync('npm run seed', { 
       encoding: 'utf8',
       stdio: 'inherit'
     });
@@ -166,7 +166,7 @@ function showNextSteps() {
   log('      http://localhost:3000/login.html', 'yellow');
   log('');
   log('   3️⃣  Fazer login:', 'cyan');
-  log('      Admin: admin@admin / (senha definida em ADMIN_PASSWORD)', 'yellow');
+  log('      Admin: (valor de ADMIN_EMAIL) / (senha definida em ADMIN_PASSWORD)', 'yellow');
   log('      Associado: carlos.silva@gmail.com / 123456', 'yellow');
   log('');
   log('📦 Dados no Banco:', 'blue');
@@ -193,7 +193,7 @@ async function main() {
     log('   3. Vá na aba "Connect"', 'cyan');
     log('   4. Copie a "Postgres Connection URL"', 'cyan');
     log('   5. Cole no arquivo .env na linha DATABASE_URL=', 'cyan');
-    log('   6. Execute: node server/seed-database.js', 'cyan');
+    log('   6. Execute: npm run seed', 'cyan');
     process.exit(1);
   }
   
@@ -223,7 +223,7 @@ async function main() {
   
   if (!seeded) {
     log('\n⚠️  Erro ao popular banco', 'yellow');
-    log('   Tente manualmente: node server/seed-database.js', 'cyan');
+    log('   Tente manualmente: npm run seed', 'cyan');
     process.exit(1);
   }
   

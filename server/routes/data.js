@@ -1,7 +1,9 @@
 const express = require('express');
+const bcrypt = require('bcrypt');
 const { pool } = require('../db');
 const { requireAdmin } = require('../middleware/requireAdmin');
 const { requireAuth } = require('../middleware/requireAuth');
+const { ensureAdminUser } = require('../user-service');
 
 const MONTH_KEYS = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 
@@ -77,13 +79,29 @@ function normalizePagamentoCell(raw) {
   return { raw: s, valor: v };
 }
 
+function normalizeOptionalText(value) {
+  const text = String(value ?? '').trim();
+  return text || null;
+}
+
+function normalizeAssociadoEmail(value) {
+  const email = String(value ?? '').trim().toLowerCase();
+  return email || null;
+}
+
+function getAssociadoDefaultPassword(item) {
+  const explicit = String(item?.senha ?? item?.password ?? '').trim();
+  if (explicit) return explicit;
+  return String(process.env.ASSOCIADO_DEFAULT_PASSWORD || '123456').trim() || '123456';
+}
+
 async function fetchData() {
   const client = await pool.connect();
   try {
     const configRes = await client.query('SELECT data FROM app_config WHERE id=1');
     const config = configRes.rows?.[0]?.data && typeof configRes.rows[0].data === 'object' ? configRes.rows[0].data : {};
 
-    const associadosRes = await client.query('SELECT id, nome, apelido FROM associados ORDER BY id ASC');
+    const associadosRes = await client.query('SELECT id, nome, apelido, email, telefone, foto_url FROM associados ORDER BY id ASC');
     const pagamentosRes = await client.query('SELECT associado_id, mes_key, raw FROM associados_pagamentos');
 
     const pagamentosByAssociado = new Map();
@@ -98,7 +116,15 @@ async function fetchData() {
       for (const mk of MONTH_KEYS) pagamentos[mk] = 'Pendente';
       const merged = pagamentosByAssociado.get(String(a.id)) || {};
       for (const mk of Object.keys(merged)) pagamentos[mk] = merged[mk];
-      return { id: a.id, nome: a.nome, apelido: a.apelido, pagamentos };
+      return {
+        id: a.id,
+        nome: a.nome,
+        apelido: a.apelido,
+        email: a.email,
+        telefone: a.telefone,
+        foto_url: a.foto_url,
+        pagamentos,
+      };
     });
 
     const jogadores = (await client.query('SELECT * FROM jogadores ORDER BY id ASC')).rows;
@@ -188,7 +214,13 @@ async function replaceAllData(data) {
     for (const a of associados) {
       const nome = String(a?.nome ?? '').trim() || '—';
       const apelido = String(a?.apelido ?? '').trim();
-      const ins = await client.query('INSERT INTO associados (nome, apelido) VALUES ($1,$2) RETURNING id', [nome, apelido]);
+      const email = normalizeAssociadoEmail(a?.email);
+      const telefone = normalizeOptionalText(a?.telefone);
+      const fotoUrl = normalizeOptionalText(a?.foto_url ?? a?.fotoUrl);
+      const ins = await client.query(
+        'INSERT INTO associados (nome, apelido, email, telefone, foto_url) VALUES ($1,$2,$3,$4,$5) RETURNING id',
+        [nome, apelido, email, telefone, fotoUrl]
+      );
       const id = ins.rows[0].id;
       let pagamentos = a?.pagamentos && typeof a.pagamentos === 'object' ? a.pagamentos : {};
       if (a?.pagamentosByYear && typeof a.pagamentosByYear === 'object') {
@@ -206,6 +238,20 @@ async function replaceAllData(data) {
         await client.query(
           'INSERT INTO associados_pagamentos (associado_id, mes_key, raw, valor) VALUES ($1,$2,$3,$4)',
           [id, mk, norm.raw, safeValor]
+        );
+      }
+
+      if (email) {
+        const passwordHash = await bcrypt.hash(getAssociadoDefaultPassword(a), 10);
+        await client.query(
+          `INSERT INTO users (email, password_hash, role, associado_id, ativo)
+           VALUES ($1, $2, 'associado', $3, TRUE)
+           ON CONFLICT (email)
+           DO UPDATE SET password_hash = EXCLUDED.password_hash,
+                         role = 'associado',
+                         associado_id = EXCLUDED.associado_id,
+                         ativo = TRUE`,
+          [email, passwordHash, id]
         );
       }
     }
@@ -316,6 +362,8 @@ async function replaceAllData(data) {
         );
       }
     }
+
+    await ensureAdminUser({ client });
 
     await client.query('COMMIT');
   } catch (err) {

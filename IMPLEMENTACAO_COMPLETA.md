@@ -35,7 +35,7 @@ Adicionados campos:
 
 #### Rotas de Autenticação (`server/routes/auth.js`)
 - **POST `/api/auth/login`**: Login com email/senha
-  - Suporta admin legado (`admin@admin`)
+  - Suporta admin configurado por `ADMIN_EMAIL` e `ADMIN_PASSWORD`
   - Valida usuários do banco com bcrypt
   - Retorna JWT + dados do usuário
   
@@ -164,7 +164,7 @@ npm start
 1. Acesse: `http://localhost:3000`
 2. Será redirecionado para `/login.html`
 3. Credenciais:
-   - Email: `admin@admin`
+  - Email: valor de `ADMIN_EMAIL`
    - Senha: valor de `ADMIN_PASSWORD` no `.env`
 4. Após login → `/dashboard.html`
 
@@ -367,7 +367,7 @@ chuteira-cansada/
 ## 📝 Notas Importantes
 
 ### Compatibilidade
-✅ Mantida compatibilidade com login admin legado (`admin@admin`)
+✅ Mantida compatibilidade com login admin configurado por ambiente
 
 ### Migrações
 ✅ Migrações automáticas ao iniciar servidor
@@ -393,7 +393,7 @@ npm install
 
 ### Erro: "invalid_credentials"
 - Verificar email e senha
-- Admin: usar `admin@admin` com `ADMIN_PASSWORD`
+- Admin: usar `ADMIN_EMAIL` com `ADMIN_PASSWORD`
 - Verificar se usuário está ativo no banco
 
 ### Redirecionamento em loop

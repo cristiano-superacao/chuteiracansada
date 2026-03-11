@@ -40,7 +40,7 @@ PORT=3000
 npm install
 
 # Executar seed
-node server/seed-database.js
+npm run seed
 ```
 
 ### 5. Iniciar servidor
@@ -54,7 +54,7 @@ npm start
 Abra no navegador: **http://localhost:3000/login.html**
 
 **Credenciais Admin:**
-- Email: `admin@admin`
+- Email: `(valor de ADMIN_EMAIL no .env)`
 - Senha: `admin123`
 
 **Credenciais Associado (exemplo):**
@@ -88,7 +88,7 @@ Conecte seu repositório GitHub ao Railway e faça deploy automático.
 ### 4. Popular banco (após deploy)
 Acesse o terminal do Railway e execute:
 ```bash
-node server/seed-database.js
+npm run seed
 ```
 
 ---
@@ -122,7 +122,7 @@ PORT=3000
 
 ### 4. Popular e iniciar
 ```powershell
-node server/seed-database.js
+npm run seed
 npm start
 ```
 
@@ -191,7 +191,7 @@ Após executar o seed, você terá:
 
 Após popular o banco e iniciar o servidor, teste:
 
-- [ ] Login admin (`admin@admin` / `admin123`)
+- [ ] Login admin (`ADMIN_EMAIL` / `ADMIN_PASSWORD` configurados)
 - [ ] Dashboard admin carrega
 - [ ] Página de Associados lista 15 pessoas
 - [ ] Página de Jogadores lista 15 jogadores

@@ -9,7 +9,7 @@
   <link rel="icon" type="image/png" href="assets/icon-192.png" />
   <link rel="apple-touch-icon" href="assets/icon-192.png" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-  <link rel="stylesheet" href="assets/styles.css" />
+  <link rel="stylesheet" href="assets/styles.css?v=20260310-11" />
   <style>
     .dashboard-cards {
       display: grid;
@@ -317,7 +317,7 @@
               <span class="info-card__detail-value">R$ 30,00</span>
             </div>
             <div class="info-card__detail">
-              <span class="info-card__detail-label">Meses pagos (2025):</span>
+              <span class="info-card__detail-label" id="months-paid-label">Meses pagos:</span>
               <span class="info-card__detail-value" id="months-paid">0/12</span>
             </div>
             <div class="info-card__detail">
@@ -358,7 +358,7 @@
     </main>
   </div>
 
-  <script src="assets/app.js"></script>
+  <script src="assets/app.js?v=20260310-15"></script>
   <script>
     const TOKEN_KEY = 'cc_token';
     const USER_KEY = 'cc_user';
@@ -505,6 +505,9 @@
     async function loadFinancialStatus(associadoId) {
       try {
         const pagamentos = await apiGetJson(`/api/data/associados/${associadoId}/pagamentos`);
+        const currentYear = new Date().getFullYear();
+        const monthsPaidLabel = document.getElementById('months-paid-label');
+        if (monthsPaidLabel) monthsPaidLabel.textContent = `Meses pagos (${currentYear}):`;
 
         const currentMonthIdx = new Date().getMonth();
         const paidByMonthKey = new Map();

@@ -59,7 +59,7 @@ No terminal do VS Code, execute:
 node server/test-system.js
 
 # 2. Popular banco com 460+ registros
-node server/seed-database.js
+npm run seed
 
 # 3. Iniciar servidor
 npm start
@@ -72,7 +72,7 @@ npm start
 Acesse: **http://localhost:3000/login.html**
 
 **Credenciais:**
-- 👮 **Admin:** `admin@admin` / (senha definida em `ADMIN_PASSWORD`)
+- 👮 **Admin:** valor de `ADMIN_EMAIL` / (senha definida em `ADMIN_PASSWORD`)
 - 👤 **Associado:** `carlos.silva@gmail.com` / `123456` (exemplo do seed)
 
 ---

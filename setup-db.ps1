@@ -45,7 +45,7 @@ if ($LASTEXITCODE -eq 0) {
     
     if ($seed -match '^[SsYy]') {
         Write-Host "`nPopulando banco..." -ForegroundColor Yellow
-        node server/seed-database.js
+        npm run seed
         
         if ($LASTEXITCODE -eq 0) {
             Write-Host "`nBANCO POPULADO COM SUCESSO!" -ForegroundColor Green
@@ -59,7 +59,7 @@ if ($LASTEXITCODE -eq 0) {
             Write-Host "PROXIMOS PASSOS:" -ForegroundColor Yellow
             Write-Host "1. Iniciar servidor: npm start"
             Write-Host "2. Acessar: http://localhost:3000/login.html"
-            Write-Host "3. Login admin: admin@admin / (senha definida em ADMIN_PASSWORD)"
+            Write-Host "3. Login admin: (valor de ADMIN_EMAIL) / (senha definida em ADMIN_PASSWORD)"
             Write-Host "4. Login associado: carlos.silva@gmail.com / 123456`n"
             
             $start = Read-Host "Iniciar servidor agora? (S/N)"

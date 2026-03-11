@@ -1,8 +1,8 @@
 const express = require('express');
-const jwt = require('jsonwebtoken');
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const { pool, dbEnabled } = require('../db');
+const { signAuthToken } = require('../auth-utils');
 
 const router = express.Router();
 
@@ -112,22 +112,18 @@ router.get('/google/callback',
     session: false 
   }),
   (req, res) => {
-    const secret = process.env.ADMIN_JWT_SECRET;
-    
-    if (!secret || !req.user) {
+    if (!process.env.ADMIN_JWT_SECRET || !req.user) {
       return res.redirect('/login.html?error=server_error');
     }
 
     // Gera JWT
-    const token = jwt.sign(
+    const token = signAuthToken(
       { 
         userId: req.user.id, 
         role: req.user.role, 
         email: req.user.email,
         associadoId: req.user.associado_id || null
-      }, 
-      secret, 
-      { expiresIn: '8h' }
+      }
     );
 
     // Prepara dados do usuário

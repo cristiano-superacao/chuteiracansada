@@ -76,7 +76,7 @@ Execute estes 3 comandos no terminal:
 node server/test-system.js
 
 # 2. Popular banco com dados de exemplo
-node server/seed-database.js
+npm run seed
 
 # 3. Iniciar o servidor
 npm start
@@ -92,7 +92,7 @@ npm start
 
 | Tipo | Email | Senha | Descrição |
 |------|-------|-------|-----------|
-| **Admin** | admin@admin | admin123 | Acesso completo ao sistema |
+| **Admin** | valor de `ADMIN_EMAIL` | valor de `ADMIN_PASSWORD` | Acesso completo ao sistema |
 | **Associado** | carlos.silva@gmail.com | 123456 | Dashboard do associado |
 | **Associado** | joao.santos@gmail.com | 123456 | Outro associado |
 
@@ -137,7 +137,7 @@ Este script verifica:
 
 ## 📦 Dados Incluídos no Seed
 
-Quando você executar `node server/seed-database.js`, serão criados:
+Quando você executar `npm run seed`, serão criados:
 
 | Tabela | Quantidade | Descrição |
 |--------|-----------|-----------|
@@ -242,7 +242,7 @@ O login com Google já está implementado, mas precisa de configuração:
 
 Após iniciar o sistema, teste:
 
-- [ ] Login admin funciona (admin@admin / admin123)
+- [ ] Login admin funciona (`ADMIN_EMAIL` / `ADMIN_PASSWORD`)
 - [ ] Dashboard admin carrega
 - [ ] Página de Associados lista 15 pessoas
 - [ ] Página de Jogadores mostra 15 atletas

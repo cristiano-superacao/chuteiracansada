@@ -11,6 +11,7 @@ const STORAGE_KEY = 'chuteiraCansada.v1';
 // Auth unificado (login.html): JWT + user em localStorage
 const AUTH_TOKEN_KEY = 'cc_token';
 const AUTH_USER_KEY = 'cc_user';
+const LAST_ADMIN_EMAIL_KEY = 'cc_last_admin_email';
 
 const ADMIN_SESSION_KEY = 'chuteiraCansada.adminSession.v1';
 const ADMIN_TOKEN_KEY = 'chuteiraCansada.adminToken.v1';
@@ -69,12 +70,20 @@ const DEFAULT_DATA = {
     feriados: [],
   },
   associados: [
-    { nome: 'Adenildo Batista dos Santos', apelido: 'Guilito', pagamentosByYear: { '2026': seedPayments('Pendente') } },
-    { nome: 'Adilson Jose dos Santos', apelido: 'Dica', pagamentosByYear: { '2026': seedPayments('Pendente') } },
-    { nome: 'Adolfo Gabriel', apelido: 'Adolfo', pagamentosByYear: { '2026': seedPayments('D') } },
-    { nome: 'Alan Celestino Pereira', apelido: 'Messi', pagamentosByYear: { '2026': seedPayments('Pendente') } },
-    { nome: 'Albert Paulo', apelido: 'N9', pagamentosByYear: { '2026': seedPayments('Pendente') } },
-    { nome: 'Aldo de Jesus da Encarnação', apelido: 'Aldo', pagamentosByYear: { '2026': seedPayments('Pendente') } },
+    {
+      nome: 'Adenildo Batista dos Santos',
+      apelido: 'Guilito',
+      email: 'guilito@chuteiracansada.com',
+      telefone: '11990000001',
+      pagamentosByYear: { '2026': seedPayments('Pendente') },
+    },
+    {
+      nome: 'Adilson Jose dos Santos',
+      apelido: 'Dica',
+      email: 'dica@chuteiracansada.com',
+      telefone: '11990000002',
+      pagamentosByYear: { '2026': seedPayments('Pendente') },
+    },
   ],
   jogadores: [
     { nome: 'Jogador Exemplo', time: 'Brasil', gols: 2, amarelos: 1, vermelhos: 0, suspensoes: 0 },
@@ -83,15 +92,10 @@ const DEFAULT_DATA = {
     { mes: 'Jan', data: '2026-01-05', descricao: 'Água / gelo', valor: 20 },
   ],
   entradas: [
-    { mes: 'Jan', data: '2026-01-05', origem: 'Doação', valor: 60 },
+    { mes: 'Jan', data: '2026-01-05', origem: 'Mensalidade', valor: 60 },
   ],
   times: [
     { time: 'Brasil', pg: 15, j: 5, v: 5, e: 0, der: 0, gf: 15, gs: 5, sg: 10, ca: 10, cv: 1 },
-    { time: 'Argentina', pg: 12, j: 5, v: 4, e: 0, der: 2, gf: 16, gs: 8, sg: 8, ca: 18, cv: 3 },
-    { time: 'França', pg: 9, j: 5, v: 3, e: 0, der: 2, gf: 18, gs: 9, sg: 9, ca: 22, cv: 5 },
-    { time: 'Marrocos', pg: 7, j: 5, v: 2, e: 1, der: 2, gf: 10, gs: 5, sg: 5, ca: 10, cv: 2 },
-    { time: 'Colombia', pg: 6, j: 5, v: 2, e: 0, der: 3, gf: 5, gs: 18, sg: -13, ca: 19, cv: 0 },
-    { time: 'Peru', pg: 3, j: 5, v: 0, e: 3, der: 2, gf: 3, gs: 19, sg: -16, ca: 26, cv: 5 },
   ],
   campeonato: {
     jogos: [
@@ -117,9 +121,9 @@ const DEFAULT_DATA = {
         rodada: '1',
         titulo: 'Resumo da rodada',
         texto: 'Jogaços, muita emoção e disputa acirrada na tabela.',
-        criadoEm: new Date().toISOString(),
+        criadoEm: '2026-01-05T00:00:00.000Z',
         comentarios: [
-          { nome: 'Visitante', texto: 'Que rodada boa!', criadoEm: new Date().toISOString() },
+          { nome: 'Visitante', texto: 'Que rodada boa!', criadoEm: '2026-01-05T00:00:00.000Z' },
         ],
       },
     ],
@@ -804,9 +808,22 @@ function progressDone() {
 }
 
 
-async function apiLoginWithPassword(password) {
+function getLastAdminEmail() {
+  const stored = String(localStorage.getItem(LAST_ADMIN_EMAIL_KEY) || '').trim();
+  const currentUserEmail = String(getStoredUser()?.email || '').trim();
+  return stored || currentUserEmail;
+}
+
+function setLastAdminEmail(email) {
+  const normalized = String(email || '').trim().toLowerCase();
+  if (!normalized) return;
+  localStorage.setItem(LAST_ADMIN_EMAIL_KEY, normalized);
+}
+
+async function apiLoginWithPassword(email, password) {
   // Mantém compatibilidade com o "modo admin" legado via prompt
-  const json = await apiFetchJson('/auth/login', { method: 'POST', body: JSON.stringify({ email: 'admin@admin', password }) });
+  const normalizedEmail = String(email || '').trim().toLowerCase();
+  const json = await apiFetchJson('/auth/login', { method: 'POST', body: JSON.stringify({ email: normalizedEmail, password }) });
   const token = String(json?.token || '');
   if (!token) throw new Error('invalid_token');
   if (json?.user) {
@@ -814,6 +831,7 @@ async function apiLoginWithPassword(password) {
       localStorage.setItem(AUTH_USER_KEY, JSON.stringify(json.user));
     } catch {}
   }
+  setLastAdminEmail(normalizedEmail);
   setAdminToken(token);
   await refreshAdminFromToken();
 }
@@ -835,6 +853,42 @@ async function apiSaveAllData(data) {
     method: 'PUT',
     headers: { Authorization: `Bearer ${token}` },
     body: JSON.stringify(data),
+  });
+}
+
+async function apiSavePageData(data) {
+  const token = getAdminToken();
+  if (!token) {
+    const err = new Error('not_logged_in');
+    err.code = 'NOT_LOGGED_IN';
+    throw err;
+  }
+
+  const page = document.body.getAttribute('data-page');
+  let path = '/data';
+  let body = data;
+
+  if (page === 'jogadores') {
+    path = '/jogadores';
+    body = data.jogadores ?? [];
+  } else if (page === 'gastos') {
+    path = '/gastos';
+    body = data.gastos ?? [];
+  } else if (page === 'saldo') {
+    path = '/entradas';
+    body = data.entradas ?? [];
+  } else if (page === 'classificacao') {
+    path = '/times';
+    body = data.times ?? [];
+  } else if (page === 'campeonato' || page === 'entreterimento') {
+    path = '/campeonato';
+    body = data.campeonato ?? {};
+  }
+
+  await apiFetchJson(path, {
+    method: 'PUT',
+    headers: { Authorization: `Bearer ${token}` },
+    body: JSON.stringify(body),
   });
 }
 
@@ -860,31 +914,40 @@ async function loadDataPreferApi() {
   }
 }
 
+let saveDataQueue = Promise.resolve();
+
 async function saveDataPreferApi(state, options = {}) {
   const showToast = options?.showToast !== false;
-  try {
-    state.data = normalizeDataModel(state.data);
-    await apiSaveAllData(state.data);
-    setData(state.data);
-    if (showToast) toast('Salvo');
-    return true;
-  } catch (err) {
-    console.error('Falha ao salvar via API.', err);
-    setData(state.data);
-    if (err?.status === 503 || String(err?.message || '') === 'db_unavailable') {
-      toastOncePerSession(
-        LOCAL_FALLBACK_NOTICE_KEY,
-        'Servidor sem Postgres configurado: os dados ficam salvos neste navegador.'
-      );
-    } else {
-      toastOncePerSession(
-        LOCAL_FALLBACK_NOTICE_KEY,
-        'Não consegui salvar no servidor: os dados ficam salvos neste navegador.'
-      );
+  const snapshot = normalizeDataModel(structuredClone(state.data));
+  state.data = snapshot;
+
+  const runSave = async () => {
+    try {
+      await apiSavePageData(snapshot);
+      setData(snapshot);
+      if (showToast) toast('Salvo');
+      return true;
+    } catch (err) {
+      console.error('Falha ao salvar via API.', err);
+      setData(snapshot);
+      if (err?.status === 503 || String(err?.message || '') === 'db_unavailable') {
+        toastOncePerSession(
+          LOCAL_FALLBACK_NOTICE_KEY,
+          'Servidor sem Postgres configurado: os dados ficam salvos neste navegador.'
+        );
+      } else {
+        toastOncePerSession(
+          LOCAL_FALLBACK_NOTICE_KEY,
+          'Não consegui salvar no servidor: os dados ficam salvos neste navegador.'
+        );
+      }
+      if (showToast) toast('Salvo localmente');
+      return false;
     }
-    if (showToast) toast('Salvo localmente');
-    return false;
-  }
+  };
+
+  saveDataQueue = saveDataQueue.catch(() => undefined).then(runSave);
+  return saveDataQueue;
 }
 
 function isMensalidadeEntrada(item) {
@@ -906,10 +969,12 @@ function bindAdminControls(state) {
     }
 
     // Caso ainda exista esse botão em alguma página antiga, mantém o prompt admin
+    const email = prompt('Email do administrador:', getLastAdminEmail());
+    if (email == null) return;
     const pass = prompt('Senha do administrador:');
     if (pass == null) return;
     try {
-      await apiLoginWithPassword(pass);
+      await apiLoginWithPassword(email, pass);
       renderPage(state);
       toast('Admin autenticado');
     } catch (err) {
@@ -1274,8 +1339,11 @@ function bindGlobalActions(state) {
       'add-jogo',
       'rebuild-jogos',
       'add-video',
+      'remove-video',
       'add-imagem',
+      'remove-imagem',
       'add-post',
+      'remove-post',
     ]);
 
     if (adminOnly.has(action) && !isAdmin()) {
@@ -1398,6 +1466,18 @@ function bindGlobalActions(state) {
       return;
     }
 
+    if (action === 'remove-video') {
+      const idx = Number(btn.getAttribute('data-index'));
+      if (!state.data.campeonato) state.data.campeonato = { jogos: [], videos: [], imagens: [], posts: [] };
+      const list = state.data.campeonato.videos = state.data.campeonato.videos ?? [];
+      if (idx >= 0 && idx < list.length) {
+        list.splice(idx, 1);
+        renderPage(state);
+        scheduleCampeonatoAutoSave(state);
+      }
+      return;
+    }
+
     if (action === 'add-imagem') {
       const input = document.getElementById('campeonato-imagem-url');
       const url = String(input?.value ?? '').trim();
@@ -1413,6 +1493,18 @@ function bindGlobalActions(state) {
       if (input) input.value = '';
       renderPage(state);
       scheduleCampeonatoAutoSave(state);
+      return;
+    }
+
+    if (action === 'remove-imagem') {
+      const idx = Number(btn.getAttribute('data-index'));
+      if (!state.data.campeonato) state.data.campeonato = { jogos: [], videos: [], imagens: [], posts: [] };
+      const list = state.data.campeonato.imagens = state.data.campeonato.imagens ?? [];
+      if (idx >= 0 && idx < list.length) {
+        list.splice(idx, 1);
+        renderPage(state);
+        scheduleCampeonatoAutoSave(state);
+      }
       return;
     }
 
@@ -1438,6 +1530,20 @@ function bindGlobalActions(state) {
 
       renderPage(state);
       scheduleCampeonatoAutoSave(state);
+      return;
+    }
+
+    if (action === 'remove-post') {
+      const postId = String(btn.getAttribute('data-post-id') || '').trim();
+      if (!postId) return;
+      if (!state.data.campeonato) state.data.campeonato = { jogos: [], videos: [], imagens: [], posts: [] };
+      const list = state.data.campeonato.posts = state.data.campeonato.posts ?? [];
+      const idx = list.findIndex((post) => String(post?.id) === postId);
+      if (idx >= 0) {
+        list.splice(idx, 1);
+        renderPage(state);
+        scheduleCampeonatoAutoSave(state);
+      }
       return;
     }
 
@@ -3169,13 +3275,13 @@ function fmtDateShort(iso) {
 
 function renderCampeonato(state) {
   if (!state.data.campeonato) state.data.campeonato = { jogos: [], videos: [], imagens: [], posts: [] };
+  const admin = isAdmin();
 
   // Jogos (cartelas por rodada)
   const roundsSlot = document.querySelector('[data-slot="campeonato-rounds"]');
   if (roundsSlot) {
     roundsSlot.innerHTML = '';
     const allJogos = state.data.campeonato.jogos ?? [];
-    const admin = isAdmin();
     const jogos = admin ? allJogos : allJogos.filter((j) => isVisibleJogoForVisitor(j));
 
     if (!jogos.length) {
@@ -3348,9 +3454,9 @@ function renderCampeonato(state) {
     videosSlot.innerHTML = '';
     const wrap = el('div', { class: 'media-list' });
     const list = state.data.campeonato.videos ?? [];
-    for (const v of list) {
+    list.forEach((v, idx) => {
       const embed = toYouTubeEmbedUrl(v?.url);
-      if (!embed) continue;
+      if (!embed) return;
       const frame = el('div', { class: 'media-frame' });
       const iframe = document.createElement('iframe');
       iframe.src = embed;
@@ -3358,8 +3464,20 @@ function renderCampeonato(state) {
       iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
       iframe.allowFullscreen = true;
       frame.appendChild(iframe);
+      if (admin) {
+        const actions = el('div', { class: 'actions', style: 'margin-top:8px;justify-content:flex-end' });
+        const remove = el('button', {
+          class: 'btn btn--ghost',
+          type: 'button',
+          'data-action': 'remove-video',
+          'data-index': String(idx),
+        });
+        remove.textContent = 'Remover vídeo';
+        actions.appendChild(remove);
+        frame.appendChild(actions);
+      }
       wrap.appendChild(frame);
-    }
+    });
     videosSlot.appendChild(wrap);
   }
 
@@ -3369,9 +3487,9 @@ function renderCampeonato(state) {
     imagensSlot.innerHTML = '';
     const grid = el('div', { class: 'img-grid' });
     const list = state.data.campeonato.imagens ?? [];
-    for (const img of list) {
+    list.forEach((img, idx) => {
       const url = String(img?.url || '').trim();
-      if (!url) continue;
+      if (!url) return;
       const card = el('div', { class: 'img-card' });
       const im = document.createElement('img');
       im.src = url;
@@ -3380,8 +3498,20 @@ function renderCampeonato(state) {
       card.appendChild(im);
       const cap = el('div', { class: 'img-cap', text: String(img?.legenda || '').trim() || '—' });
       card.appendChild(cap);
+      if (admin) {
+        const actions = el('div', { class: 'actions', style: 'padding:0 12px 12px;justify-content:flex-end' });
+        const remove = el('button', {
+          class: 'btn btn--ghost',
+          type: 'button',
+          'data-action': 'remove-imagem',
+          'data-index': String(idx),
+        });
+        remove.textContent = 'Remover imagem';
+        actions.appendChild(remove);
+        card.appendChild(actions);
+      }
       grid.appendChild(card);
-    }
+    });
     imagensSlot.appendChild(grid);
   }
 
@@ -3400,6 +3530,18 @@ function renderCampeonato(state) {
         el('div', { class: 'post__meta', text: `Rodada: ${p?.rodada || '—'} • ${fmtDateShort(p?.criadoEm)}` }),
       ]);
       post.appendChild(head);
+      if (admin) {
+        const actions = el('div', { class: 'actions', style: 'margin:10px 0 0;justify-content:flex-end' });
+        const remove = el('button', {
+          class: 'btn btn--ghost',
+          type: 'button',
+          'data-action': 'remove-post',
+          'data-post-id': String(p.id),
+        });
+        remove.textContent = 'Remover post';
+        actions.appendChild(remove);
+        post.appendChild(actions);
+      }
       post.appendChild(el('p', { class: 'post__text', text: p?.texto || '' }));
 
       const comments = el('div', { class: 'comments' });
@@ -3448,6 +3590,7 @@ function injectToastStyles() {
 (async function init() {
   injectToastStyles();
   const state = { data: structuredClone(DEFAULT_DATA) };
+  const page = document.body.getAttribute('data-page');
   // Suporte a tema (claro/escuro/sistema)
   initProgressBar();
   setupThemeColorMetaWatcher();
@@ -3481,8 +3624,13 @@ function injectToastStyles() {
     });
   } catch {}
   await refreshAdminFromToken();
-  state.data = await loadDataPreferApi();
-  renderPage(state);
+
+  // A área do associado (`inicio.html`) usa seu próprio carregamento enxuto;
+  // evitar `/api/data` aqui impede 401 desnecessário e fallback local incorreto.
+  if (page !== 'inicio') {
+    state.data = await loadDataPreferApi();
+    renderPage(state);
+  }
 })();
 
 function updateThemeColorMeta(theme) {

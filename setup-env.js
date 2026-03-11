@@ -338,7 +338,7 @@ async function showNextSteps(hasConnection) {
   
   if (hasConnection) {
     log('   1️⃣  Popular o banco com dados de exemplo:', 'cyan');
-    log('      node server/seed-database.js', 'yellow');
+    log('      npm run seed', 'yellow');
     log('');
     log('   2️⃣  Iniciar o servidor:', 'cyan');
     log('      npm start', 'yellow');
@@ -347,7 +347,7 @@ async function showNextSteps(hasConnection) {
     log('      http://localhost:3000/login.html', 'yellow');
     log('');
     log('   4️⃣  Fazer login:', 'cyan');
-    log('      Admin: admin@admin / (sua senha ADMIN_PASSWORD)', 'yellow');
+    log('      Admin: (valor de ADMIN_EMAIL) / (sua senha ADMIN_PASSWORD)', 'yellow');
   } else {
     log('   1️⃣  Configure o PostgreSQL:', 'cyan');
     log('      Consulte INICIO_RAPIDO.md ou TESTAR_LOCALMENTE.md', 'yellow');

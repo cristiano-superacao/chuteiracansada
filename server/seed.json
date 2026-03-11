@@ -1,7 +1,7 @@
 {
   "associados": [
-    {"nome":"Adenildo Batista dos Santos","apelido":"Guilito","pagamentos":{"jan":"Pendente","fev":"Pendente","mar":"Pendente","abr":"Pendente","mai":"Pendente","jun":"Pendente","jul":"Pendente","ago":"Pendente","set":"Pendente","out":"Pendente","nov":"Pendente","dez":"Pendente"}},
-    {"nome":"Adilson Jose dos Santos","apelido":"Dica","pagamentos":{"jan":"Pendente","fev":"Pendente","mar":"Pendente","abr":"Pendente","mai":"Pendente","jun":"Pendente","jul":"Pendente","ago":"Pendente","set":"Pendente","out":"Pendente","nov":"Pendente","dez":"Pendente"}}
+    {"nome":"Adenildo Batista dos Santos","apelido":"Guilito","email":"guilito@chuteiracansada.com","telefone":"11990000001","pagamentos":{"jan":"Pendente","fev":"Pendente","mar":"Pendente","abr":"Pendente","mai":"Pendente","jun":"Pendente","jul":"Pendente","ago":"Pendente","set":"Pendente","out":"Pendente","nov":"Pendente","dez":"Pendente"}},
+    {"nome":"Adilson Jose dos Santos","apelido":"Dica","email":"dica@chuteiracansada.com","telefone":"11990000002","pagamentos":{"jan":"Pendente","fev":"Pendente","mar":"Pendente","abr":"Pendente","mai":"Pendente","jun":"Pendente","jul":"Pendente","ago":"Pendente","set":"Pendente","out":"Pendente","nov":"Pendente","dez":"Pendente"}}
   ],
   "jogadores": [
     {"nome":"Jogador Exemplo","time":"Brasil","gols":2,"amarelos":1,"vermelhos":0,"suspensoes":0}

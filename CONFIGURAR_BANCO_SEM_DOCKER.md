@@ -60,7 +60,7 @@ SESSION_SECRET=seu-secret-muito-longo-e-aleatorio-aqui-123456789abcdef
 node server/test-system.js
 
 # 2. Popular banco com dados de teste (460+ registros)
-node server/seed-database.js
+npm run seed
 
 # 3. Iniciar servidor
 npm start
@@ -71,7 +71,7 @@ npm start
 Abra o navegador em: **http://localhost:3000/login.html**
 
 **Credenciais:**
-- Admin: `admin@admin` / `(valor de ADMIN_PASSWORD no .env)`
+- Admin: `(valor de ADMIN_EMAIL no .env)` / `(valor de ADMIN_PASSWORD no .env)`
 - Associado: `carlos.silva@gmail.com` / `123456`
 
 ---
@@ -117,7 +117,7 @@ SESSION_SECRET=gere-um-valor-aleatorio-longo-aqui
 
 ```powershell
 node server/test-system.js
-node server/seed-database.js
+npm run seed
 npm start
 ```
 
@@ -164,7 +164,7 @@ SESSION_SECRET=seu-secret-longo-aleatorio
 Execute:
 ```powershell
 node server/test-system.js
-node server/seed-database.js
+npm run seed
 npm start
 ```
 
@@ -218,7 +218,7 @@ SESSION_SECRET=gere-um-valor-aleatorio
 
 ```powershell
 node server/test-system.js
-node server/seed-database.js
+npm run seed
 npm start
 ```
 
@@ -246,7 +246,7 @@ Execute esta sequência:
 node server/test-system.js
 
 # 2. Popular banco
-node server/seed-database.js
+npm run seed
 
 # 3. Iniciar servidor
 npm start
@@ -293,7 +293,7 @@ Após a configuração, você terá:
 1. **Escolha UMA das opções acima** (Railway é mais rápida)
 2. **Configure o DATABASE_URL no .env**
 3. **Execute node server/test-system.js** (deve aparecer ✅)
-4. **Execute node server/seed-database.js** (popula o banco)
+4. **Execute npm run seed** (popula o banco)
 5. **Execute npm start** (inicia o servidor)
 6. **Acesse http://localhost:3000/login.html**
 

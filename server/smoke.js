@@ -2,6 +2,8 @@ const path = require('path');
 // Não sobrescreve variáveis vindas do ambiente (ex.: Railway).
 require('dotenv').config({ override: false, path: path.join(__dirname, '..', '.env') });
 
+const { getConfiguredAdminEmail } = require('./auth-utils');
+
 function getArg(name) {
   const idx = process.argv.indexOf(name);
   return idx >= 0 ? process.argv[idx + 1] : null;
@@ -21,7 +23,7 @@ async function fetchJson(url, opts = {}) {
 
 async function main() {
   const baseUrl = (getArg('--baseUrl') || 'http://localhost:3000').replace(/\/$/, '');
-  const adminEmail = process.env.ADMIN_EMAIL || 'admin@admin';
+  const adminEmail = getConfiguredAdminEmail();
   const adminPassword = process.env.ADMIN_PASSWORD || '';
 
   if (!process.env.ADMIN_JWT_SECRET) {

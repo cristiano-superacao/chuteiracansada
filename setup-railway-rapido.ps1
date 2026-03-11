@@ -98,7 +98,7 @@ $seed = Read-Host "`nDeseja popular o banco com dados de teste? (S/n)"
 
 if ($seed -eq "" -or $seed -eq "S" -or $seed -eq "s") {
     Write-Host "`n🌱 Populando banco com 460+ registros...`n" -ForegroundColor Cyan
-    node server/seed-database.js
+    npm run seed
     
     Write-Host "`n============================================================" -ForegroundColor Cyan
     Write-Host "✅ CONFIGURAÇÃO CONCLUÍDA!" -ForegroundColor Green
@@ -107,7 +107,7 @@ if ($seed -eq "" -or $seed -eq "S" -or $seed -eq "s") {
     Write-Host "`n🚀 Próximos Passos:" -ForegroundColor Blue
     Write-Host "   1️⃣  Iniciar servidor: npm start" -ForegroundColor Cyan
     Write-Host "   2️⃣  Acessar: http://localhost:3000/login.html" -ForegroundColor Cyan
-    Write-Host "   3️⃣  Login Admin: admin@admin / (senha definida em ADMIN_PASSWORD)" -ForegroundColor Cyan
+    Write-Host "   3️⃣  Login Admin: (valor de ADMIN_EMAIL) / (senha definida em ADMIN_PASSWORD)" -ForegroundColor Cyan
     Write-Host "   4️⃣  Login Associado: carlos.silva@gmail.com / 123456" -ForegroundColor Cyan
     
     Write-Host "`n📦 Banco populado com:" -ForegroundColor Blue
@@ -118,7 +118,7 @@ if ($seed -eq "" -or $seed -eq "S" -or $seed -eq "s") {
     Write-Host "   • Posts, vídeos e imagens`n" -ForegroundColor Cyan
 } else {
     Write-Host "`n⏭️  Pulado. Execute depois:" -ForegroundColor Yellow
-    Write-Host "   node server/seed-database.js`n" -ForegroundColor Cyan
+    Write-Host "   npm run seed`n" -ForegroundColor Cyan
 }
 
 Write-Host "Pressione ENTER para finalizar..."

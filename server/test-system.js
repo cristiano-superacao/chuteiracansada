@@ -6,6 +6,7 @@
 
 require('dotenv').config();
 const { pool, dbEnabled } = require('./db');
+const { getConfiguredAdminEmail } = require('./auth-utils');
 
 const colors = {
   reset: '\x1b[0m',
@@ -140,7 +141,7 @@ async function testUsers() {
     
     if (result.rows.length === 0) {
       log('   ⚠️  Nenhum usuário encontrado no banco', 'yellow');
-      log('   💡 Execute: node server/seed-database.js', 'cyan');
+      log('   💡 Execute: npm run seed', 'cyan');
       return false;
     }
     
@@ -182,11 +183,12 @@ async function showSummary(hasDb, hasEnv, hasTables, hasUsers) {
   log('\n' + '='.repeat(60), 'cyan');
   
   if (hasDb && hasEnv && hasTables && hasUsers) {
+    const adminEmail = getConfiguredAdminEmail();
     log('✅ SISTEMA PRONTO PARA USO!', 'green');
     log('\n🚀 Próximos passos:', 'blue');
     log('   1. Inicie o servidor: npm start', 'cyan');
     log('   2. Acesse: http://localhost:3000/login.html', 'cyan');
-    log('   3. Login admin: admin@admin / (valor de ADMIN_PASSWORD)', 'cyan');
+    log(`   3. Login admin: ${adminEmail} / (valor de ADMIN_PASSWORD)`, 'cyan');
     log('   4. Ou login associado: carlos.silva@gmail.com / 123456', 'cyan');
   } else {
     log('⚠️  SISTEMA PRECISA DE CONFIGURAÇÃO', 'yellow');
@@ -203,7 +205,7 @@ async function showSummary(hasDb, hasEnv, hasTables, hasUsers) {
     }
     
     if (!hasUsers) {
-      log('   5. Popule o banco: node server/seed-database.js', 'cyan');
+      log('   5. Popule o banco: npm run seed', 'cyan');
     }
   }
   

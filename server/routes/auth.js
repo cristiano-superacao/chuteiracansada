@@ -1,7 +1,13 @@
 const express = require('express');
-const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const { pool, dbEnabled } = require('../db');
+const {
+  getBearerToken,
+  getConfiguredAdminEmail,
+  getConfiguredAdminPassword,
+  signAuthToken,
+  verifyAuthToken,
+} = require('../auth-utils');
 
 const router = express.Router();
 
@@ -9,22 +15,21 @@ const router = express.Router();
 router.post('/login', async (req, res) => {
   const email = String(req.body?.email ?? '').trim().toLowerCase();
   const password = String(req.body?.password ?? '');
-  const secret = process.env.ADMIN_JWT_SECRET;
-  const adminEmail = String(process.env.ADMIN_EMAIL || 'admin@admin').trim().toLowerCase();
-  const adminPassword = process.env.ADMIN_PASSWORD;
+  const adminEmail = getConfiguredAdminEmail();
+  const adminPassword = getConfiguredAdminPassword();
 
-  if (!secret) {
+  if (!process.env.ADMIN_JWT_SECRET) {
     return res.status(500).json({ error: 'server_misconfigured' });
   }
 
-  // Login admin via env (mantém compatibilidade com admin@admin)
+  // Login admin configurado por ambiente, com fallback interno de compatibilidade
   if (email && email === adminEmail) {
     if (!adminPassword) {
       return res.status(500).json({ error: 'server_misconfigured' });
     }
 
     if (password === adminPassword) {
-      const token = jwt.sign({ userId: 0, role: 'admin', email: adminEmail }, secret, { expiresIn: '8h' });
+      const token = signAuthToken({ userId: 0, role: 'admin', email: adminEmail });
       return res.json({
         token,
         user: { id: 0, email: adminEmail, role: 'admin', nome: 'Administrador' }
@@ -59,11 +64,7 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'invalid_credentials' });
     }
 
-    const token = jwt.sign(
-      { userId: user.id, role: user.role, email: user.email, associadoId: user.associado_id }, 
-      secret, 
-      { expiresIn: '8h' }
-    );
+    const token = signAuthToken({ userId: user.id, role: user.role, email: user.email, associadoId: user.associado_id });
 
     return res.json({ 
       token, 
@@ -83,17 +84,15 @@ router.post('/login', async (req, res) => {
 
 // Obter informações do usuário atual
 router.get('/me', async (req, res) => {
-  const auth = req.headers.authorization || '';
-  const token = auth.startsWith('Bearer ') ? auth.slice('Bearer '.length).trim() : '';
-  const secret = process.env.ADMIN_JWT_SECRET;
-  const adminEmail = String(process.env.ADMIN_EMAIL || 'admin@admin').trim().toLowerCase();
+  const token = getBearerToken(req);
+  const adminEmail = getConfiguredAdminEmail();
   
-  if (!token || !secret) {
+  if (!token || !process.env.ADMIN_JWT_SECRET) {
     return res.json({ authenticated: false, user: null });
   }
 
   try {
-    const payload = jwt.verify(token, secret);
+    const payload = verifyAuthToken(token);
     
     // Admin via env
     if (payload.role === 'admin' && payload.userId === 0) {

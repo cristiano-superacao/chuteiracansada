@@ -74,7 +74,7 @@ if /i "%SEED%"=="S" (
     echo.
     echo 🌱 Populando banco com 460+ registros...
     echo.
-    node server/seed-database.js
+    npm run seed
     echo.
     echo ============================================================
     echo ✅ CONFIGURAÇÃO CONCLUÍDA!
@@ -83,11 +83,11 @@ if /i "%SEED%"=="S" (
     echo 🚀 Próximos passos:
     echo    1. npm start
     echo    2. Acesse: http://localhost:3000/login.html
-    echo    3. Login: admin@admin / (senha definida em ADMIN_PASSWORD)
+    echo    3. Login: (valor de ADMIN_EMAIL) / (senha definida em ADMIN_PASSWORD)
     echo.
 ) else (
     echo.
-    echo ⏭️  Pulado. Execute depois: node server/seed-database.js
+    echo ⏭️  Pulado. Execute depois: npm run seed
     echo.
 )
 
