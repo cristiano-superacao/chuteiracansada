@@ -673,6 +673,14 @@ a{color:inherit;text-decoration:none}
 }
 .associados-table tbody td.col-nome{white-space:normal}
 .associados-table tbody td.col-apelido{white-space:nowrap}
+.associados-table thead th.is-month-focus{
+  background:var(--brand-1);
+  color:#FFFFFF;
+}
+.associados-table tbody td.is-month-focus{
+  background:var(--brand-soft-10);
+  box-shadow: inset 0 0 0 1px var(--brand-soft-15);
+}
 
 /* Classificação: visual inspirado nos cards de Campeonato */
 .classificacao-table{border-collapse:separate;border-spacing:0 8px}

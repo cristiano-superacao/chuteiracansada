@@ -2576,6 +2576,7 @@ function renderAssociados(state) {
   const filter = getAssociadosFilter();
   const year = filter.ano;
   const monthKey = MONTHS.find((m) => m.label === filter.mes)?.key;
+  applyAssociadosMonthFocus(table, monthKey);
 
   const all = (state.data.associados ?? [])
     .filter((a) => associadosMatchesSearch(a, filter))
@@ -2672,6 +2673,23 @@ function renderAssociados(state) {
 
     tbody.appendChild(tr);
   });
+}
+
+function applyAssociadosMonthFocus(table, monthKey) {
+  if (!table) return;
+
+  table.querySelectorAll('.is-month-focus').forEach((el) => {
+    el.classList.remove('is-month-focus');
+  });
+
+  if (!monthKey) return;
+  const monthIndex = MONTHS.findIndex((m) => m.key === monthKey);
+  if (monthIndex < 0) return;
+
+  // Coluna 1=Nome, 2=Apelido, meses começam na 3.
+  const column = monthIndex + 3;
+  const selector = `thead th:nth-child(${column}), tbody td:nth-child(${column})`;
+  table.querySelectorAll(selector).forEach((el) => el.classList.add('is-month-focus'));
 }
 
 function updateAssociadosKpis(filteredAssociados, year, monthLabel, monthKey) {
