@@ -561,6 +561,10 @@ img{max-width:100%;height:auto}
 
 @media (min-width: 1280px){
   body[data-page="campeonato"] .container{max-width:1400px}
+  .cmp-kpi{padding:14px 16px}
+  .cmp-kpi__value{font-size:24px}
+  .card__header--campeonato .card__title{font-size:22px;letter-spacing:0.2px}
+  .card__header--campeonato .card__hint{font-size:13px;line-height:1.5}
   .cmp-toolbar{grid-template-columns:1fr auto;align-items:end}
   .cmp-toolbar__group--actions{justify-content:flex-end}
 }
@@ -1067,7 +1071,8 @@ body[data-page="campeonato"] .cup-title{
   letter-spacing:0.6px;
   text-transform:uppercase;
   padding:8px 10px 12px;
-  font-size:22px;
+  font-size:clamp(18px, 2.2vw, 22px);
+  line-height:1.2;
 }
 
 /* Layout de cartelas de rodadas (imagem 2 + adaptação para tabela imagem 1) */
@@ -1122,6 +1127,7 @@ body[data-page="campeonato"] .cup-card__round{
   border-radius:var(--radius-sm);
   padding:10px 10px;
   font-size:15px;
+  line-height:1.25;
   vertical-align:middle;
   background:var(--card);
   color:var(--text);
@@ -1132,12 +1138,21 @@ body[data-page="campeonato"] .cup-card__round{
   border-style:dashed;
   cursor:text;
 }
+.cup-table td[contenteditable="true"]:focus{
+  outline:2px solid var(--brand-ring);
+  outline-offset:1px;
+}
 
 /* Colunas específicas */
 .cup-col-time{width:72px;text-align:center;font-weight:800}
 .cup-col-team{font-weight:600;text-align:left;min-width:80px}
 .cup-col-team.team-home{text-align:right}
 .cup-col-team.team-away{text-align:left}
+.cup-col-team{
+  max-width:160px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
   
   .cup-col-score {
     width: 40px;
@@ -1169,6 +1184,7 @@ body[data-page="campeonato"] .cup-card__round{
     min-height:34px;
     padding:0;
   }
+  .cup-col-del .icon-btn:hover{color:var(--danger);border-color:rgba(211,47,47,0.35)}
 
 /* Mobile de Campeonato foi consolidado no @media (max-width: 768px) acima */
 

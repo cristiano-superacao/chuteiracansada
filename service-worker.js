@@ -1,6 +1,6 @@
 ﻿/* Chuteira Cansada - Service Worker (PWA) */
 
-const CACHE_NAME = 'chuteira-cansada-v24';
+const CACHE_NAME = 'chuteira-cansada-v25';
 
 const PRECACHE_URLS = [
   '/',
@@ -11,8 +11,8 @@ const PRECACHE_URLS = [
   '/classificacao.html',
   '/campeonato.html',
   '/entreterimento.html',
-  '/assets/styles.css?v=20260311-10',
-  '/assets/app.js?v=20260311-10',
+  '/assets/styles.css?v=20260311-11',
+  '/assets/app.js?v=20260311-11',
   '/manifest.json',
   '/assets/icon-192.png',
   '/assets/icon-512.png',
@@ -76,6 +76,7 @@ self.addEventListener('fetch', (event) => {
     })
   );
 });
+
 
 
 
