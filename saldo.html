@@ -1,20 +1,20 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#06AA48" />
-  <title>Chuteira Cansada — Saldo</title>
+  <title>Chuteira Cansada â€” Saldo</title>
   <link rel="manifest" href="manifest.json" />
   <link rel="icon" type="image/png" href="assets/icon-192.png" />
   <link rel="apple-touch-icon" href="assets/icon-192.png" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-  <link rel="stylesheet" href="assets/styles.css?v=20260311-08" />
+  <link rel="stylesheet" href="assets/styles.css?v=20260311-09" />
 </head>
 <body data-page="saldo">
-  <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+  <a class="skip-link" href="#conteudo">Pular para o conteÃºdo</a>
   
-  <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle menu">☰</button>
+  <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle menu">â˜°</button>
   <div class="sidebar-overlay" id="sidebar-overlay"></div>
   
   <aside class="sidebar" id="sidebar">
@@ -28,17 +28,17 @@
       </div>
     </div>
     
-    <nav class="sidebar__nav" aria-label="Navegação principal">
+    <nav class="sidebar__nav" aria-label="NavegaÃ§Ã£o principal">
       <ul class="sidebar__menu">
         <li><a class="sidebar__link" href="dashboard.html"><span class="sidebar__icon"><i class="fas fa-tachometer-alt"></i></span> Dashboard</a></li>
         <li><a class="sidebar__link" href="dashboard.html"><span class="sidebar__icon"><i class="fas fa-users"></i></span> Associados</a></li>
         <li><a class="sidebar__link" href="jogadores.html"><span class="sidebar__icon"><i class="fas fa-futbol"></i></span> Jogadores</a></li>
         <li><a class="sidebar__link" href="gastos.html"><span class="sidebar__icon"><i class="fas fa-money-bill-wave"></i></span> Gastos</a></li>
         <li><a class="sidebar__link is-active" href="saldo.html"><span class="sidebar__icon"><i class="fas fa-chart-line"></i></span> Saldo</a></li>
-        <li><a class="sidebar__link" href="classificacao.html"><span class="sidebar__icon"><i class="fas fa-trophy"></i></span> Classificação</a></li>
+        <li><a class="sidebar__link" href="classificacao.html"><span class="sidebar__icon"><i class="fas fa-trophy"></i></span> ClassificaÃ§Ã£o</a></li>
         <li><a class="sidebar__link" href="campeonato.html"><span class="sidebar__icon"><i class="fas fa-calendar-alt"></i></span> Campeonato</a></li>
         <li><a class="sidebar__link" href="entreterimento.html"><span class="sidebar__icon"><i class="fas fa-gamepad"></i></span> Entretenimento</a></li>
-        <li><a class="sidebar__link" href="dashboard.html#configuracoes"><span class="sidebar__icon"><i class="fas fa-cog"></i></span> Configurações</a></li>
+        <li><a class="sidebar__link" href="dashboard.html#configuracoes"><span class="sidebar__icon"><i class="fas fa-cog"></i></span> ConfiguraÃ§Ãµes</a></li>
       </ul>
     </nav>
     
@@ -51,7 +51,7 @@
     <main id="conteudo" class="container page">
     <header class="page__header">
       <h1 class="page__title">Saldo</h1>
-      <p class="page__subtitle">Visão consolidada de arrecadação e gastos para acompanhar o caixa mês a mês.</p>
+      <p class="page__subtitle">VisÃ£o consolidada de arrecadaÃ§Ã£o e gastos para acompanhar o caixa mÃªs a mÃªs.</p>
     </header>
 
     <section class="sal-overview" aria-label="Indicadores gerais do saldo">
@@ -77,15 +77,15 @@
           <p class="sal-kpi__value" id="saldo-kpi-meses-positivos">0</p>
         </article>
       </div>
-      <p class="sal-overview__hint" id="saldo-kpi-context">Indicadores gerais com base nos lançamentos atuais.</p>
+      <p class="sal-overview__hint" id="saldo-kpi-context">Indicadores gerais com base nos lanÃ§amentos atuais.</p>
     </section>
 
     <section class="grid">
       <div class="card">
         <div class="card__header">
           <div>
-            <h2 class="card__title">Arrecadação</h2>
-            <p class="card__hint">Use lançamentos (entrada) para registrar outras arrecadações (fora mensalidades).</p>
+            <h2 class="card__title">ArrecadaÃ§Ã£o</h2>
+            <p class="card__hint">Use lanÃ§amentos (entrada) para registrar outras arrecadaÃ§Ãµes (fora mensalidades).</p>
           </div>
           <div class="actions">
             <button class="btn" type="button" data-action="add-row" data-table="entradas" data-admin-only="1">Adicionar entrada</button>
@@ -97,11 +97,11 @@
           <table class="table table--striped table--sticky-first table--sticky-actions entradas-table" data-table="entradas">
             <thead>
               <tr>
-                <th class="w-140">Mês</th>
+                <th class="w-140">MÃªs</th>
                 <th class="w-160">Data</th>
                 <th>Origem</th>
                 <th class="w-160">Valor (R$)</th>
-                <th class="w-72" aria-label="Ações"></th>
+                <th class="w-72" aria-label="AÃ§Ãµes"></th>
               </tr>
             </thead>
             <tbody></tbody>
@@ -110,7 +110,7 @@
 
         <div class="card__footer">
           <div class="muted" data-slot="entradas-resumo"></div>
-          <button class="btn btn--primary" type="button" data-action="save" data-admin-only="1">Salvar alterações</button>
+          <button class="btn btn--primary" type="button" data-action="save" data-admin-only="1">Salvar alteraÃ§Ãµes</button>
         </div>
       </div>
 
@@ -128,15 +128,15 @@
       </div>
     </section>
 
-    <section class="card" aria-label="Detalhamento por mês">
+    <section class="card" aria-label="Detalhamento por mÃªs">
       <div class="card__header card__header--saldo-mensal">
         <div>
-          <h2 class="card__title">Por mês</h2>
-          <p class="card__hint">Compare entradas e gastos, aplicando filtros para leitura rápida.</p>
+          <h2 class="card__title">Por mÃªs</h2>
+          <p class="card__hint">Compare entradas e gastos, aplicando filtros para leitura rÃ¡pida.</p>
         </div>
         <div class="sal-toolbar" aria-label="Filtros de saldo mensal">
-          <label class="field" aria-label="Filtrar por mês">
-            <span class="field__label">Mês</span>
+          <label class="field" aria-label="Filtrar por mÃªs">
+            <span class="field__label">MÃªs</span>
             <select class="select" id="saldo-filter-mes">
               <option value="todos">Todos</option>
               <option>Jan</option>
@@ -173,7 +173,7 @@
         <table class="table table--striped table--sticky-first saldo-mensal-table" data-table="saldo-mensal">
           <thead>
             <tr>
-              <th class="w-140">Mês</th>
+              <th class="w-140">MÃªs</th>
               <th class="w-160">Entradas + Associados</th>
               <th class="w-160">Gastos</th>
               <th class="w-160">Saldo</th>
@@ -191,12 +191,13 @@
 
   <footer class="footer">
     <div class="container footer__inner">
-      <span class="muted">© 2026 Chuteira Cansada</span>
+      <span class="muted">Â© 2026 Chuteira Cansada</span>
       <span class="muted">Dados no servidor (Postgres) com fallback local</span>
     </div>
   </footer>
 
-  <script src="assets/app.js?v=20260311-08"></script>
+  <script src="assets/app.js?v=20260311-09"></script>
   </div>
 </body>
 </html>
+

@@ -270,7 +270,7 @@ img{max-width:100%;height:auto}
 }
 
 /* Compat: algumas páginas alternam .is-active */
-.sidebar-overlay.is-active{opacity:1}
+.sidebar-overlay.is-active{opacity:1;pointer-events:auto}
 
 /* Conteúdo principal ajustado para sidebar */
 .app-content{
@@ -735,7 +735,7 @@ img{max-width:100%;height:auto}
   .container{padding:0 16px}
 }
 
-@media (min-width: 721px) and (max-width: 1024px){
+@media (min-width: 768px) and (max-width: 1024px){
   :root{
     --topbar-h: 66px;
     --page-nav-h: 58px;

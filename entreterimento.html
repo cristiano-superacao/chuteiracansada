@@ -1,20 +1,20 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#06AA48" />
-  <title>Chuteira Cansada — Entretenimento</title>
+  <title>Chuteira Cansada â€” Entretenimento</title>
   <link rel="manifest" href="manifest.json" />
   <link rel="icon" type="image/png" href="assets/icon-192.png" />
   <link rel="apple-touch-icon" href="assets/icon-192.png" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-  <link rel="stylesheet" href="assets/styles.css?v=20260311-08" />
+  <link rel="stylesheet" href="assets/styles.css?v=20260311-09" />
 </head>
 <body data-page="entreterimento">
-  <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+  <a class="skip-link" href="#conteudo">Pular para o conteÃºdo</a>
   
-  <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle menu">☰</button>
+  <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle menu">â˜°</button>
   <div class="sidebar-overlay" id="sidebar-overlay"></div>
   
   <aside class="sidebar" id="sidebar">
@@ -28,17 +28,17 @@
       </div>
     </div>
     
-    <nav class="sidebar__nav" aria-label="Navegação principal">
+    <nav class="sidebar__nav" aria-label="NavegaÃ§Ã£o principal">
       <ul class="sidebar__menu">
         <li><a class="sidebar__link" href="dashboard.html"><span class="sidebar__icon"><i class="fas fa-tachometer-alt"></i></span> Dashboard</a></li>
         <li><a class="sidebar__link" href="dashboard.html"><span class="sidebar__icon"><i class="fas fa-users"></i></span> Associados</a></li>
         <li><a class="sidebar__link" href="jogadores.html"><span class="sidebar__icon"><i class="fas fa-futbol"></i></span> Jogadores</a></li>
         <li><a class="sidebar__link" href="gastos.html"><span class="sidebar__icon"><i class="fas fa-money-bill-wave"></i></span> Gastos</a></li>
         <li><a class="sidebar__link" href="saldo.html"><span class="sidebar__icon"><i class="fas fa-chart-line"></i></span> Saldo</a></li>
-        <li><a class="sidebar__link" href="classificacao.html"><span class="sidebar__icon"><i class="fas fa-trophy"></i></span> Classificação</a></li>
+        <li><a class="sidebar__link" href="classificacao.html"><span class="sidebar__icon"><i class="fas fa-trophy"></i></span> ClassificaÃ§Ã£o</a></li>
         <li><a class="sidebar__link" href="campeonato.html"><span class="sidebar__icon"><i class="fas fa-calendar-alt"></i></span> Campeonato</a></li>
         <li><a class="sidebar__link is-active" href="entreterimento.html"><span class="sidebar__icon"><i class="fas fa-gamepad"></i></span> Entretenimento</a></li>
-        <li><a class="sidebar__link" href="dashboard.html#configuracoes"><span class="sidebar__icon"><i class="fas fa-cog"></i></span> Configurações</a></li>
+        <li><a class="sidebar__link" href="dashboard.html#configuracoes"><span class="sidebar__icon"><i class="fas fa-cog"></i></span> ConfiguraÃ§Ãµes</a></li>
       </ul>
     </nav>
     
@@ -51,19 +51,19 @@
     <main id="conteudo" class="container page">
     <header class="page__header">
       <h1 class="page__title">Entretenimento</h1>
-      <p class="page__subtitle">Vídeos, imagens e posts da rodada. Qualquer pessoa pode comentar.</p>
+      <p class="page__subtitle">VÃ­deos, imagens e posts da rodada. Qualquer pessoa pode comentar.</p>
     </header>
 
     <div class="grid grid--even">
-      <section class="card" aria-label="Vídeos">
+      <section class="card" aria-label="VÃ­deos">
         <div class="card__header">
           <div>
-            <h2 class="card__title">Vídeos</h2>
+            <h2 class="card__title">VÃ­deos</h2>
             <p class="card__hint">Cole links (ex: YouTube). O site incorpora automaticamente.</p>
           </div>
           <div class="actions" data-admin-only="1">
             <label class="field">
-              <span class="field__label">Link do vídeo</span>
+              <span class="field__label">Link do vÃ­deo</span>
               <input class="input" id="campeonato-video-url" type="url" placeholder="https://..." />
             </label>
             <button class="btn" type="button" data-action="add-video">Adicionar</button>
@@ -76,7 +76,7 @@
         <div class="card__header">
           <div>
             <h2 class="card__title">Imagens</h2>
-            <p class="card__hint">Cole links de imagem (JPG/PNG/WebP). Exibição responsiva.</p>
+            <p class="card__hint">Cole links de imagem (JPG/PNG/WebP). ExibiÃ§Ã£o responsiva.</p>
           </div>
           <div class="actions" data-admin-only="1">
             <label class="field">
@@ -94,11 +94,11 @@
       <div class="card__header">
         <div>
           <h2 class="card__title">Entretenimento</h2>
-          <p class="card__hint">Posts da rodada e comentários. Qualquer pessoa pode comentar.</p>
+          <p class="card__hint">Posts da rodada e comentÃ¡rios. Qualquer pessoa pode comentar.</p>
         </div>
         <div class="actions" data-admin-only="1">
           <label class="field">
-            <span class="field__label">Título</span>
+            <span class="field__label">TÃ­tulo</span>
             <input class="input" id="campeonato-post-titulo" type="text" placeholder="Resumo da rodada..." />
           </label>
           <label class="field">
@@ -107,7 +107,7 @@
           </label>
           <label class="field" style="min-width:260px">
             <span class="field__label">Texto</span>
-            <input class="input" id="campeonato-post-texto" type="text" placeholder="Escreva um comentário do admin..." style="min-width:260px" />
+            <input class="input" id="campeonato-post-texto" type="text" placeholder="Escreva um comentÃ¡rio do admin..." style="min-width:260px" />
           </label>
           <button class="btn" type="button" data-action="add-post">Publicar</button>
         </div>
@@ -117,19 +117,20 @@
 
       <div class="card__footer">
         <span class="muted">Quando o servidor estiver online, tudo salva na nuvem (Postgres). Se falhar, usa fallback local.</span>
-        <button class="btn btn--primary" type="button" data-action="save" data-admin-only="1">Salvar alterações</button>
+        <button class="btn btn--primary" type="button" data-action="save" data-admin-only="1">Salvar alteraÃ§Ãµes</button>
       </div>
     </section>
   </main>
 
   <footer class="footer">
     <div class="container footer__inner">
-      <span class="muted">© 2026 Chuteira Cansada</span>
+      <span class="muted">Â© 2026 Chuteira Cansada</span>
       <span class="muted">Dados no servidor (Postgres) com fallback local</span>
     </div>
   </footer>
 
-  <script src="assets/app.js?v=20260311-08"></script>
+  <script src="assets/app.js?v=20260311-09"></script>
   </div>
 </body>
 </html>
+
