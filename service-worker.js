@@ -1,4 +1,4 @@
-﻿/* Chuteira Cansada â€” Service Worker (PWA) */
+﻿/* Chuteira Cansada - Service Worker (PWA) */
 
 const CACHE_NAME = 'chuteira-cansada-v23';
 
@@ -42,12 +42,12 @@ self.addEventListener('fetch', (event) => {
 
   if (request.method !== 'GET') return;
 
-  // Nunca cacheia a API.
+  // Never cache API responses.
   if (url.pathname.startsWith('/api')) {
     return;
   }
 
-  // NavegaÃ§Ã£o: tenta rede primeiro para pegar atualizaÃ§Ãµes; se falhar, usa cache.
+  // Navigation: try network first for fresh content; fallback to cache.
   if (request.mode === 'navigate') {
     event.respondWith(
       fetch(request)
@@ -61,7 +61,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Assets: cache-first simples.
+  // Static assets: simple cache-first strategy.
   event.respondWith(
     caches.match(request).then((cached) => {
       if (cached) return cached;
