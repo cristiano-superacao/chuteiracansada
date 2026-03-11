@@ -1194,6 +1194,10 @@ body[data-page="campeonato"] .cup-card__round{
 
 /* Barra de páginas logo abaixo da topbar */
 .sidebar{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   width: 100%;
   height: var(--page-nav-h);
   left: 0;
@@ -1205,13 +1209,26 @@ body[data-page="campeonato"] .cup-card__round{
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
 }
 
-/* Header e footer laterais não são necessários no modo topo */
-.sidebar__header,
+/* Header lateral não é necessário no modo topo */
+.sidebar__header{display:none}
+
+/* Mantém ação de sair visível no modo topo */
 .sidebar__footer{
-  display: none;
+  display:block;
+  border-top:none;
+  padding:8px 12px 8px 0;
+  flex-shrink:0;
+}
+
+.sidebar__footer .btn{
+  width:auto;
+  min-height:38px;
+  padding:8px 12px;
+  border-radius:999px;
 }
 
 .sidebar__nav{
+  flex:1;
   padding: 8px 12px;
   overflow-x: auto;
   overflow-y: hidden;
