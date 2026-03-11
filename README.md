@@ -41,6 +41,9 @@ Sistema completo e profissional para gestão de campeonato de futebol e controle
 Sincronizar/gerar credenciais de todos os associados já cadastrados:
 
 - Comando: `npm run sync:associados`
+- Exportar CSV de credenciais: `node -r dotenv/config server/sync-associados-users.js --export-csv`
+- Exportar CSV em caminho específico: `node -r dotenv/config server/sync-associados-users.js --csv=exports/credenciais.csv`
+- Preservar senhas atuais sem reset: `node -r dotenv/config server/sync-associados-users.js --preserve-passwords`
 - Senha padrão gerada para associados sem senha explícita: `ASSOCIADO_DEFAULT_PASSWORD` (ou `123456` se não definida)
 - Quando o associado não possui email cadastrado, o sistema gera email técnico automaticamente com domínio configurável em `ASSOCIADO_EMAIL_DOMAIN`.
 

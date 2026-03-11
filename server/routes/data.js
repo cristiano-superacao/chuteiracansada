@@ -107,6 +107,37 @@ function buildAssociadoFallbackEmail(item, associadoId) {
   return `${localPart}.${associadoId}@${domain}`;
 }
 
+async function upsertAssociadoUser(client, { associadoId, email, passwordHash }) {
+  const existingByAssociado = await client.query(
+    'SELECT id FROM users WHERE associado_id = $1 LIMIT 1',
+    [associadoId]
+  );
+
+  if (existingByAssociado.rowCount > 0) {
+    await client.query(
+      `UPDATE users
+       SET email = $1,
+           password_hash = $2,
+           role = 'associado',
+           ativo = TRUE
+       WHERE id = $3`,
+      [email, passwordHash, existingByAssociado.rows[0].id]
+    );
+    return;
+  }
+
+  await client.query(
+    `INSERT INTO users (email, password_hash, role, associado_id, ativo)
+     VALUES ($1, $2, 'associado', $3, TRUE)
+     ON CONFLICT (email)
+     DO UPDATE SET password_hash = EXCLUDED.password_hash,
+                   role = 'associado',
+                   associado_id = EXCLUDED.associado_id,
+                   ativo = TRUE`,
+    [email, passwordHash, associadoId]
+  );
+}
+
 async function fetchData() {
   const client = await pool.connect();
   try {
@@ -255,16 +286,7 @@ async function replaceAllData(data) {
 
       const ensuredEmail = email || buildAssociadoFallbackEmail(a, id);
       const passwordHash = await bcrypt.hash(getAssociadoDefaultPassword(a), 10);
-      await client.query(
-        `INSERT INTO users (email, password_hash, role, associado_id, ativo)
-         VALUES ($1, $2, 'associado', $3, TRUE)
-         ON CONFLICT (email)
-         DO UPDATE SET password_hash = EXCLUDED.password_hash,
-                       role = 'associado',
-                       associado_id = EXCLUDED.associado_id,
-                       ativo = TRUE`,
-        [ensuredEmail, passwordHash, id]
-      );
+      await upsertAssociadoUser(client, { associadoId: id, email: ensuredEmail, passwordHash });
 
       if (!email) {
         await client.query('UPDATE associados SET email = $1 WHERE id = $2', [ensuredEmail, id]);
@@ -626,16 +648,7 @@ router.post('/associados', requireAdmin, async (req, res) => {
 
     const ensuredEmail = email || buildAssociadoFallbackEmail({ nome, apelido }, id);
     const passwordHash = await bcrypt.hash(senha || getAssociadoDefaultPassword(req.body || {}), 10);
-    await client.query(
-      `INSERT INTO users (email, password_hash, role, associado_id, ativo)
-       VALUES ($1, $2, 'associado', $3, TRUE)
-       ON CONFLICT (email)
-       DO UPDATE SET password_hash = EXCLUDED.password_hash,
-                     role = 'associado',
-                     associado_id = EXCLUDED.associado_id,
-                     ativo = TRUE`,
-      [ensuredEmail, passwordHash, id]
-    );
+    await upsertAssociadoUser(client, { associadoId: id, email: ensuredEmail, passwordHash });
 
     if (!email) {
       await client.query('UPDATE associados SET email = $1 WHERE id = $2', [ensuredEmail, id]);

@@ -30,4 +30,5 @@ Thumbs.db
 /build/
 
 # Local data (optional)
+exports/
 *.sqlite

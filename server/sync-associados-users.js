@@ -1,4 +1,6 @@
 const bcrypt = require('bcrypt');
+const fs = require('fs');
+const path = require('path');
 const { pool, dbEnabled } = require('./db');
 
 function normalizeEmail(value) {
@@ -29,6 +31,14 @@ async function syncAssociadosUsers() {
     throw new Error('DATABASE_URL ausente. Configure o banco antes de sincronizar usuários.');
   }
 
+  const args = process.argv.slice(2);
+  const preservePasswords = args.includes('--preserve-passwords');
+  const exportCsv = args.includes('--export-csv') || args.some((a) => a.startsWith('--csv='));
+  const csvArg = args.find((a) => a.startsWith('--csv='));
+  const csvPath = csvArg
+    ? csvArg.slice('--csv='.length)
+    : path.join(process.cwd(), 'exports', 'credenciais-associados.csv');
+
   const client = await pool.connect();
   try {
     const associados = (await client.query(
@@ -37,34 +47,78 @@ async function syncAssociadosUsers() {
 
     let created = 0;
     let updated = 0;
+    const credentials = [];
 
     for (const a of associados) {
       const email = normalizeEmail(a.email) || buildFallbackEmail(a);
-      const passwordHash = await bcrypt.hash(resolvePassword(a), 10);
+      const plainPassword = resolvePassword(a);
+      const hashedPassword = await bcrypt.hash(plainPassword, 10);
 
-      const existedBefore = await client.query('SELECT 1 FROM users WHERE associado_id = $1 LIMIT 1', [a.id]);
-
-      await client.query(
-        `INSERT INTO users (email, password_hash, role, associado_id, ativo)
-         VALUES ($1, $2, 'associado', $3, TRUE)
-         ON CONFLICT (email)
-         DO UPDATE SET password_hash = EXCLUDED.password_hash,
-                       role = 'associado',
-                       associado_id = EXCLUDED.associado_id,
-                       ativo = TRUE,
-                       email = EXCLUDED.email
-         RETURNING id`,
-        [email, passwordHash, a.id]
+      const existingByAssociado = await client.query(
+        'SELECT id, email, password_hash FROM users WHERE associado_id = $1 LIMIT 1',
+        [a.id]
       );
+
+      if (existingByAssociado.rowCount > 0) {
+        const current = existingByAssociado.rows[0];
+        await client.query(
+          `UPDATE users
+           SET email = $1,
+               password_hash = $2,
+               role = 'associado',
+               ativo = TRUE
+           WHERE id = $3`,
+          [
+            email,
+            preservePasswords ? current.password_hash : hashedPassword,
+            current.id,
+          ]
+        );
+        updated += 1;
+      } else {
+        await client.query(
+          `INSERT INTO users (email, password_hash, role, associado_id, ativo)
+           VALUES ($1, $2, 'associado', $3, TRUE)
+           ON CONFLICT (email)
+           DO UPDATE SET password_hash = EXCLUDED.password_hash,
+                         role = 'associado',
+                         associado_id = EXCLUDED.associado_id,
+                         ativo = TRUE`,
+          [email, hashedPassword, a.id]
+        );
+        created += 1;
+      }
 
       if (!normalizeEmail(a.email)) {
         await client.query('UPDATE associados SET email = $1 WHERE id = $2', [email, a.id]);
       }
 
-      if (existedBefore.rowCount > 0) updated += 1;
-      else created += 1;
+      credentials.push({
+        nome: a.nome,
+        apelido: a.apelido || '',
+        email,
+        senha: preservePasswords ? '(mantida)' : plainPassword,
+      });
 
       console.log(`${a.nome} -> ${email}`);
+    }
+
+    if (exportCsv) {
+      const dir = path.dirname(csvPath);
+      fs.mkdirSync(dir, { recursive: true });
+
+      const escapeCsv = (value) => {
+        const s = String(value ?? '');
+        if (/[";,\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+        return s;
+      };
+
+      const lines = [
+        'nome;apelido;email;senha',
+        ...credentials.map((c) => [c.nome, c.apelido, c.email, c.senha].map(escapeCsv).join(';')),
+      ];
+      fs.writeFileSync(csvPath, lines.join('\n'), 'utf8');
+      console.log(`CSV de credenciais salvo em: ${csvPath}`);
     }
 
     console.log(`Sincronização concluída. Associados: ${associados.length}, criados: ${created}, atualizados: ${updated}.`);
