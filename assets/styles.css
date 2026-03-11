@@ -108,6 +108,7 @@ body{
 }
 
 a{color:inherit;text-decoration:none}
+img{max-width:100%;height:auto}
 
 /* Layout principal com sidebar + conteúdo */
 .app-layout{
@@ -259,11 +260,13 @@ a{color:inherit;text-decoration:none}
   background: rgba(0, 0, 0, 0.5);
   z-index: 35;
   opacity: 0;
+  pointer-events: none;
   transition: opacity var(--transition-base) ease;
 }
 
 .sidebar-overlay.is-visible{
   opacity: 1;
+  pointer-events: auto;
 }
 
 /* Compat: algumas páginas alternam .is-active */
@@ -299,7 +302,12 @@ a{color:inherit;text-decoration:none}
   outline-offset: 2px;
 }
 
-.container{width:100%;max-width:1280px;margin:0 auto;padding:0 20px}
+.container{width:100%;max-width:1280px;margin:0 auto;padding-left:16px;padding-right:16px}
+
+@media (min-width: 1280px){
+  .container{padding-left:20px;padding-right:20px}
+  .page{padding-top:32px}
+}
 
 .topbar{
   position:sticky;top:0;z-index:30;
@@ -314,7 +322,7 @@ a{color:inherit;text-decoration:none}
 .topbar__inner{
   display:flex;gap:14px;align-items:center;justify-content:space-between;
   width:100%;
-  padding: 0 20px;
+  padding: 0 16px;
 }
 
 .topbar__right{display:flex;align-items:center;gap:10px;justify-content:flex-end;flex-wrap:wrap}
@@ -570,7 +578,7 @@ a{color:inherit;text-decoration:none}
 }
 
 .img-grid{display:grid;grid-template-columns:1fr;gap:12px}
-@media (min-width: 720px){.img-grid{grid-template-columns:1fr 1fr}}
+@media (min-width: 768px){.img-grid{grid-template-columns:1fr 1fr}}
 .img-card{border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;background:var(--card);box-shadow: var(--shadow);transition: transform var(--transition-base) ease, box-shadow var(--transition-base) ease;}
 .img-card:hover{transform: translateY(-2px);box-shadow: var(--shadow-md);}
 .img-card img{display:block;width:100%;height:auto}
@@ -825,7 +833,7 @@ a{color:inherit;text-decoration:none}
 }
 .icon-btn:hover{border-color:var(--brand-1);background:var(--brand-soft-08);transform:translateY(-1px);box-shadow: var(--shadow-md);}
 
-@media (max-width: 720px){
+@media (max-width: 768px){
   .container{padding:0 12px}
   .page{padding:20px 0 36px}
 
@@ -1102,7 +1110,7 @@ body[data-page="campeonato"] .cup-card__round{
     cursor: pointer;
   }
 
-/* Mobile de Campeonato foi consolidado no @media (max-width: 720px) acima */
+/* Mobile de Campeonato foi consolidado no @media (max-width: 768px) acima */
 
 /* =========================================================
    Navegação no topo (substitui menu lateral)
@@ -1183,35 +1191,75 @@ body.is-scrolled .sidebar{
   backdrop-filter: blur(10px);
 }
 
-/* Desativa comportamento de drawer mobile antigo */
-.sidebar-toggle,
-.sidebar-overlay{
-  display: none !important;
-}
+/* Mobile: menu colapsável em drawer */
+@media (max-width: 768px){
+  .sidebar-toggle{
+    display:flex !important;
+    align-items:center;
+    justify-content:center;
+  }
 
-@media (max-width: 720px){
+  .sidebar-overlay{
+    display:block !important;
+  }
+
   .sidebar{
-    transform: none !important;
-    height: var(--page-nav-h);
+    width:250px;
+    top:0;
+    left:0;
+    right:auto;
+    bottom:0;
+    height:100vh;
+    transform:translateX(-100%) !important;
+    border-right:1px solid var(--border);
+    border-bottom:none;
+    box-shadow: 8px 0 24px rgba(0, 0, 0, 0.18);
+    z-index:45;
+  }
+
+  .sidebar.is-open{
+    transform:translateX(0) !important;
+  }
+
+  .sidebar__header,
+  .sidebar__footer{
+    display:flex;
+  }
+
+  .sidebar__footer{
+    display:block;
   }
 
   .sidebar__nav{
-    padding: 7px 10px;
+    padding: 12px 10px;
+    overflow-y:auto;
+    overflow-x:hidden;
+  }
+
+  .sidebar__menu{
+    display:block;
+    width:100%;
+  }
+
+  .sidebar__menu-item{
+    margin:0 0 6px;
   }
 
   .sidebar__link{
-    padding: 8px 12px;
-    font-size: 13px;
-    gap: 8px;
+    padding: 12px 14px;
+    font-size: 14px;
+    gap: 10px;
+    border-radius: 10px;
+  }
+
+  .sidebar__icon{
+    font-size: 16px;
+    width: 18px;
   }
 
   .app-content{
     margin-left: 0;
-    padding-top: var(--page-nav-h);
-  }
-
-  .topbar__inner{
-    padding-left: 16px;
+    padding-top: 0;
   }
 }
 
