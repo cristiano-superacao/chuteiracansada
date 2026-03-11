@@ -247,6 +247,7 @@
             </div>
             <div class="info-card__detail" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border-color)">
               <span class="info-card__detail-label" style="font-size:16px;font-weight:600;color:var(--text-dark)" id="next-game-match">- vs -</span>
+              <span class="my-team-chip" id="next-game-badge" style="display:none">Meu time</span>
             </div>
             <div class="info-card__detail" style="margin-top:8px">
               <span class="info-card__detail-value" id="next-game-focus" style="font-size:12px;color:var(--text-light)">Carregando contexto...</span>
@@ -591,6 +592,7 @@
         const games = await apiGetJson('/api/data/campeonato-jogos');
         const myTeamName = playerContext?.myTeam?.time || '';
         const focusEl = document.getElementById('next-game-focus');
+        const badgeEl = document.getElementById('next-game-badge');
         
         if (games && games.length > 0) {
           const { game: nextGame, isMyTeam } = pickNextGame(games, myTeamName);
@@ -604,6 +606,7 @@
           document.getElementById('next-game-time').textContent = nextGame.hora || '-';
           document.getElementById('next-game-location').textContent = nextGame.local || '-';
           document.getElementById('next-game-match').textContent = `${nextGame.casa} vs ${nextGame.fora}`;
+          if (badgeEl) badgeEl.style.display = isMyTeam ? 'inline-flex' : 'none';
 
           if (focusEl) {
             focusEl.textContent = isMyTeam
@@ -613,11 +616,14 @@
         } else {
           document.getElementById('next-game-date').textContent = 'Nenhum jogo agendado';
           if (focusEl) focusEl.textContent = 'Sem partidas registradas no momento.';
+          if (badgeEl) badgeEl.style.display = 'none';
         }
       } catch (err) {
         console.error('Erro ao carregar próximo jogo:', err);
         const focusEl = document.getElementById('next-game-focus');
         if (focusEl) focusEl.textContent = 'Não foi possível carregar o próximo jogo agora.';
+        const badgeEl = document.getElementById('next-game-badge');
+        if (badgeEl) badgeEl.style.display = 'none';
       }
     }
 
