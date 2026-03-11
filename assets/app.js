@@ -2586,6 +2586,8 @@ function renderAssociados(state) {
       return isPaymentPending(v);
     });
 
+  updateAssociadosKpis(all, year, filter.mes, monthKey);
+
   const total = all.length;
 
   // Visitante deve conseguir ver a lista completa (sem ficar preso na 1ª página).
@@ -2670,6 +2672,41 @@ function renderAssociados(state) {
 
     tbody.appendChild(tr);
   });
+}
+
+function updateAssociadosKpis(filteredAssociados, year, monthLabel, monthKey) {
+  const totalEl = document.getElementById('associados-kpi-total');
+  const pagosEl = document.getElementById('associados-kpi-pagos');
+  const pendEl = document.getElementById('associados-kpi-pendentes');
+  const arrecadadoEl = document.getElementById('associados-kpi-arrecadado');
+  const adimplenciaEl = document.getElementById('associados-kpi-adimplencia');
+  const contextEl = document.getElementById('associados-kpi-context');
+
+  if (!totalEl && !pagosEl && !pendEl && !arrecadadoEl && !adimplenciaEl && !contextEl) return;
+
+  const list = Array.isArray(filteredAssociados) ? filteredAssociados : [];
+  const total = list.length;
+
+  let pagos = 0;
+  let pendentes = 0;
+  let arrecadado = 0;
+
+  for (const a of list) {
+    const val = monthKey ? getPagamentoRaw(a, year, monthKey) : '';
+    const amount = paymentAmount(val);
+    arrecadado += amount;
+    if (amount > 0) pagos += 1;
+    else pendentes += 1;
+  }
+
+  const taxa = total > 0 ? Math.round((pagos / total) * 100) : 0;
+
+  if (totalEl) totalEl.textContent = String(total);
+  if (pagosEl) pagosEl.textContent = String(pagos);
+  if (pendEl) pendEl.textContent = String(pendentes);
+  if (arrecadadoEl) arrecadadoEl.textContent = money(arrecadado);
+  if (adimplenciaEl) adimplenciaEl.textContent = `${taxa}%`;
+  if (contextEl) contextEl.textContent = `Métricas para ${monthLabel}/${year} com os filtros atuais.`;
 }
 
 function renderInadimplentes(state) {

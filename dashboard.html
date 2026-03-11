@@ -9,7 +9,7 @@
   <link rel="icon" type="image/png" href="assets/icon-192.png" />
   <link rel="apple-touch-icon" href="assets/icon-192.png" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-  <link rel="stylesheet" href="assets/styles.css?v=20260311-02" />
+  <link rel="stylesheet" href="assets/styles.css?v=20260311-03" />
 </head>
 <body data-page="associados">
   <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
@@ -101,54 +101,88 @@
     <main id="conteudo" class="container page">
     <header class="page__header">
       <h1 class="page__title">Associados</h1>
-      <p class="page__subtitle">Acompanhe pagamentos por mês (Janeiro a Dezembro).</p>
+      <p class="page__subtitle">Acompanhe pagamentos, pendências e arrecadação mensal em uma visão única.</p>
     </header>
 
+    <section class="assoc-overview" aria-label="Resumo do mês de associados">
+      <div class="assoc-kpis">
+        <article class="assoc-kpi" aria-live="polite">
+          <p class="assoc-kpi__label">Associados</p>
+          <p class="assoc-kpi__value" id="associados-kpi-total">0</p>
+        </article>
+        <article class="assoc-kpi" aria-live="polite">
+          <p class="assoc-kpi__label">Pagos no mês</p>
+          <p class="assoc-kpi__value assoc-kpi__value--ok" id="associados-kpi-pagos">0</p>
+        </article>
+        <article class="assoc-kpi" aria-live="polite">
+          <p class="assoc-kpi__label">Pendentes no mês</p>
+          <p class="assoc-kpi__value assoc-kpi__value--warn" id="associados-kpi-pendentes">0</p>
+        </article>
+        <article class="assoc-kpi" aria-live="polite">
+          <p class="assoc-kpi__label">Arrecadado</p>
+          <p class="assoc-kpi__value" id="associados-kpi-arrecadado">R$ 0,00</p>
+        </article>
+        <article class="assoc-kpi" aria-live="polite">
+          <p class="assoc-kpi__label">Taxa de adimplência</p>
+          <p class="assoc-kpi__value" id="associados-kpi-adimplencia">0%</p>
+        </article>
+      </div>
+      <p class="assoc-overview__hint" id="associados-kpi-context">Métricas do mês selecionado.</p>
+    </section>
+
     <section class="card" aria-label="Tabela de associados">
-      <div class="card__header">
+      <div class="card__header card__header--associados">
         <div>
           <h2 class="card__title">Pagamentos</h2>
           <p class="card__hint">Clique em uma célula para editar. Com servidor ativo, salva para todos; se não, usa fallback local.</p>
         </div>
-        <div class="actions">
-          <button class="btn" type="button" data-action="add-row" data-table="associados" data-admin-only="1">Adicionar associado</button>
-          <button class="btn" type="button" data-action="import-associados" data-admin-only="1">Importar Excel</button>
-          <button class="btn btn--ghost" type="button" data-action="download-associados-template">Baixar template</button>
-          <label class="field" aria-label="Pesquisar por nome">
-            <span class="field__label">Nome</span>
-            <input class="input" id="associados-search-nome" type="search" placeholder="Pesquisar..." />
-          </label>
-          <label class="field" aria-label="Pesquisar por apelido">
-            <span class="field__label">Apelido</span>
-            <input class="input" id="associados-search-apelido" type="search" placeholder="Pesquisar..." />
-          </label>
-          <label class="field" aria-label="Filtrar ano">
-            <span class="field__label">Ano</span>
-            <input class="input" id="associados-filter-ano" type="number" inputmode="numeric" min="2000" max="2100" placeholder="2026" />
-          </label>
-          <label class="field" aria-label="Filtrar mês">
-            <span class="field__label">Mês</span>
-            <select class="select" id="associados-filter-mes">
-              <option>Jan</option>
-              <option>Fev</option>
-              <option>Mar</option>
-              <option>Abr</option>
-              <option>Mai</option>
-              <option>Jun</option>
-              <option>Jul</option>
-              <option>Ago</option>
-              <option>Set</option>
-              <option>Out</option>
-              <option>Nov</option>
-              <option>Dez</option>
-            </select>
-          </label>
-          <label class="check" title="Mostrar apenas associados com pagamento pendente no mês selecionado">
-            <input type="checkbox" id="associados-filter-pendentes" />
-            <span>Somente pendentes</span>
-          </label>
-          <button class="btn" type="button" data-action="export-associados-pdf">Exportar PDF</button>
-          <button class="btn btn--ghost" type="button" data-action="reset" data-scope="associados" data-admin-only="1">Restaurar exemplo</button>
+        <div class="assoc-toolbar" aria-label="Ferramentas de associados">
+          <div class="assoc-toolbar__group assoc-toolbar__group--actions">
+            <button class="btn" type="button" data-action="add-row" data-table="associados" data-admin-only="1">Adicionar associado</button>
+            <button class="btn" type="button" data-action="import-associados" data-admin-only="1">Importar Excel</button>
+            <button class="btn btn--ghost" type="button" data-action="download-associados-template">Baixar template</button>
+          </div>
+
+          <div class="assoc-toolbar__group assoc-toolbar__group--filters">
+            <label class="field" aria-label="Pesquisar por nome">
+              <span class="field__label">Nome</span>
+              <input class="input" id="associados-search-nome" type="search" placeholder="Pesquisar por nome..." />
+            </label>
+            <label class="field" aria-label="Pesquisar por apelido">
+              <span class="field__label">Apelido</span>
+              <input class="input" id="associados-search-apelido" type="search" placeholder="Pesquisar por apelido..." />
+            </label>
+            <label class="field" aria-label="Filtrar ano">
+              <span class="field__label">Ano</span>
+              <input class="input" id="associados-filter-ano" type="number" inputmode="numeric" min="2000" max="2100" placeholder="2026" />
+            </label>
+            <label class="field" aria-label="Filtrar mês">
+              <span class="field__label">Mês</span>
+              <select class="select" id="associados-filter-mes">
+                <option>Jan</option>
+                <option>Fev</option>
+                <option>Mar</option>
+                <option>Abr</option>
+                <option>Mai</option>
+                <option>Jun</option>
+                <option>Jul</option>
+                <option>Ago</option>
+                <option>Set</option>
+                <option>Out</option>
+                <option>Nov</option>
+                <option>Dez</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="assoc-toolbar__group assoc-toolbar__group--utilities">
+            <label class="check" title="Mostrar apenas associados com pagamento pendente no mês selecionado">
+              <input type="checkbox" id="associados-filter-pendentes" />
+              <span>Somente pendentes</span>
+            </label>
+            <button class="btn" type="button" data-action="export-associados-pdf">Exportar PDF</button>
+            <button class="btn btn--ghost" type="button" data-action="reset" data-scope="associados" data-admin-only="1">Restaurar exemplo</button>
+          </div>
         </div>
       </div>
 
@@ -264,6 +298,6 @@
   <input id="import-associados-file" type="file" accept=".xlsx,.xls,.csv" hidden />
 
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script src="assets/app.js?v=20260310-20"></script>
+  <script src="assets/app.js?v=20260311-03"></script>
 </body>
 </html>
