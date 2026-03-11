@@ -42,12 +42,54 @@ CREATE TABLE IF NOT EXISTS associados_pagamentos (
 CREATE TABLE IF NOT EXISTS jogadores (
   id BIGSERIAL PRIMARY KEY,
   nome TEXT NOT NULL,
+  email TEXT,
   time TEXT NOT NULL DEFAULT '',
   gols INT NOT NULL DEFAULT 0,
   amarelos INT NOT NULL DEFAULT 0,
   vermelhos INT NOT NULL DEFAULT 0,
   suspensoes INT NOT NULL DEFAULT 0
 );
+
+ALTER TABLE jogadores ADD COLUMN IF NOT EXISTS email TEXT;
+
+ALTER TABLE users ADD COLUMN IF NOT EXISTS jogador_id BIGINT;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conname = 'users_jogador_id_fkey'
+      AND conrelid = 'users'::regclass
+  ) THEN
+    ALTER TABLE users
+      ADD CONSTRAINT users_jogador_id_fkey
+      FOREIGN KEY (jogador_id) REFERENCES jogadores(id) ON DELETE CASCADE;
+  END IF;
+END $$;
+
+CREATE UNIQUE INDEX IF NOT EXISTS users_jogador_id_unique_idx
+  ON users (jogador_id)
+  WHERE jogador_id IS NOT NULL;
+
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conname = 'users_role_check'
+      AND conrelid = 'users'::regclass
+  ) THEN
+    ALTER TABLE users DROP CONSTRAINT users_role_check;
+  END IF;
+
+  ALTER TABLE users
+    ADD CONSTRAINT users_role_check
+    CHECK (role IN ('admin', 'associado', 'jogador'));
+EXCEPTION
+  WHEN duplicate_object THEN
+    NULL;
+END $$;
 
 -- Gastos
 CREATE TABLE IF NOT EXISTS gastos (

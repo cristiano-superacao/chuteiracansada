@@ -425,6 +425,8 @@
         window.location.href = '/dashboard.html';
       } else if (role === 'associado') {
         window.location.href = '/inicio.html';
+      } else if (role === 'jogador') {
+        window.location.href = '/jogador.html';
       }
     }
 
@@ -468,7 +470,7 @@
             showAlert(
               'E-mail ou senha incorretos. ' +
               'Se for admin: use o e-mail de ADMIN_EMAIL (padrão: admin@admin) e a senha de ADMIN_PASSWORD (Railway). ' +
-              'Se for associado: a senha padrão é 123456 (ou ASSOCIADO_DEFAULT_PASSWORD).'
+              'Se for associado/jogador: a senha padrão é 123456 (ou ASSOCIADO_DEFAULT_PASSWORD / JOGADOR_DEFAULT_PASSWORD).'
             );
           } else if (code === 'missing_credentials' || response.status === 400) {
             showAlert('Preencha e-mail e senha');

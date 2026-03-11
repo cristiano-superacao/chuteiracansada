@@ -96,9 +96,12 @@ async function createAdminUser(email, password) {
 async function listUsers() {
   try {
     const result = await pool.query(`
-      SELECT u.id, u.email, u.role, u.ativo, a.nome, a.apelido
+            SELECT u.id, u.email, u.role, u.ativo,
+              a.nome AS associado_nome,
+              j.nome AS jogador_nome
       FROM users u
       LEFT JOIN associados a ON u.associado_id = a.id
+            LEFT JOIN jogadores j ON u.jogador_id = j.id
       ORDER BY u.id ASC
     `);
 
@@ -107,7 +110,7 @@ async function listUsers() {
     console.log('---|------------------------|------------|-------------------|------');
     
     result.rows.forEach(user => {
-      const nome = user.nome || '—';
+      const nome = user.associado_nome || user.jogador_nome || '—';
       const ativo = user.ativo ? '✅' : '❌';
       console.log(
         `${String(user.id).padEnd(2)} | ${user.email.padEnd(22)} | ${user.role.padEnd(10)} | ${nome.padEnd(17)} | ${ativo}`

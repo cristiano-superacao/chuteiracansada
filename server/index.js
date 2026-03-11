@@ -8,7 +8,7 @@ const session = require('express-session');
 const passport = require('passport');
 const { migrateWithRetry } = require('./migrate');
 const { pool, dbEnabled } = require('./db');
-const { ensureAdminUser } = require('./user-service');
+const { ensureAdminUser, syncJogadorUsers } = require('./user-service');
 const { authRouter } = require('./routes/auth');
 const { dataRouter } = require('./routes/data');
 const oauthRouter = require('./routes/oauth');
@@ -149,6 +149,13 @@ function listenAsync(port) {
       }
     } catch (err) {
       console.warn('[auth] não foi possível sincronizar usuário admin no banco:', err?.message || err);
+    }
+
+    try {
+      const players = await syncJogadorUsers();
+      console.log(`[auth] jogadores sincronizados: total=${players.total}, criados=${players.created}, atualizados=${players.updated}`);
+    } catch (err) {
+      console.warn('[auth] não foi possível sincronizar usuários de jogadores:', err?.message || err);
     }
   } catch (err) {
     console.error('Migrações falharam após várias tentativas. A API seguirá executando, mas operações de dados podem falhar até corrigir a conexão ao banco.', err);

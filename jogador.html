@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#06AA48" />
+  <title>Chuteira Cansada - Meu Histórico</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/png" href="assets/icon-192.png" />
+  <link rel="apple-touch-icon" href="assets/icon-192.png" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="assets/styles.css?v=20260311-16" />
+</head>
+<body data-page="jogador">
+  <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+
+  <div class="app-content">
+    <main id="conteudo" class="container stack-lg" tabindex="-1">
+      <section class="card player-hero" aria-label="Resumo do jogador">
+        <div>
+          <h1 class="card__title">Meu Histórico</h1>
+          <p class="card__hint">Acompanhe suas estatísticas e jogos do seu time em tempo real.</p>
+        </div>
+        <div class="player-hero__identity">
+          <p><strong>Jogador:</strong> <span id="jgd-nome">—</span></p>
+          <p><strong>Time:</strong> <span id="jgd-time">—</span></p>
+          <p><strong>Status do time:</strong> <span id="jgd-posicao-time">—</span></p>
+        </div>
+      </section>
+
+      <section class="player-kpis" aria-label="Indicadores do jogador">
+        <article class="player-kpi">
+          <p class="player-kpi__label">Gols</p>
+          <p class="player-kpi__value" id="jgd-gols">0</p>
+        </article>
+        <article class="player-kpi">
+          <p class="player-kpi__label">Amarelos</p>
+          <p class="player-kpi__value" id="jgd-amarelos">0</p>
+        </article>
+        <article class="player-kpi">
+          <p class="player-kpi__label">Vermelhos</p>
+          <p class="player-kpi__value" id="jgd-vermelhos">0</p>
+        </article>
+        <article class="player-kpi">
+          <p class="player-kpi__label">Suspensões</p>
+          <p class="player-kpi__value" id="jgd-suspensoes">0</p>
+        </article>
+        <article class="player-kpi">
+          <p class="player-kpi__label">Jogos no histórico</p>
+          <p class="player-kpi__value" id="jgd-total-jogos">0</p>
+        </article>
+      </section>
+
+      <section class="player-history-grid" aria-label="Histórico de jogos">
+        <article class="card">
+          <div class="card__header">
+            <h2 class="card__title">Últimos Jogos</h2>
+          </div>
+          <div id="jgd-ultimos-jogos" class="stack"></div>
+        </article>
+
+        <article class="card">
+          <div class="card__header">
+            <h2 class="card__title">Próximos Jogos</h2>
+          </div>
+          <div id="jgd-proximos-jogos" class="stack"></div>
+        </article>
+      </section>
+    </main>
+  </div>
+
+  <script src="assets/app.js?v=20260311-18"></script>
+</body>
+</html>

@@ -89,6 +89,11 @@ function normalizeAssociadoEmail(value) {
   return email || null;
 }
 
+function normalizeJogadorEmail(value) {
+  const email = String(value ?? '').trim().toLowerCase();
+  return email || null;
+}
+
 function getAssociadoDefaultPassword(item) {
   const explicit = String(item?.senha ?? item?.password ?? '').trim();
   if (explicit) return explicit;
@@ -105,6 +110,24 @@ function buildAssociadoFallbackEmail(item, associadoId) {
   const localPart = fromName || `associado.${associadoId}`;
   const domain = String(process.env.ASSOCIADO_EMAIL_DOMAIN || 'associado.chuteira.local').trim().toLowerCase();
   return `${localPart}.${associadoId}@${domain}`;
+}
+
+function getJogadorDefaultPassword(item) {
+  const explicit = String(item?.senha ?? item?.password ?? '').trim();
+  if (explicit) return explicit;
+  return String(process.env.JOGADOR_DEFAULT_PASSWORD || '123456').trim() || '123456';
+}
+
+function buildJogadorFallbackEmail(item, jogadorId) {
+  const fromName = String(item?.nome || '').trim().toLowerCase()
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .replace(/[^a-z0-9]+/g, '.')
+    .replace(/^\.+|\.+$/g, '')
+    .slice(0, 40);
+  const localPart = fromName || `jogador.${jogadorId}`;
+  const domain = String(process.env.JOGADOR_EMAIL_DOMAIN || 'jogador.chuteira.local').trim().toLowerCase();
+  return `${localPart}.${jogadorId}@${domain}`;
 }
 
 async function upsertAssociadoUser(client, { associadoId, email, passwordHash }) {
@@ -136,6 +159,60 @@ async function upsertAssociadoUser(client, { associadoId, email, passwordHash })
                    ativo = TRUE`,
     [email, passwordHash, associadoId]
   );
+}
+
+async function upsertJogadorUser(client, { jogadorId, email, fallbackEmail, passwordHash }) {
+  const existingByJogador = await client.query(
+    'SELECT id FROM users WHERE jogador_id = $1 LIMIT 1',
+    [jogadorId]
+  );
+
+  const tryUpdate = async (targetEmail, userId) => {
+    await client.query(
+      `UPDATE users
+       SET email = $1,
+           password_hash = $2,
+           role = 'jogador',
+           associado_id = NULL,
+           jogador_id = $3,
+           ativo = TRUE
+       WHERE id = $4`,
+      [targetEmail, passwordHash, jogadorId, userId]
+    );
+  };
+
+  const tryInsert = async (targetEmail) => {
+    await client.query(
+      `INSERT INTO users (email, password_hash, role, associado_id, jogador_id, ativo)
+       VALUES ($1, $2, 'jogador', NULL, $3, TRUE)`,
+      [targetEmail, passwordHash, jogadorId]
+    );
+  };
+
+  const candidates = [email, fallbackEmail].filter(Boolean);
+
+  if (existingByJogador.rowCount > 0) {
+    for (const candidate of candidates) {
+      try {
+        await tryUpdate(candidate, existingByJogador.rows[0].id);
+        return candidate;
+      } catch (err) {
+        if (err?.code !== '23505') throw err;
+      }
+    }
+    throw new Error('failed_to_update_jogador_user_email');
+  }
+
+  for (const candidate of candidates) {
+    try {
+      await tryInsert(candidate);
+      return candidate;
+    } catch (err) {
+      if (err?.code !== '23505') throw err;
+    }
+  }
+
+  throw new Error('failed_to_create_jogador_user_email');
 }
 
 async function fetchData() {
@@ -296,10 +373,12 @@ async function replaceAllData(data) {
     // Jogadores
     const jogadores = Array.isArray(data?.jogadores) ? data.jogadores : [];
     for (const j of jogadores) {
-      await client.query(
-        'INSERT INTO jogadores (nome, time, gols, amarelos, vermelhos, suspensoes) VALUES ($1,$2,$3,$4,$5,$6)',
+      const email = normalizeJogadorEmail(j?.email);
+      const ins = await client.query(
+        'INSERT INTO jogadores (nome, email, time, gols, amarelos, vermelhos, suspensoes) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id',
         [
           String(j?.nome ?? '').trim() || '—',
+          email,
           String(j?.time ?? '').trim(),
           Number(j?.gols) || 0,
           Number(j?.amarelos) || 0,
@@ -307,6 +386,20 @@ async function replaceAllData(data) {
           Number(j?.suspensoes) || 0,
         ]
       );
+
+      const jogadorId = ins.rows[0].id;
+      const fallbackEmail = buildJogadorFallbackEmail(j, jogadorId);
+      const passwordHash = await bcrypt.hash(getJogadorDefaultPassword(j), 10);
+      const ensuredEmail = await upsertJogadorUser(client, {
+        jogadorId,
+        email: email || fallbackEmail,
+        fallbackEmail,
+        passwordHash,
+      });
+
+      if (!email) {
+        await client.query('UPDATE jogadores SET email = $1 WHERE id = $2', [ensuredEmail, jogadorId]);
+      }
     }
 
     // Gastos
@@ -424,6 +517,23 @@ function sendDbAware(res, err, fallbackStatus, payload) {
   return res.status(fallbackStatus).json(payload);
 }
 
+function parseDateTimeForSort(data, hora) {
+  const d = String(data || '').trim();
+  const h = String(hora || '').trim();
+  const hm = /^([01]?\d|2[0-3]):([0-5]\d)$/.test(h) ? h : '00:00';
+
+  let m = d.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (m) return Date.parse(`${m[1]}-${m[2]}-${m[3]}T${hm}:00`);
+
+  m = d.match(/^(\d{2})\/(\d{2})(?:\/(\d{4}))?$/);
+  if (m) {
+    const year = m[3] || String(new Date().getFullYear());
+    return Date.parse(`${year}-${m[2]}-${m[1]}T${hm}:00`);
+  }
+
+  return Number.NaN;
+}
+
 // ===== Rotas autenticadas para o painel do associado (compat com inicio.html) =====
 router.get('/data/jogadores', requireAuth, async (_req, res) => {
   try {
@@ -449,6 +559,85 @@ router.get('/data/campeonato-jogos', requireAuth, async (_req, res) => {
   try {
     const data = await fetchData();
     res.json(data.campeonato?.jogos || []);
+  } catch (err) {
+    console.error(err);
+    sendDbAware(res, err, 500, { error: 'failed_to_load' });
+  }
+});
+
+router.get('/data/jogador/me', requireAuth, async (req, res) => {
+  const role = String(req.user?.role || '');
+  const tokenJogadorId = Number(req.user?.jogadorId || req.user?.jogador_id || 0);
+  const queryJogadorId = Number(req.query?.jogadorId || 0);
+
+  if (role !== 'jogador' && role !== 'admin') {
+    return res.status(403).json({ error: 'forbidden' });
+  }
+
+  try {
+    let jogadorId = role === 'admin' && queryJogadorId > 0 ? queryJogadorId : tokenJogadorId;
+    if ((!Number.isFinite(jogadorId) || jogadorId <= 0) && role === 'admin') {
+      const firstJogador = await pool.query('SELECT id FROM jogadores ORDER BY id ASC LIMIT 1');
+      jogadorId = Number(firstJogador.rows?.[0]?.id || 0);
+    }
+    if (!Number.isFinite(jogadorId) || jogadorId <= 0) {
+      return res.status(404).json({ error: 'jogador_not_found' });
+    }
+
+    const jogadorRes = await pool.query(
+      'SELECT id, nome, email, time, gols, amarelos, vermelhos, suspensoes FROM jogadores WHERE id = $1 LIMIT 1',
+      [jogadorId]
+    );
+    if (jogadorRes.rowCount === 0) {
+      return res.status(404).json({ error: 'jogador_not_found' });
+    }
+
+    const jogador = jogadorRes.rows[0];
+    const time = String(jogador.time || '').trim();
+
+    const classRes = time
+      ? await pool.query('SELECT * FROM times WHERE LOWER(TRIM(time)) = LOWER(TRIM($1)) LIMIT 1', [time])
+      : { rows: [] };
+
+    const jogosRes = time
+      ? await pool.query(
+        `SELECT id, rodada, data, hora, casa, placar, fora, local
+         FROM campeonato_jogos
+         WHERE LOWER(TRIM(casa)) = LOWER(TRIM($1))
+            OR LOWER(TRIM(fora)) = LOWER(TRIM($1))`,
+        [time]
+      )
+      : { rows: [] };
+
+    const jogosOrdenados = jogosRes.rows
+      .slice()
+      .sort((a, b) => parseDateTimeForSort(b.data, b.hora) - parseDateTimeForSort(a.data, a.hora));
+
+    const now = Date.now();
+    const ultimosJogos = jogosOrdenados
+      .filter((j) => {
+        const ts = parseDateTimeForSort(j.data, j.hora);
+        return Number.isFinite(ts) && ts <= now;
+      })
+      .slice(0, 10);
+
+    const proximosJogos = jogosOrdenados
+      .filter((j) => {
+        const ts = parseDateTimeForSort(j.data, j.hora);
+        return Number.isFinite(ts) && ts > now;
+      })
+      .reverse()
+      .slice(0, 10);
+
+    return res.json({
+      jogador,
+      classificacaoTime: classRes.rows?.[0] || null,
+      historico: {
+        jogosDoTime: jogosOrdenados,
+        ultimosJogos,
+        proximosJogos,
+      },
+    });
   } catch (err) {
     console.error(err);
     sendDbAware(res, err, 500, { error: 'failed_to_load' });

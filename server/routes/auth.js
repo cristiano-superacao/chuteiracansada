@@ -47,9 +47,12 @@ router.post('/login', async (req, res) => {
 
   try {
     const result = await pool.query(
-      `SELECT u.id, u.email, u.password_hash, u.role, u.associado_id, a.nome, a.apelido
+      `SELECT u.id, u.email, u.password_hash, u.role, u.associado_id, u.jogador_id,
+              a.nome AS associado_nome, a.apelido AS associado_apelido,
+              j.nome AS jogador_nome, j.time AS jogador_time
        FROM users u
        LEFT JOIN associados a ON u.associado_id = a.id
+       LEFT JOIN jogadores j ON u.jogador_id = j.id
        WHERE u.email = $1 AND u.ativo = TRUE`,
       [email]
     );
@@ -65,7 +68,17 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'invalid_credentials' });
     }
 
-    const token = signAuthToken({ userId: user.id, role: user.role, email: user.email, associadoId: user.associado_id });
+    const displayName = user.role === 'jogador'
+      ? (user.jogador_nome || user.email.split('@')[0])
+      : (user.associado_nome || user.associado_apelido || user.email.split('@')[0]);
+
+    const token = signAuthToken({
+      userId: user.id,
+      role: user.role,
+      email: user.email,
+      associadoId: user.associado_id,
+      jogadorId: user.jogador_id,
+    });
 
     return res.json({ 
       token, 
@@ -73,8 +86,10 @@ router.post('/login', async (req, res) => {
         id: user.id, 
         email: user.email, 
         role: user.role, 
-        nome: user.nome || user.apelido || user.email.split('@')[0],
-        associadoId: user.associado_id 
+        nome: displayName,
+        associadoId: user.associado_id,
+        jogadorId: user.jogador_id,
+        time: user.jogador_time || null,
       } 
     });
   } catch (err) {
@@ -106,23 +121,32 @@ router.get('/me', async (req, res) => {
     // Usuário do banco
     if (dbEnabled) {
       const result = await pool.query(
-        `SELECT u.id, u.email, u.role, u.associado_id, a.nome, a.apelido
+        `SELECT u.id, u.email, u.role, u.associado_id, u.jogador_id,
+                a.nome AS associado_nome, a.apelido AS associado_apelido,
+                j.nome AS jogador_nome, j.time AS jogador_time
          FROM users u
          LEFT JOIN associados a ON u.associado_id = a.id
+         LEFT JOIN jogadores j ON u.jogador_id = j.id
          WHERE u.id = $1 AND u.ativo = TRUE`,
         [payload.userId]
       );
 
       if (result.rows.length > 0) {
         const user = result.rows[0];
+        const displayName = user.role === 'jogador'
+          ? (user.jogador_nome || user.email.split('@')[0])
+          : (user.associado_nome || user.associado_apelido || user.email.split('@')[0]);
+
         return res.json({ 
           authenticated: true, 
           user: { 
             id: user.id, 
             email: user.email, 
             role: user.role, 
-            nome: user.nome || user.apelido || user.email.split('@')[0],
-            associadoId: user.associado_id 
+            nome: displayName,
+            associadoId: user.associado_id,
+            jogadorId: user.jogador_id,
+            time: user.jogador_time || null,
           } 
         });
       }

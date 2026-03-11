@@ -187,6 +187,7 @@ function roleLabel(role) {
   const r = String(role || '').toLowerCase();
   if (r === 'admin') return 'Administrador';
   if (r === 'associado') return 'Associado';
+  if (r === 'jogador') return 'Jogador';
   return 'Visitante';
 }
 
@@ -275,7 +276,9 @@ function ensureTopbarChrome() {
   const u = getStoredUser();
   const name = displayNameFromUser(u);
   const role = roleLabel(u?.role);
-  const subtitle = role === 'Administrador' ? 'Painel Administrativo' : (role === 'Associado' ? 'Área do Associado' : 'Portal do campeonato');
+  const subtitle = role === 'Administrador'
+    ? 'Painel Administrativo'
+    : (role === 'Associado' ? 'Área do Associado' : (role === 'Jogador' ? 'Histórico do Jogador' : 'Portal do campeonato'));
 
   inner.innerHTML = `
     <div class="brand" aria-label="Chuteira Cansada">
@@ -397,6 +400,9 @@ async function enforcePageAuth() {
     if (page === 'inicio') {
       // Área do associado (admin pode acessar para suporte)
       if (String(user.role) !== 'associado' && String(user.role) !== 'admin') throw new Error('forbidden');
+    } else if (page === 'jogador') {
+      // Área do jogador (admin pode acessar para suporte)
+      if (String(user.role) !== 'jogador' && String(user.role) !== 'admin') throw new Error('forbidden');
     } else {
       // Demais páginas são do painel admin
       if (String(user.role) !== 'admin') throw new Error('forbidden');
@@ -1019,6 +1025,67 @@ async function apiAddComment(postId, nome, texto) {
     method: 'POST',
     body: JSON.stringify({ nome, texto }),
   });
+}
+
+async function apiLoadJogadorMe() {
+  const token = getAdminToken();
+  if (!token) {
+    const err = new Error('not_logged_in');
+    err.code = 'NOT_LOGGED_IN';
+    throw err;
+  }
+  return apiFetchJson('/data/jogador/me', { headers: { Authorization: `Bearer ${token}` } });
+}
+
+function renderJogadorPortal(payload) {
+  const jogador = payload?.jogador || {};
+  const hist = payload?.historico || {};
+  const classif = payload?.classificacaoTime || null;
+
+  const byId = (id) => document.getElementById(id);
+  const setText = (id, value) => {
+    const node = byId(id);
+    if (node) node.textContent = String(value ?? '—');
+  };
+
+  setText('jgd-nome', jogador.nome || '—');
+  setText('jgd-time', jogador.time || '—');
+  setText('jgd-gols', Number(jogador.gols) || 0);
+  setText('jgd-amarelos', Number(jogador.amarelos) || 0);
+  setText('jgd-vermelhos', Number(jogador.vermelhos) || 0);
+  setText('jgd-suspensoes', Number(jogador.suspensoes) || 0);
+  setText('jgd-total-jogos', Array.isArray(hist.jogosDoTime) ? hist.jogosDoTime.length : 0);
+
+  const posNode = byId('jgd-posicao-time');
+  if (posNode) {
+    posNode.textContent = classif && Number.isFinite(Number(classif.pg))
+      ? `PG ${Number(classif.pg) || 0} • SG ${Number(classif.sg) || 0}`
+      : 'Sem classificação disponível';
+  }
+
+  const mountJogos = (slotId, jogos) => {
+    const slot = byId(slotId);
+    if (!slot) return;
+    slot.innerHTML = '';
+    const list = Array.isArray(jogos) ? jogos : [];
+    if (!list.length) {
+      slot.appendChild(el('div', { class: 'muted', text: 'Nenhum jogo encontrado.' }));
+      return;
+    }
+
+    const wrap = el('div', { class: 'player-history-list' });
+    for (const j of list) {
+      wrap.appendChild(el('article', { class: 'player-history-item' }, [
+        el('div', { class: 'player-history-item__meta', text: `Rodada ${j?.rodada || '—'} • ${j?.data || '—'} ${j?.hora || ''}`.trim() }),
+        el('div', { class: 'player-history-item__match', text: `${j?.casa || '—'} ${j?.placar || 'x'} ${j?.fora || '—'}` }),
+        el('div', { class: 'player-history-item__local', text: j?.local || 'Local não informado' }),
+      ]));
+    }
+    slot.appendChild(wrap);
+  };
+
+  mountJogos('jgd-ultimos-jogos', hist.ultimosJogos);
+  mountJogos('jgd-proximos-jogos', hist.proximosJogos);
 }
 
 async function loadDataPreferApi() {
@@ -4465,7 +4532,10 @@ function injectToastStyles() {
 
   // A área do associado (`inicio.html`) usa seu próprio carregamento enxuto;
   // evitar `/api/data` aqui impede 401 desnecessário e fallback local incorreto.
-  if (page !== 'inicio') {
+  if (page === 'jogador') {
+    const payload = await apiLoadJogadorMe();
+    renderJogadorPortal(payload);
+  } else if (page !== 'inicio') {
     state.data = await loadDataPreferApi();
     renderPage(state);
   }
