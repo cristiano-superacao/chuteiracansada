@@ -32,6 +32,23 @@ Sistema completo e profissional para gestão de campeonato de futebol e controle
 - **Dashboards separados**: Interface específica por role
 - **Proteção de rotas**: Verificação de autenticação em todas as páginas
 
+### Login individual por associado
+
+- Cada associado pode ter login próprio com role `associado`.
+- O associado tem acesso apenas à área de visualização (`inicio.html`) e aos próprios pagamentos.
+- O admin mantém acesso completo de edição.
+
+Sincronizar/gerar credenciais de todos os associados já cadastrados:
+
+- Comando: `npm run sync:associados`
+- Senha padrão gerada para associados sem senha explícita: `ASSOCIADO_DEFAULT_PASSWORD` (ou `123456` se não definida)
+- Quando o associado não possui email cadastrado, o sistema gera email técnico automaticamente com domínio configurável em `ASSOCIADO_EMAIL_DOMAIN`.
+
+Variáveis opcionais relacionadas:
+
+- `ASSOCIADO_DEFAULT_PASSWORD` = senha padrão para associados
+- `ASSOCIADO_EMAIL_DOMAIN` = domínio usado para email técnico quando faltar email no cadastro
+
 > 📖 **Documentação completa**: 
 > - [AUTH_README.md](AUTH_README.md) - Autenticação tradicional
 > - [GOOGLE_OAUTH.md](GOOGLE_OAUTH.md) - Configurar login com Google
@@ -199,6 +216,12 @@ O sistema já inclui:
 4. Railway detecta Node automaticamente e usa `npm start`.
 
 > Observação: o deploy “automático” geralmente é via integração GitHub↔Railway.
+
+### Acesso de outro computador (dados na nuvem)
+
+- Com deploy no Railway e `DATABASE_URL` configurada, os dados são centralizados no Postgres (nuvem).
+- Em outro computador, basta acessar a URL pública e entrar com email/senha do usuário.
+- Para garantir que todos os associados tenham credenciais válidas após importações, execute `npm run sync:associados` no ambiente com acesso ao banco.
 
 ## Segurança (importante)
 

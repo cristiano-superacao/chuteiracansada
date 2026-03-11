@@ -95,6 +95,18 @@ function getAssociadoDefaultPassword(item) {
   return String(process.env.ASSOCIADO_DEFAULT_PASSWORD || '123456').trim() || '123456';
 }
 
+function buildAssociadoFallbackEmail(item, associadoId) {
+  const fromName = String(item?.apelido || item?.nome || '').trim().toLowerCase()
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .replace(/[^a-z0-9]+/g, '.')
+    .replace(/^\.+|\.+$/g, '')
+    .slice(0, 40);
+  const localPart = fromName || `associado.${associadoId}`;
+  const domain = String(process.env.ASSOCIADO_EMAIL_DOMAIN || 'associado.chuteira.local').trim().toLowerCase();
+  return `${localPart}.${associadoId}@${domain}`;
+}
+
 async function fetchData() {
   const client = await pool.connect();
   try {
@@ -241,18 +253,21 @@ async function replaceAllData(data) {
         );
       }
 
-      if (email) {
-        const passwordHash = await bcrypt.hash(getAssociadoDefaultPassword(a), 10);
-        await client.query(
-          `INSERT INTO users (email, password_hash, role, associado_id, ativo)
-           VALUES ($1, $2, 'associado', $3, TRUE)
-           ON CONFLICT (email)
-           DO UPDATE SET password_hash = EXCLUDED.password_hash,
-                         role = 'associado',
-                         associado_id = EXCLUDED.associado_id,
-                         ativo = TRUE`,
-          [email, passwordHash, id]
-        );
+      const ensuredEmail = email || buildAssociadoFallbackEmail(a, id);
+      const passwordHash = await bcrypt.hash(getAssociadoDefaultPassword(a), 10);
+      await client.query(
+        `INSERT INTO users (email, password_hash, role, associado_id, ativo)
+         VALUES ($1, $2, 'associado', $3, TRUE)
+         ON CONFLICT (email)
+         DO UPDATE SET password_hash = EXCLUDED.password_hash,
+                       role = 'associado',
+                       associado_id = EXCLUDED.associado_id,
+                       ativo = TRUE`,
+        [ensuredEmail, passwordHash, id]
+      );
+
+      if (!email) {
+        await client.query('UPDATE associados SET email = $1 WHERE id = $2', [ensuredEmail, id]);
       }
     }
 
@@ -592,12 +607,14 @@ router.put('/campeonato', requireAdmin, async (req, res) => {
 router.post('/associados', requireAdmin, async (req, res) => {
   const nome = String(req.body?.nome ?? '').trim() || '—';
   const apelido = String(req.body?.apelido ?? '').trim();
+  const email = normalizeAssociadoEmail(req.body?.email);
+  const senha = String(req.body?.senha ?? '').trim();
   const pagamentos = req.body?.pagamentos && typeof req.body.pagamentos === 'object' ? req.body.pagamentos : {};
 
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
-    const ins = await client.query('INSERT INTO associados (nome, apelido) VALUES ($1,$2) RETURNING id', [nome, apelido]);
+    const ins = await client.query('INSERT INTO associados (nome, apelido, email) VALUES ($1,$2,$3) RETURNING id', [nome, apelido, email]);
     const id = ins.rows[0].id;
     for (const mk of MONTH_KEYS) {
       const norm = normalizePagamentoCell(pagamentos[mk]);
@@ -606,8 +623,26 @@ router.post('/associados', requireAdmin, async (req, res) => {
         [id, mk, norm.raw, norm.valor]
       );
     }
+
+    const ensuredEmail = email || buildAssociadoFallbackEmail({ nome, apelido }, id);
+    const passwordHash = await bcrypt.hash(senha || getAssociadoDefaultPassword(req.body || {}), 10);
+    await client.query(
+      `INSERT INTO users (email, password_hash, role, associado_id, ativo)
+       VALUES ($1, $2, 'associado', $3, TRUE)
+       ON CONFLICT (email)
+       DO UPDATE SET password_hash = EXCLUDED.password_hash,
+                     role = 'associado',
+                     associado_id = EXCLUDED.associado_id,
+                     ativo = TRUE`,
+      [ensuredEmail, passwordHash, id]
+    );
+
+    if (!email) {
+      await client.query('UPDATE associados SET email = $1 WHERE id = $2', [ensuredEmail, id]);
+    }
+
     await client.query('COMMIT');
-    res.json({ ok: true, id });
+    res.json({ ok: true, id, email: ensuredEmail });
   } catch (err) {
     try { await client.query('ROLLBACK'); } catch { /* ignore */ }
     console.error(err);
@@ -891,10 +926,16 @@ router.post('/campeonato/posts/:id/comentarios', async (req, res) => {
 });
 
 // Endpoints adicionais para dashboard do associado
-router.get('/associados/:id/pagamentos', async (req, res) => {
+router.get('/associados/:id/pagamentos', requireAuth, async (req, res) => {
   const associadoId = Number(req.params.id);
   if (!associadoId || isNaN(associadoId)) {
     return res.status(400).json({ error: 'invalid_associado_id' });
+  }
+
+  const role = String(req.user?.role || '');
+  const tokenAssociadoId = Number(req.user?.associadoId || req.user?.associado_id || 0);
+  if (role !== 'admin' && (role !== 'associado' || tokenAssociadoId !== associadoId)) {
+    return res.status(403).json({ error: 'forbidden' });
   }
 
   try {
@@ -909,7 +950,7 @@ router.get('/associados/:id/pagamentos', async (req, res) => {
   }
 });
 
-router.get('/campeonato-jogos', async (_req, res) => {
+router.get('/campeonato-jogos', requireAuth, async (_req, res) => {
   try {
     const result = await pool.query('SELECT * FROM campeonato_jogos ORDER BY id ASC');
     res.json(result.rows);
