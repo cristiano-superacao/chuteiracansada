@@ -398,6 +398,53 @@ function compareYearMonth(aYM, bYM) {
   return (a.year - b.year) || (a.month - b.month);
 }
 
+function monthLabelFromDate(rawDate) {
+  const s = String(rawDate || '').trim();
+  if (!s) return '';
+
+  // yyyy-mm-dd
+  let m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (m) {
+    const mm = Number(m[2]);
+    if (Number.isFinite(mm) && mm >= 1 && mm <= 12) return MONTHS[mm - 1].label;
+  }
+
+  // dd/mm/yyyy
+  m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (m) {
+    const mm = Number(m[2]);
+    if (Number.isFinite(mm) && mm >= 1 && mm <= 12) return MONTHS[mm - 1].label;
+  }
+
+  return '';
+}
+
+function normalizeMonthLabel(rawMonth, rawDate = '') {
+  const fromDate = monthLabelFromDate(rawDate);
+  if (fromDate) return fromDate;
+
+  const month = normalizeText(rawMonth);
+  if (!month) return '—';
+
+  const map = {
+    jan: 'Jan', janeiro: 'Jan',
+    fev: 'Fev', fevereiro: 'Fev',
+    mar: 'Mar', marco: 'Mar', março: 'Mar',
+    abr: 'Abr', abril: 'Abr',
+    mai: 'Mai', maio: 'Mai',
+    jun: 'Jun', junho: 'Jun',
+    jul: 'Jul', julho: 'Jul',
+    ago: 'Ago', agosto: 'Ago',
+    set: 'Set', setembro: 'Set',
+    out: 'Out', outubro: 'Out',
+    nov: 'Nov', novembro: 'Nov',
+    dez: 'Dez', dezembro: 'Dez',
+  };
+
+  if (Object.prototype.hasOwnProperty.call(map, month)) return map[month];
+  return trimText(rawMonth) || '—';
+}
+
 function clampInadimplenciaStartYM(ym) {
   const parsed = parseYearMonth(ym);
   if (!parsed) return INADIMPLENCIA_MIN_START_YM;
@@ -590,7 +637,7 @@ function normalizeDataModel(data) {
 
   data.gastos.forEach((g) => {
     if (!g || typeof g !== 'object') return;
-    g.mes = trimText(g.mes) || '—';
+    g.mes = normalizeMonthLabel(g.mes, g.data);
     g.data = trimText(g.data);
     g.descricao = trimText(g.descricao);
     g.valor = parseMoney(g.valor);
@@ -602,7 +649,7 @@ function normalizeDataModel(data) {
 
   data.entradas.forEach((e) => {
     if (!e || typeof e !== 'object') return;
-    e.mes = trimText(e.mes) || '—';
+    e.mes = normalizeMonthLabel(e.mes, e.data);
     e.data = trimText(e.data);
     e.origem = trimText(e.origem);
     e.valor = parseMoney(e.valor);
@@ -3224,7 +3271,7 @@ function summarizeSaldo(state) {
 
     for (const e of state.data.entradas) {
       if (isMensalidadeEntrada(e)) continue;
-      const mes = (e.mes || '').trim() || '—';
+      const mes = normalizeMonthLabel(e.mes, e.data);
       if (!byMonth.has(mes)) byMonth.set(mes, { mes, entradas: 0, gastos: 0 });
       byMonth.get(mes).entradas += parseMoney(e.valor);
     }
@@ -3236,7 +3283,7 @@ function summarizeSaldo(state) {
     }
 
     for (const g of state.data.gastos) {
-      const mes = (g.mes || '').trim() || '—';
+      const mes = normalizeMonthLabel(g.mes, g.data);
       if (!byMonth.has(mes)) byMonth.set(mes, { mes, entradas: 0, gastos: 0 });
       byMonth.get(mes).gastos += parseMoney(g.valor);
     }
