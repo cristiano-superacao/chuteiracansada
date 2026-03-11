@@ -1057,12 +1057,34 @@ function parseMoney(raw) {
   if (typeof raw === 'number') return Number.isFinite(raw) ? raw : 0;
   const s = String(raw).trim();
   if (!s) return 0;
-  // aceita "R$ 1.234,56" ou "1234.56" ou "1234,56"
-  const cleaned = s
+  // Suporta pt-BR e formato decimal do banco:
+  // - "R$ 1.234,56" -> 1234.56
+  // - "1234,56" -> 1234.56
+  // - "1234.56" (DB/US) -> 1234.56
+  // - "1.234" (milhar pt-BR) -> 1234
+  let cleaned = s
     .replace(/R\$\s?/gi, '')
-    .replace(/\./g, '')
-    .replace(/,/g, '.')
-    .replace(/[^0-9.\-]/g, '');
+    .replace(/\s+/g, '')
+    .replace(/[^0-9,\.\-]/g, '');
+
+  const hasComma = cleaned.includes(',');
+  const dotCount = (cleaned.match(/\./g) || []).length;
+
+  if (hasComma) {
+    // pt-BR: ponto como milhar e vírgula como decimal
+    cleaned = cleaned.replace(/\./g, '').replace(/,/g, '.');
+  } else if (dotCount > 1) {
+    // Ex.: "1.234.567" => milhar
+    cleaned = cleaned.replace(/\./g, '');
+  } else if (dotCount === 1) {
+    // Decide se ponto é decimal (DB/US) ou milhar (pt-BR)
+    const parts = cleaned.split('.');
+    const decimalPart = parts[1] || '';
+    if (decimalPart.length === 3) {
+      cleaned = parts.join('');
+    }
+  }
+
   const n = Number(cleaned);
   return Number.isFinite(n) ? n : 0;
 }
@@ -1993,7 +2015,7 @@ function scheduleCampeonatoAutoSave(state) {
   campeonatoAutoSaveTimer = setTimeout(async () => {
     campeonatoAutoSaveTimer = null;
     const ok = await saveDataPreferApi(state, { showToast: false });
-    if (ok) toastOncePerSession(CAMPEONATO_AUTOSAVE_TOAST_KEY, 'Entreterimento salvo na nuvem');
+    if (ok) toastOncePerSession(CAMPEONATO_AUTOSAVE_TOAST_KEY, 'Entretenimento salvo na nuvem');
   }, 800);
 }
 
