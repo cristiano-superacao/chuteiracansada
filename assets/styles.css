@@ -57,6 +57,10 @@
   --font-size-xl: 20px;
   --font-size-2xl: 24px;
   --font-size-3xl: 32px;
+
+  /* Alturas do chrome superior (topbar + menu de páginas) */
+  --topbar-h: 60px;
+  --page-nav-h: 58px;
 }
 
 /* Badges de status (reuso em dashboards) */
@@ -295,13 +299,13 @@ a{color:inherit;text-decoration:none}
   outline-offset: 2px;
 }
 
-.container{width:100%;max-width:1200px;margin:0 auto;padding:0 16px}
+.container{width:100%;max-width:1280px;margin:0 auto;padding:0 20px}
 
 .topbar{
   position:sticky;top:0;z-index:30;
   background: var(--brand-1);
   color: #FFFFFF;
-  height: 60px;
+  height: var(--topbar-h);
   display: flex;
   align-items: center;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.10);
@@ -552,6 +556,13 @@ a{color:inherit;text-decoration:none}
 }
 .table--sticky-actions thead th:last-child{z-index:3}
 
+/* Tablet e telas médias: melhora leitura das tabelas */
+@media (max-width: 1024px){
+  .table th,.table td{padding:11px 10px;font-size:12px}
+  .card__header{padding:16px}
+  .card__footer{padding:14px 16px}
+}
+
 /* Associados: otimiza para caber Jan–Dez na tela */
 .associados-table{table-layout:fixed}
 .associados-table th,.associados-table td{padding:9px 8px;font-size:13px}
@@ -651,9 +662,12 @@ a{color:inherit;text-decoration:none}
     margin-left: 0;
   }
 
-  .topbar__inner{flex-direction:row;align-items:center;gap:10px;padding:12px 16px;padding-left:70px}
+  .topbar__inner{flex-direction:row;align-items:center;gap:8px;padding:10px 12px;padding-left:12px}
   .brand{min-width:0}
   .brand__subtitle{display:none}
+  .topbar__profile-role{display:none}
+  .topbar__profile-name{max-width:110px}
+  .topbar__btn{padding:7px 10px;font-size:12px}
   .topbar__right{width:auto;justify-content:flex-end}
 
   .card__header,.card__footer{flex-direction:column;align-items:stretch}
@@ -667,6 +681,15 @@ a{color:inherit;text-decoration:none}
   .icon-btn{width:44px;height:44px}
   .page__title{font-size:var(--font-size-xl)}
 
+  /* Em telas menores, colunas sticky atrapalham leitura horizontal */
+  .table--sticky-first th:first-child,
+  .table--sticky-first td:first-child,
+  .table--sticky-actions th:last-child,
+  .table--sticky-actions td:last-child{
+    position: static;
+    box-shadow: none;
+  }
+
   /* Campeonato: ajustes mobile (evita @media duplicado no fim do arquivo) */
   body[data-page="campeonato"] .cup-grid{grid-template-columns:1fr}
   .cup-table td{padding:6px 4px;font-size:13px}
@@ -676,6 +699,23 @@ a{color:inherit;text-decoration:none}
   .classificacao-table{border-spacing:0 4px}
   .classificacao-table thead th,.classificacao-table tbody td{padding:8px 6px;font-size:12px}
   .classificacao-table thead th:first-child,.classificacao-table tbody td:first-child{padding-left:10px}
+}
+
+@media (max-width: 480px){
+  :root{
+    --topbar-h: 56px;
+    --page-nav-h: 52px;
+  }
+
+  .container{padding:0 10px}
+  .card{border-radius:10px}
+  .card__header{padding:14px}
+  .card__title{font-size:16px}
+  .card__hint{font-size:12px}
+  .page__header{margin:8px 0 18px}
+  .page__title{font-size:22px}
+  .btn{padding:10px 14px;min-height:42px}
+  .input,.select{padding:10px 12px}
 }
 
 /* Barra de progresso superior (requisições) */
@@ -833,10 +873,10 @@ body[data-page="campeonato"] .cup-card__round{
 /* Barra de páginas logo abaixo da topbar */
 .sidebar{
   width: 100%;
-  height: 58px;
+  height: var(--page-nav-h);
   left: 0;
   right: 0;
-  top: 60px;
+  top: var(--topbar-h);
   bottom: auto;
   border-right: none;
   border-bottom: 1px solid var(--border);
@@ -892,7 +932,7 @@ body[data-page="campeonato"] .cup-card__round{
 /* Conteúdo passa a ocupar largura total; compensa menu fixo superior */
 .app-content{
   margin-left: 0;
-  padding-top: 58px;
+  padding-top: var(--page-nav-h);
 }
 
 /* Elevação dinâmica quando há rolagem */
@@ -914,7 +954,7 @@ body.is-scrolled .sidebar{
 @media (max-width: 720px){
   .sidebar{
     transform: none !important;
-    height: 54px;
+    height: var(--page-nav-h);
   }
 
   .sidebar__nav{
@@ -929,7 +969,7 @@ body.is-scrolled .sidebar{
 
   .app-content{
     margin-left: 0;
-    padding-top: 54px;
+    padding-top: var(--page-nav-h);
   }
 
   .topbar__inner{
