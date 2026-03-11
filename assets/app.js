@@ -1792,6 +1792,17 @@ function bindGastosControls(state) {
   }
 }
 
+function bindSaldoControls(state) {
+  if (document.body.getAttribute('data-page') !== 'saldo') return;
+  const mes = document.getElementById('saldo-filter-mes');
+  const status = document.getElementById('saldo-filter-status');
+  const movimento = document.getElementById('saldo-filter-movimento');
+  const rerender = () => renderPage(state);
+  if (mes) mes.addEventListener('change', rerender);
+  if (status) status.addEventListener('change', rerender);
+  if (movimento) movimento.addEventListener('change', rerender);
+}
+
 function getGastosFilter() {
   const q = document.getElementById('gastos-search');
   const mes = document.getElementById('gastos-filter-mes');
@@ -1806,6 +1817,17 @@ function getGastosFilter() {
     min: Number.isFinite(minValue) && minValue > 0 ? minValue : 0,
     max: Number.isFinite(maxValue) && maxValue > 0 ? maxValue : Number.POSITIVE_INFINITY,
     sort: sort?.value || 'data-desc',
+  };
+}
+
+function getSaldoFilter() {
+  const mes = document.getElementById('saldo-filter-mes');
+  const status = document.getElementById('saldo-filter-status');
+  const movimento = document.getElementById('saldo-filter-movimento');
+  return {
+    mes: mes?.value || 'todos',
+    status: status?.value || 'todos',
+    movimento: Boolean(movimento?.checked),
   };
 }
 
@@ -3535,6 +3557,9 @@ function summarizeSaldo(state) {
     slot.appendChild(kpi('Saldo', money(saldo), saldo >= 0 ? 'ok' : 'bad'));
   }
 
+  const filter = getSaldoFilter();
+  updateSaldoDashboardKpis(state, totalMensalidades, totalOutrasEntradas, totalGastos, saldo, filter);
+
   const tbody = document.querySelector('table[data-table="saldo-mensal"] tbody');
   if (tbody) {
     tbody.innerHTML = '';
@@ -3564,7 +3589,20 @@ function summarizeSaldo(state) {
     }
 
     // Cada linha compara: gastos vs (outras entradas + mensalidades dos associados).
-    const rows = [...byMonth.values()];
+    const allRows = [...byMonth.values()];
+    const rows = allRows.filter((r) => {
+      if (filter.mes && filter.mes !== 'todos' && r.mes !== filter.mes) return false;
+      const s = r.entradas - r.gastos;
+      if (filter.status === 'positivo' && !(s > 0)) return false;
+      if (filter.status === 'negativo' && !(s < 0)) return false;
+      if (filter.status === 'zerado' && s !== 0) return false;
+      if (filter.movimento && !(r.entradas > 0 || r.gastos > 0)) return false;
+      return true;
+    });
+
+    const countEl = document.getElementById('saldo-mensal-count');
+    if (countEl) countEl.textContent = `Mostrando ${rows.length} de ${allRows.length} meses.`;
+
     for (const r of rows) {
       const tr = document.createElement('tr');
       const tdMes = el('td', { text: r.mes });
@@ -3579,6 +3617,56 @@ function summarizeSaldo(state) {
       tr.appendChild(tdSa);
       tbody.appendChild(tr);
     }
+  }
+}
+
+function updateSaldoDashboardKpis(state, totalMensalidades, totalOutrasEntradas, totalGastos, saldo, filter) {
+  const mensalidadesEl = document.getElementById('saldo-kpi-mensalidades');
+  const outrasEl = document.getElementById('saldo-kpi-outras');
+  const gastosEl = document.getElementById('saldo-kpi-gastos');
+  const finalEl = document.getElementById('saldo-kpi-final');
+  const positivosEl = document.getElementById('saldo-kpi-meses-positivos');
+  const ctxEl = document.getElementById('saldo-kpi-context');
+
+  if (mensalidadesEl) mensalidadesEl.textContent = money(totalMensalidades);
+  if (outrasEl) outrasEl.textContent = money(totalOutrasEntradas);
+  if (gastosEl) gastosEl.textContent = money(totalGastos);
+  if (finalEl) {
+    finalEl.textContent = money(saldo);
+    finalEl.classList.toggle('sal-kpi__value--ok', saldo >= 0);
+    finalEl.classList.toggle('sal-kpi__value--warn', saldo < 0);
+  }
+
+  const mensalidadeByMonth = computeMensalidadeByMonth(state.data.associados || []);
+  const byMonth = new Map();
+  for (const m of MONTHS.map((x) => x.label)) byMonth.set(m, { entradas: 0, gastos: 0 });
+  for (const e of (state.data.entradas || [])) {
+    if (isMensalidadeEntrada(e)) continue;
+    const mes = normalizeMonthLabel(e.mes, e.data);
+    if (!byMonth.has(mes)) byMonth.set(mes, { entradas: 0, gastos: 0 });
+    byMonth.get(mes).entradas += parseMoney(e.valor);
+  }
+  for (const [mes, valor] of mensalidadeByMonth.entries()) {
+    if (!byMonth.has(mes)) byMonth.set(mes, { entradas: 0, gastos: 0 });
+    byMonth.get(mes).entradas += valor;
+  }
+  for (const g of (state.data.gastos || [])) {
+    const mes = normalizeMonthLabel(g.mes, g.data);
+    if (!byMonth.has(mes)) byMonth.set(mes, { entradas: 0, gastos: 0 });
+    byMonth.get(mes).gastos += parseMoney(g.valor);
+  }
+  const positivos = [...byMonth.values()].filter((r) => (r.entradas - r.gastos) > 0).length;
+  if (positivosEl) positivosEl.textContent = String(positivos);
+
+  if (ctxEl) {
+    const monthLabel = filter?.mes && filter.mes !== 'todos' ? filter.mes : 'todos os meses';
+    const statusLabel = ({
+      todos: 'todos os status',
+      positivo: 'saldo positivo',
+      negativo: 'saldo negativo',
+      zerado: 'saldo zerado',
+    })[filter?.status || 'todos'];
+    ctxEl.textContent = `Filtro atual: ${monthLabel} • ${statusLabel}${filter?.movimento ? ' • somente com movimento' : ''}.`;
   }
 }
 
@@ -3961,6 +4049,7 @@ function injectToastStyles() {
   bindInadimplentesFilter(state);
   bindJogadoresFilter(state);
   bindGastosControls(state);
+  bindSaldoControls(state);
   bindJogadoresImport(state);
   bindAssociadosImport(state);
   bindGastosImport(state);

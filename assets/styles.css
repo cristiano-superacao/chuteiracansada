@@ -520,10 +520,34 @@ a{color:inherit;text-decoration:none}
 .gastos-table thead th:nth-child(4),
 .gastos-table tbody td:nth-child(4){text-align:right;padding-right:14px}
 
+/* Dashboard de Saldo */
+.sal-overview{margin:-6px 0 14px}
+.sal-kpis{display:grid;grid-template-columns:repeat(5, minmax(150px, 1fr));gap:10px}
+.sal-kpi{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px;box-shadow:var(--shadow)}
+.sal-kpi__label{margin:0;color:var(--muted);font-size:12px;font-weight:800;letter-spacing:0.2px}
+.sal-kpi__value{margin:6px 0 0;font-size:22px;line-height:1.1;font-weight:900;color:var(--brand-1)}
+.sal-kpi__value--ok{color:var(--ok)}
+.sal-kpi__value--warn{color:var(--danger)}
+.sal-overview__hint{margin:8px 2px 0;color:var(--muted);font-weight:700;font-size:12px}
+
+.card__header--saldo-mensal{flex-direction:column;align-items:stretch;gap:14px}
+.sal-toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end}
+.sal-toolbar .field{min-width:170px}
+
+.entradas-table{table-layout:fixed;min-width:980px}
+.saldo-mensal-table{table-layout:fixed;min-width:860px}
+.saldo-mensal-table th:nth-child(2),
+.saldo-mensal-table td:nth-child(2),
+.saldo-mensal-table th:nth-child(3),
+.saldo-mensal-table td:nth-child(3),
+.saldo-mensal-table th:nth-child(4),
+.saldo-mensal-table td:nth-child(4){text-align:right;padding-right:14px}
+
 @media (max-width: 1280px){
   .assoc-kpis{grid-template-columns:repeat(3, minmax(150px, 1fr))}
   .jog-kpis{grid-template-columns:repeat(3, minmax(150px, 1fr))}
   .gst-kpis{grid-template-columns:repeat(3, minmax(150px, 1fr))}
+  .sal-kpis{grid-template-columns:repeat(3, minmax(150px, 1fr))}
 }
 
 @media (max-width: 1024px){
@@ -540,6 +564,9 @@ a{color:inherit;text-decoration:none}
   .gst-toolbar__group--actions .btn{min-width:145px}
   .gst-toolbar__group--actions .field{min-width:190px}
   .gst-toolbar__group--filters .field{min-width:145px}
+  .sal-kpis{grid-template-columns:repeat(2, minmax(150px, 1fr))}
+  .sal-kpi__value{font-size:20px}
+  .sal-toolbar .field{min-width:145px}
 }
 
 .img-grid{display:grid;grid-template-columns:1fr;gap:12px}
@@ -820,6 +847,16 @@ a{color:inherit;text-decoration:none}
   .gst-kpi__value{font-size:18px}
   .gst-overview__hint{margin-top:6px;font-size:11px}
 
+  .sal-overview{margin:-4px 0 12px}
+  .sal-kpis{grid-template-columns:1fr 1fr;gap:8px}
+  .sal-kpi{padding:10px 11px}
+  .sal-kpi__value{font-size:18px}
+  .sal-overview__hint{margin-top:6px;font-size:11px}
+
+  .sal-toolbar{display:grid;grid-template-columns:1fr;gap:8px}
+  .sal-toolbar .field,
+  .sal-toolbar .check{width:100%;min-width:0}
+
   .gst-toolbar__group{display:grid;grid-template-columns:1fr;gap:8px}
   .gst-toolbar__group .btn,
   .gst-toolbar__group .field,
@@ -916,6 +953,7 @@ a{color:inherit;text-decoration:none}
   .assoc-kpis{grid-template-columns:1fr}
   .jog-kpis{grid-template-columns:1fr}
   .gst-kpis{grid-template-columns:1fr}
+  .sal-kpis{grid-template-columns:1fr}
 }
 
 /* Barra de progresso superior (requisições) */
