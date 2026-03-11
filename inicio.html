@@ -229,6 +229,9 @@
             <div class="info-card__detail" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border-color)">
               <span class="info-card__detail-label" style="font-size:16px;font-weight:600;color:var(--text-dark)" id="next-game-match">- vs -</span>
             </div>
+            <div class="info-card__detail" style="margin-top:8px">
+              <span class="info-card__detail-value" id="next-game-focus" style="font-size:12px;color:var(--text-light)">Carregando contexto...</span>
+            </div>
           </div>
         </div>
 
@@ -529,10 +532,10 @@
       // Atualizar nome de boas-vindas
       document.getElementById('welcome-name').textContent = `Bem-vindo(a), ${user.nome}!`;
 
-      // Carregar próximo jogo
-      await loadNextGame();
-
       const playerContext = await getPlayerContext(user);
+
+      // Carregar próximo jogo (priorizando jogos do time do associado)
+      await loadNextGame(playerContext);
 
       // Carregar minhas estatísticas
       await loadMyStats(playerContext);
@@ -547,21 +550,55 @@
       await loadRecentGames();
     }
 
-    async function loadNextGame() {
+    function pickNextGame(games, teamName) {
+      const list = Array.isArray(games) ? games : [];
+      if (!list.length) return { game: null, isMyTeam: false };
+
+      const normalizedTeam = normalizeKey(teamName);
+      if (!normalizedTeam) return { game: list[0], isMyTeam: false };
+
+      const myGame = list.find((g) => {
+        const casa = normalizeKey(g?.casa);
+        const fora = normalizeKey(g?.fora);
+        return casa === normalizedTeam || fora === normalizedTeam;
+      });
+
+      if (myGame) return { game: myGame, isMyTeam: true };
+      return { game: list[0], isMyTeam: false };
+    }
+
+    async function loadNextGame(playerContext) {
       try {
         const games = await apiGetJson('/api/data/campeonato-jogos');
+        const myTeamName = playerContext?.myTeam?.time || '';
+        const focusEl = document.getElementById('next-game-focus');
         
         if (games && games.length > 0) {
-          const nextGame = games[0];
+          const { game: nextGame, isMyTeam } = pickNextGame(games, myTeamName);
+          if (!nextGame) {
+            document.getElementById('next-game-date').textContent = 'Nenhum jogo agendado';
+            if (focusEl) focusEl.textContent = 'Sem partidas registradas no momento.';
+            return;
+          }
+
           document.getElementById('next-game-date').textContent = nextGame.data || '-';
           document.getElementById('next-game-time').textContent = nextGame.hora || '-';
           document.getElementById('next-game-location').textContent = nextGame.local || '-';
           document.getElementById('next-game-match').textContent = `${nextGame.casa} vs ${nextGame.fora}`;
+
+          if (focusEl) {
+            focusEl.textContent = isMyTeam
+              ? 'Partida do seu time em destaque.'
+              : 'Mostrando a próxima partida geral.';
+          }
         } else {
           document.getElementById('next-game-date').textContent = 'Nenhum jogo agendado';
+          if (focusEl) focusEl.textContent = 'Sem partidas registradas no momento.';
         }
       } catch (err) {
         console.error('Erro ao carregar próximo jogo:', err);
+        const focusEl = document.getElementById('next-game-focus');
+        if (focusEl) focusEl.textContent = 'Não foi possível carregar o próximo jogo agora.';
       }
     }
 
