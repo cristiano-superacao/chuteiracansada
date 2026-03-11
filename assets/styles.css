@@ -1228,6 +1228,7 @@ body[data-page="campeonato"] .cup-card__round{
   min-height:38px;
   padding:8px 12px;
   border-radius:999px;
+  white-space:nowrap;
 }
 
 .sidebar__nav{
@@ -1330,6 +1331,11 @@ body.is-scrolled .sidebar{
     transform:none;
     padding:12px 10px 14px;
     border-top:1px solid var(--border);
+  }
+
+  .sidebar__footer .btn{
+    width:100%;
+    justify-content:center;
   }
 
   .sidebar__nav{
