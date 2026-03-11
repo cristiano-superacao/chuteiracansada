@@ -9,7 +9,7 @@
   <link rel="icon" type="image/png" href="assets/icon-192.png" />
   <link rel="apple-touch-icon" href="assets/icon-192.png" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-  <link rel="stylesheet" href="assets/styles.css?v=20260311-03" />
+  <link rel="stylesheet" href="assets/styles.css?v=20260311-05" />
 </head>
 <body data-page="jogadores">
   <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
@@ -101,24 +101,78 @@
     <main id="conteudo" class="container page">
     <header class="page__header">
       <h1 class="page__title">Jogadores</h1>
-      <p class="page__subtitle">Acompanhe gols, cartões, suspensões e o time de cada jogador.</p>
+      <p class="page__subtitle">Visualize desempenho por jogador com filtros rápidos e indicadores de disciplina.</p>
     </header>
 
+    <section class="jog-overview" aria-label="Resumo de jogadores">
+      <div class="jog-kpis">
+        <article class="jog-kpi" aria-live="polite">
+          <p class="jog-kpi__label">Jogadores listados</p>
+          <p class="jog-kpi__value" id="jogadores-kpi-total">0</p>
+        </article>
+        <article class="jog-kpi" aria-live="polite">
+          <p class="jog-kpi__label">Total de gols</p>
+          <p class="jog-kpi__value jog-kpi__value--ok" id="jogadores-kpi-gols">0</p>
+        </article>
+        <article class="jog-kpi" aria-live="polite">
+          <p class="jog-kpi__label">Cartões amarelos</p>
+          <p class="jog-kpi__value" id="jogadores-kpi-amarelos">0</p>
+        </article>
+        <article class="jog-kpi" aria-live="polite">
+          <p class="jog-kpi__label">Cartões vermelhos</p>
+          <p class="jog-kpi__value jog-kpi__value--warn" id="jogadores-kpi-vermelhos">0</p>
+        </article>
+        <article class="jog-kpi" aria-live="polite">
+          <p class="jog-kpi__label">Suspensões</p>
+          <p class="jog-kpi__value" id="jogadores-kpi-suspensoes">0</p>
+        </article>
+      </div>
+      <p class="jog-overview__hint" id="jogadores-kpi-context">Indicadores com os filtros atuais.</p>
+    </section>
+
     <section class="card" aria-label="Tabela de jogadores">
-      <div class="card__header">
+      <div class="card__header card__header--jogadores">
         <div>
           <h2 class="card__title">Estatísticas por jogador</h2>
-          <p class="card__hint">Clique para editar. Os dados ficam salvos neste navegador.</p>
+          <p class="card__hint">Clique para editar. Os dados ficam salvos no servidor quando disponível.</p>
         </div>
-        <div class="actions">
-          <button class="btn" type="button" data-action="add-row" data-table="jogadores" data-admin-only="1">Adicionar jogador</button>
-          <button class="btn" type="button" data-action="import-jogadores" data-admin-only="1">Importar Excel</button>
-          <button class="btn btn--ghost" type="button" data-action="reset" data-scope="jogadores" data-admin-only="1">Restaurar exemplo</button>
+
+        <div class="jog-toolbar" aria-label="Ferramentas de jogadores">
+          <div class="jog-toolbar__group jog-toolbar__group--actions">
+            <button class="btn" type="button" data-action="add-row" data-table="jogadores" data-admin-only="1">Adicionar jogador</button>
+            <button class="btn" type="button" data-action="import-jogadores" data-admin-only="1">Importar Excel</button>
+            <button class="btn btn--ghost" type="button" data-action="reset" data-scope="jogadores" data-admin-only="1">Restaurar exemplo</button>
+          </div>
+
+          <div class="jog-toolbar__group jog-toolbar__group--filters">
+            <label class="field" aria-label="Pesquisar por nome do jogador">
+              <span class="field__label">Nome</span>
+              <input class="input" id="jogadores-search-nome" type="search" placeholder="Pesquisar por nome..." />
+            </label>
+            <label class="field" aria-label="Filtrar por time">
+              <span class="field__label">Time</span>
+              <input class="input" id="jogadores-filter-time" type="search" placeholder="Ex.: Brasil" />
+            </label>
+            <label class="field" aria-label="Mínimo de gols">
+              <span class="field__label">Gols mínimos</span>
+              <input class="input" id="jogadores-filter-min-gols" type="number" inputmode="numeric" min="0" placeholder="0" />
+            </label>
+            <label class="field" aria-label="Ordenação">
+              <span class="field__label">Ordenar por</span>
+              <select class="select" id="jogadores-sort">
+                <option value="nome">Nome (A-Z)</option>
+                <option value="gols">Gols (maior primeiro)</option>
+                <option value="amarelos">Amarelos (maior primeiro)</option>
+                <option value="vermelhos">Vermelhos (maior primeiro)</option>
+                <option value="suspensoes">Suspensões (maior primeiro)</option>
+              </select>
+            </label>
+          </div>
         </div>
       </div>
 
       <div class="table-wrap">
-        <table class="table table--striped table--sticky-first table--sticky-actions" data-table="jogadores">
+        <table class="table table--striped table--sticky-first table--sticky-actions jogadores-table" data-table="jogadores">
           <thead>
             <tr>
               <th class="w-280">Nome</th>
@@ -135,7 +189,10 @@
       </div>
 
       <div class="card__footer">
-        <div class="muted">Dica: use números nas colunas de gols/cartões.</div>
+        <div class="stack">
+          <div class="muted" id="jogadores-count-info">Mostrando 0 de 0 jogadores.</div>
+          <div class="muted">Dica: use números inteiros nas colunas de gols/cartões/suspensões.</div>
+        </div>
         <button class="btn btn--primary" type="button" data-action="save" data-admin-only="1">Salvar alterações</button>
       </div>
     </section>
@@ -152,6 +209,6 @@
   <input id="import-jogadores-file" type="file" accept=".xlsx,.xls,.csv" hidden />
 
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script src="assets/app.js?v=20260311-03"></script>
+  <script src="assets/app.js?v=20260311-05"></script>
 </body>
 </html>

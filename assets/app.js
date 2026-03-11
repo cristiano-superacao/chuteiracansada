@@ -2025,6 +2025,21 @@ function bindInadimplentesFilter(state) {
   }
 }
 
+function bindJogadoresFilter(state) {
+  if (document.body.getAttribute('data-page') !== 'jogadores') return;
+  const nome = document.getElementById('jogadores-search-nome');
+  const time = document.getElementById('jogadores-filter-time');
+  const minGols = document.getElementById('jogadores-filter-min-gols');
+  const sort = document.getElementById('jogadores-sort');
+  if (!nome && !time && !minGols && !sort) return;
+
+  const rerender = () => renderPage(state);
+  if (nome) nome.addEventListener('input', rerender);
+  if (time) time.addEventListener('input', rerender);
+  if (minGols) minGols.addEventListener('input', rerender);
+  if (sort) sort.addEventListener('change', rerender);
+}
+
 function getAssociadosFilter() {
   const ano = document.getElementById('associados-filter-ano');
   const mes = document.getElementById('associados-filter-mes');
@@ -2049,6 +2064,30 @@ function getInadimplentesFilter() {
     ano: Number.isFinite(y) && y > 0 ? Math.trunc(y) : currentYear(),
     mes: mes?.value || 'Jan',
   };
+}
+
+function getJogadoresFilter() {
+  const nome = document.getElementById('jogadores-search-nome');
+  const time = document.getElementById('jogadores-filter-time');
+  const minGols = document.getElementById('jogadores-filter-min-gols');
+  const sort = document.getElementById('jogadores-sort');
+  const min = Number(String(minGols?.value || '').trim());
+  return {
+    nome: nome?.value || '',
+    time: time?.value || '',
+    minGols: Number.isFinite(min) && min > 0 ? Math.trunc(min) : 0,
+    sort: sort?.value || 'nome',
+  };
+}
+
+function jogadoresMatchesFilter(j, filter) {
+  const nomeQ = normalizeText(filter?.nome);
+  const timeQ = normalizeText(filter?.time);
+  if (nomeQ && !normalizeText(j?.nome).includes(nomeQ)) return false;
+  if (timeQ && !normalizeText(j?.time).includes(timeQ)) return false;
+  const gols = Number(j?.gols) || 0;
+  if ((Number(filter?.minGols) || 0) > gols) return false;
+  return true;
 }
 
 let configAutoSaveTimer = null;
@@ -2946,9 +2985,28 @@ function renderJogadores(state) {
   tbody.innerHTML = '';
 
   const list = (state.data.jogadores ?? []);
-  const jogadores = isAdmin() ? list : list.filter((j) => !isBlankJogador(j));
+  const base = isAdmin() ? list : list.filter((j) => !isBlankJogador(j));
+  const filter = getJogadoresFilter();
+  const jogadores = base.filter((j) => jogadoresMatchesFilter(j, filter));
 
-  jogadores.forEach((j, idx) => {
+  jogadores.sort((a, b) => {
+    const mode = filter.sort;
+    if (mode === 'gols' || mode === 'amarelos' || mode === 'vermelhos' || mode === 'suspensoes') {
+      const av = Number(a?.[mode]) || 0;
+      const bv = Number(b?.[mode]) || 0;
+      if (bv !== av) return bv - av;
+      return String(a?.nome || '').localeCompare(String(b?.nome || ''), 'pt-BR');
+    }
+    return String(a?.nome || '').localeCompare(String(b?.nome || ''), 'pt-BR');
+  });
+
+  updateJogadoresKpis(jogadores, filter);
+
+  const countInfo = document.getElementById('jogadores-count-info');
+  if (countInfo) countInfo.textContent = `Mostrando ${jogadores.length} de ${base.length} jogadores.`;
+
+  jogadores.forEach((j) => {
+    const idx = state.data.jogadores.indexOf(j);
     const tr = document.createElement('tr');
 
     const tdNome = document.createElement('td');
@@ -2991,6 +3049,46 @@ function renderJogadores(state) {
 
     tbody.appendChild(tr);
   });
+}
+
+function updateJogadoresKpis(jogadores, filter) {
+  const totalEl = document.getElementById('jogadores-kpi-total');
+  const golsEl = document.getElementById('jogadores-kpi-gols');
+  const amarelosEl = document.getElementById('jogadores-kpi-amarelos');
+  const vermelhosEl = document.getElementById('jogadores-kpi-vermelhos');
+  const suspEl = document.getElementById('jogadores-kpi-suspensoes');
+  const ctxEl = document.getElementById('jogadores-kpi-context');
+  if (!totalEl && !golsEl && !amarelosEl && !vermelhosEl && !suspEl && !ctxEl) return;
+
+  const list = Array.isArray(jogadores) ? jogadores : [];
+  let gols = 0;
+  let amarelos = 0;
+  let vermelhos = 0;
+  let susp = 0;
+
+  for (const j of list) {
+    gols += Number(j?.gols) || 0;
+    amarelos += Number(j?.amarelos) || 0;
+    vermelhos += Number(j?.vermelhos) || 0;
+    susp += Number(j?.suspensoes) || 0;
+  }
+
+  if (totalEl) totalEl.textContent = String(list.length);
+  if (golsEl) golsEl.textContent = String(gols);
+  if (amarelosEl) amarelosEl.textContent = String(amarelos);
+  if (vermelhosEl) vermelhosEl.textContent = String(vermelhos);
+  if (suspEl) suspEl.textContent = String(susp);
+
+  if (ctxEl) {
+    const sortLabel = {
+      nome: 'Nome (A-Z)',
+      gols: 'Gols',
+      amarelos: 'Amarelos',
+      vermelhos: 'Vermelhos',
+      suspensoes: 'Suspensões',
+    }[filter?.sort || 'nome'];
+    ctxEl.textContent = `Filtros ativos: gols mínimos ${filter?.minGols || 0} • ordenação ${sortLabel}.`;
+  }
 }
 
 function renderGastos(state) {
@@ -3747,6 +3845,7 @@ function injectToastStyles() {
   bindAdminControls(state);
   bindAssociadosFilter(state);
   bindInadimplentesFilter(state);
+  bindJogadoresFilter(state);
   bindGastosControls(state);
   bindJogadoresImport(state);
   bindAssociadosImport(state);
