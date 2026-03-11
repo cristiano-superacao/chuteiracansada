@@ -1083,6 +1083,14 @@ body[data-page="campeonato"] .cup-grid{
   gap:1.5rem;
   width:100%;
 }
+
+/* Vista principal do campeonato: 2 colunas, 5 rodadas por coluna */
+body[data-page="campeonato"] .cup-grid.cup-grid--two-columns{
+  grid-template-columns:repeat(2, minmax(0, 1fr));
+  grid-template-rows:repeat(5, minmax(0, auto));
+  grid-auto-flow:column;
+  align-items:start;
+}
 body[data-page="campeonato"] .cup-card{
   border:3px solid var(--primary);
   border-radius:var(--radius);
@@ -1112,6 +1120,33 @@ body[data-page="campeonato"] .cup-card__round{
 
 @media (min-width: 1600px){
   body[data-page="campeonato"] .cup-grid{grid-template-columns:repeat(4, minmax(0, 1fr));gap:1.1rem}
+}
+
+/* Força 2 colunas no desktop mesmo em telas largas */
+@media (min-width: 1025px){
+  body[data-page="campeonato"] .cup-grid.cup-grid--two-columns{
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Tablet: mantém 2 colunas com espaçamento mais compacto */
+@media (min-width: 769px) and (max-width: 1024px){
+  body[data-page="campeonato"] .cup-grid.cup-grid--two-columns{
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+    grid-template-rows:none;
+    grid-auto-flow:row;
+    gap:1rem;
+  }
+}
+
+/* Mobile: 1 coluna para leitura e toque */
+@media (max-width: 768px){
+  body[data-page="campeonato"] .cup-grid.cup-grid--two-columns{
+    grid-template-columns:1fr;
+    grid-template-rows:none;
+    grid-auto-flow:row;
+    gap:12px;
+  }
 }
 
 /* Tabela de jogos para substituir o Grid, permitindo largura adaptável */

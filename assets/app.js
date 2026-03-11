@@ -4086,6 +4086,10 @@ function renderCampeonato(state) {
     });
 
     const grid = el('div', { class: 'cup-grid' });
+    // Quando há muitas rodadas, organiza em 2 colunas com 5 rodadas por coluna.
+    if (rounds.length >= 10) {
+      grid.classList.add('cup-grid--two-columns');
+    }
     for (const roundKey of rounds) {
       const games = (byRound.get(roundKey) || []).slice().sort((a, b) => {
         const ta = parseCampeonatoDateTime(a?.data, a?.hora);
