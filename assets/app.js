@@ -32,6 +32,8 @@ const CAMPEONATO_MAX_RODADAS = 10;
 const CAMPEONATO_JOGOS_POR_RODADA = 3;
 const CAMPEONATO_HORARIOS_PADRAO = ['19:30', '20:30', '21:30'];
 
+let deferredInstallPrompt = null;
+
 const XLSX_CDN_URLS = [
   'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js',
   'https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js',
@@ -198,6 +200,56 @@ function displayNameFromUser(u) {
   return 'Usuário';
 }
 
+function isRunningStandalonePwa() {
+  try {
+    return Boolean(
+      (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
+      window.navigator.standalone === true
+    );
+  } catch {
+    return false;
+  }
+}
+
+function setInstallButtonVisibility() {
+  const btn = document.getElementById('topbar-install-btn');
+  if (!btn) return;
+  const visible = Boolean(deferredInstallPrompt) && !isRunningStandalonePwa();
+  btn.style.display = visible ? 'inline-flex' : 'none';
+}
+
+async function handleInstallButtonClick() {
+  if (!deferredInstallPrompt) {
+    alert('Para instalar no celular: abra o menu do navegador e toque em "Instalar app" ou "Adicionar à tela inicial".');
+    return;
+  }
+
+  try {
+    deferredInstallPrompt.prompt();
+    const choice = await deferredInstallPrompt.userChoice;
+    if (choice?.outcome === 'accepted') toast('Instalação iniciada');
+  } catch (err) {
+    console.error('Falha ao exibir prompt de instalação:', err);
+  } finally {
+    deferredInstallPrompt = null;
+    setInstallButtonVisibility();
+  }
+}
+
+function initPwaInstallPrompt() {
+  window.addEventListener('beforeinstallprompt', (event) => {
+    event.preventDefault();
+    deferredInstallPrompt = event;
+    setInstallButtonVisibility();
+  });
+
+  window.addEventListener('appinstalled', () => {
+    deferredInstallPrompt = null;
+    setInstallButtonVisibility();
+    toast('App instalada com sucesso');
+  });
+}
+
 function ensureTopbarChrome() {
   const appContent = document.querySelector('.app-content');
   if (!appContent) return;
@@ -233,6 +285,7 @@ function ensureTopbarChrome() {
       </div>
     </div>
     <div class="topbar__right">
+      <button type="button" class="topbar__btn" id="topbar-install-btn" aria-label="Instalar aplicativo" style="display:none">Instalar app</button>
       <div class="topbar__profile" aria-label="Perfil">
         <div class="topbar__avatar" aria-hidden="true"></div>
         <div class="topbar__profile-text">
@@ -249,6 +302,12 @@ function ensureTopbarChrome() {
     clearAuth();
     try { window.location.href = '/login.html'; } catch {}
   });
+
+  const installTop = inner.querySelector('#topbar-install-btn');
+  installTop?.addEventListener('click', () => {
+    handleInstallButtonClick();
+  });
+  setInstallButtonVisibility();
 }
 
 function bindSidebarChrome() {
@@ -4319,6 +4378,7 @@ function injectToastStyles() {
 
 (async function init() {
   injectToastStyles();
+  initPwaInstallPrompt();
   const state = { data: structuredClone(DEFAULT_DATA) };
   const page = document.body.getAttribute('data-page');
   // Suporte a tema (claro/escuro/sistema)
