@@ -1709,6 +1709,11 @@ function bindGlobalActions(state) {
       return;
     }
 
+    if (action === 'download-jogos-template') {
+      downloadCampeonatoJogosTemplate();
+      return;
+    }
+
     if (action === 'import-gastos') {
       openGastosImportPicker(state);
       return;
@@ -1762,6 +1767,16 @@ function downloadGastosTemplate() {
   const lines = [headers, example1, example2].map((row) => row.map(csvEscape).join(';'));
   const csv = lines.join('\r\n') + '\r\n';
   downloadTextFile('template-gastos-chuteira-cansada.csv', csv, 'text/csv;charset=utf-8');
+}
+
+function downloadCampeonatoJogosTemplate() {
+  // Template CSV compatível com importação de jogos do campeonato
+  const headers = ['Rodada', 'Data', 'Hora', 'Casa', 'Placar', 'Fora', 'Local'];
+  const example1 = ['1', '2026-01-05', '19:30', 'Brasil', '2-1', 'Argentina', 'Campo principal'];
+  const example2 = ['1', '2026-01-05', '20:30', 'Uruguai', '', 'Chile', 'Campo principal'];
+  const lines = [headers, example1, example2].map((row) => row.map(csvEscape).join(';'));
+  const csv = lines.join('\r\n') + '\r\n';
+  downloadTextFile('template-jogos-campeonato-chuteira-cansada.csv', csv, 'text/csv;charset=utf-8');
 }
 
 function bindGastosControls(state) {
