@@ -415,6 +415,107 @@
       return true;
     }
 
+    function normalizeKey(value) {
+      return String(value ?? '')
+        .trim()
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/\p{Diacritic}/gu, '')
+        .replace(/[^a-z0-9\s]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    function scorePlayerMatch(player, user) {
+      const playerName = normalizeKey(player?.nome);
+      const playerTeam = String(player?.time ?? '').trim();
+      if (!playerName || !playerTeam) return -1;
+
+      const userNome = normalizeKey(user?.nome);
+      const userApelido = normalizeKey(user?.apelido);
+      const userEmailLocal = normalizeKey(String(user?.email || '').split('@')[0]);
+
+      const candidates = [userNome, userApelido, userEmailLocal].filter(Boolean);
+      let score = 0;
+
+      for (const candidate of candidates) {
+        if (playerName === candidate) score = Math.max(score, 120);
+        else if (playerName.startsWith(candidate) || candidate.startsWith(playerName)) score = Math.max(score, 95);
+        else if (playerName.includes(candidate) || candidate.includes(playerName)) score = Math.max(score, 70);
+      }
+
+      // Bônus por interseção de tokens (ex.: ALIPIO <-> JOSE ALIPIO)
+      const playerTokens = new Set(playerName.split(' ').filter(Boolean));
+      const bestTokenOverlap = candidates.reduce((acc, candidate) => {
+        const tokens = candidate.split(' ').filter(Boolean);
+        if (!tokens.length) return acc;
+        const overlap = tokens.filter((t) => playerTokens.has(t)).length;
+        return Math.max(acc, overlap);
+      }, 0);
+
+      if (bestTokenOverlap >= 2) score = Math.max(score, 85 + bestTokenOverlap);
+      if (bestTokenOverlap === 1) score = Math.max(score, 60);
+
+      return score;
+    }
+
+    function toNumber(value) {
+      const n = Number(value);
+      return Number.isFinite(n) ? n : 0;
+    }
+
+    function rankTimes(times) {
+      return [...(times || [])].sort((a, b) => {
+        const diffPg = toNumber(b?.pg) - toNumber(a?.pg);
+        if (diffPg) return diffPg;
+
+        const diffV = toNumber(b?.v) - toNumber(a?.v);
+        if (diffV) return diffV;
+
+        const sgA = toNumber(a?.sg || (toNumber(a?.gf) - toNumber(a?.gs)));
+        const sgB = toNumber(b?.sg || (toNumber(b?.gf) - toNumber(b?.gs)));
+        const diffSg = sgB - sgA;
+        if (diffSg) return diffSg;
+
+        const diffGf = toNumber(b?.gf) - toNumber(a?.gf);
+        if (diffGf) return diffGf;
+
+        const diffCa = toNumber(a?.ca) - toNumber(b?.ca);
+        if (diffCa) return diffCa;
+
+        const diffCv = toNumber(a?.cv) - toNumber(b?.cv);
+        if (diffCv) return diffCv;
+
+        return String(a?.time || '').localeCompare(String(b?.time || ''), 'pt-BR');
+      });
+    }
+
+    async function getPlayerContext(user) {
+      const [jogadores, times] = await Promise.all([
+        apiGetJson('/api/data/jogadores'),
+        apiGetJson('/api/data/times'),
+      ]);
+
+      const candidatos = (jogadores || [])
+        .map((j) => ({ jogador: j, score: scorePlayerMatch(j, user) }))
+        .filter((item) => item.score >= 60)
+        .sort((a, b) => b.score - a.score);
+
+      const myPlayer = candidatos.length ? candidatos[0].jogador : null;
+      if (!myPlayer) return { myPlayer: null, myTeam: null, teamPosition: null };
+
+      const normalizedTeam = normalizeKey(myPlayer?.time);
+      const rankedTimes = rankTimes(times || []);
+      const teamIndex = rankedTimes.findIndex((t) => normalizeKey(t?.time) === normalizedTeam);
+      const myTeam = teamIndex >= 0 ? rankedTimes[teamIndex] : null;
+
+      return {
+        myPlayer,
+        myTeam,
+        teamPosition: teamIndex >= 0 ? (teamIndex + 1) : null,
+      };
+    }
+
     // Carregar dados do dashboard
     async function loadDashboard() {
       const user = await waitAuthUser();
@@ -431,11 +532,13 @@
       // Carregar próximo jogo
       await loadNextGame();
 
+      const playerContext = await getPlayerContext(user);
+
       // Carregar minhas estatísticas
-      await loadMyStats(user.associadoId);
+      await loadMyStats(playerContext);
 
       // Carregar classificação do time
-      await loadMyTeam(user.associadoId);
+      await loadMyTeam(playerContext);
 
       // Carregar situação financeira
       await loadFinancialStatus(user.associadoId);
@@ -462,41 +565,28 @@
       }
     }
 
-    async function loadMyStats(associadoId) {
+    async function loadMyStats(playerContext) {
       try {
-        const jogadores = await apiGetJson('/api/data/jogadores');
-        
-        // Encontrar jogador correspondente ao associado (por nome aproximado)
-        const user = JSON.parse(localStorage.getItem(USER_KEY));
-        const meuJogador = jogadores.find(j => 
-          j.nome.toLowerCase().includes(user.nome.toLowerCase()) ||
-          user.nome.toLowerCase().includes(j.nome.toLowerCase())
-        );
+        const { myPlayer } = playerContext || {};
 
-        if (meuJogador) {
-          document.getElementById('my-games').textContent = meuJogador.jogos || 0;
-          document.getElementById('my-goals').textContent = meuJogador.gols || 0;
-          document.getElementById('my-assists').textContent = meuJogador.assistencias || 0;
-          document.getElementById('my-yellow').textContent = meuJogador.amarelos || 0;
-          document.getElementById('my-red').textContent = meuJogador.vermelhos || 0;
-        }
+        document.getElementById('my-games').textContent = myPlayer?.jogos || 0;
+        document.getElementById('my-goals').textContent = myPlayer?.gols || 0;
+        document.getElementById('my-assists').textContent = myPlayer?.assistencias || 0;
+        document.getElementById('my-yellow').textContent = myPlayer?.amarelos || 0;
+        document.getElementById('my-red').textContent = myPlayer?.vermelhos || 0;
       } catch (err) {
         console.error('Erro ao carregar estatísticas:', err);
       }
     }
 
-    async function loadMyTeam(associadoId) {
+    async function loadMyTeam(playerContext) {
       try {
-        const times = await apiGetJson('/api/data/times');
-        
-        if (times && times.length > 0) {
-          // Por enquanto, pegar o primeiro time (depois pode vincular ao associado)
-          const myTeam = times[0];
-          document.getElementById('my-team-name').textContent = myTeam.time || '-';
-          document.getElementById('my-team-position').textContent = '1Âº';
-          document.getElementById('my-team-points').textContent = myTeam.pg || 0;
-          document.getElementById('my-team-wins').textContent = myTeam.v || 0;
-        }
+        const { myTeam, teamPosition } = playerContext || {};
+
+        document.getElementById('my-team-name').textContent = myTeam?.time || '-';
+        document.getElementById('my-team-position').textContent = teamPosition ? `${teamPosition}º` : '-';
+        document.getElementById('my-team-points').textContent = myTeam?.pg || 0;
+        document.getElementById('my-team-wins').textContent = myTeam?.v || 0;
       } catch (err) {
         console.error('Erro ao carregar time:', err);
       }
