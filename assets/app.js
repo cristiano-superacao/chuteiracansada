@@ -3887,6 +3887,47 @@ function fmtDateShort(iso) {
   return d.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
 }
 
+function parseCampeonatoDateTime(dataRaw, horaRaw) {
+  const data = String(dataRaw || '').trim();
+  const hora = String(horaRaw || '').trim();
+
+  let year = null;
+  let month = null;
+  let day = null;
+
+  const iso = data.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if (iso) {
+    year = Number(iso[1]);
+    month = Number(iso[2]);
+    day = Number(iso[3]);
+  } else {
+    const br = data.match(/^(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?$/);
+    if (br) {
+      day = Number(br[1]);
+      month = Number(br[2]);
+      const yRaw = br[3];
+      if (yRaw) {
+        year = Number(yRaw.length === 2 ? `20${yRaw}` : yRaw);
+      } else {
+        year = new Date().getFullYear();
+      }
+    }
+  }
+
+  const hm = hora.match(/^(\d{1,2}):(\d{2})$/);
+  const hh = hm ? Number(hm[1]) : 0;
+  const mm = hm ? Number(hm[2]) : 0;
+
+  if (
+    Number.isFinite(year) && Number.isFinite(month) && Number.isFinite(day) &&
+    year > 1900 && month >= 1 && month <= 12 && day >= 1 && day <= 31
+  ) {
+    return new Date(year, month - 1, day, hh, mm).getTime();
+  }
+
+  return Number.POSITIVE_INFINITY;
+}
+
 function renderCampeonato(state) {
   if (!state.data.campeonato) state.data.campeonato = { jogos: [], videos: [], imagens: [], posts: [] };
   const admin = isAdmin();
@@ -3988,10 +4029,17 @@ function renderCampeonato(state) {
     const grid = el('div', { class: 'cup-grid' });
     for (const roundKey of rounds) {
       const games = (byRound.get(roundKey) || []).slice().sort((a, b) => {
-        // Ordena por Data (y-m-d) e depois Hora
-        const ad = String(a?.data || '').localeCompare(String(b?.data || ''));
+        const ta = parseCampeonatoDateTime(a?.data, a?.hora);
+        const tb = parseCampeonatoDateTime(b?.data, b?.hora);
+        if (ta !== tb) return ta - tb;
+
+        const ad = String(a?.data || '').localeCompare(String(b?.data || ''), 'pt-BR');
         if (ad !== 0) return ad;
-        return String(a?.hora || '').localeCompare(String(b?.hora || ''));
+
+        const ah = String(a?.hora || '').localeCompare(String(b?.hora || ''), 'pt-BR');
+        if (ah !== 0) return ah;
+
+        return String(a?.casa || '').localeCompare(String(b?.casa || ''), 'pt-BR');
       });
 
       // Tenta achar data comum para o cabeçalho
