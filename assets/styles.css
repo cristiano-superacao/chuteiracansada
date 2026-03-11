@@ -853,6 +853,11 @@ body[data-page="campeonato"] .cup-card__round{
   padding: 8px 12px;
   overflow-x: auto;
   overflow-y: hidden;
+  scrollbar-width: none;
+}
+
+.sidebar__nav::-webkit-scrollbar{
+  display: none;
 }
 
 .sidebar__menu{
@@ -888,6 +893,16 @@ body[data-page="campeonato"] .cup-card__round{
 .app-content{
   margin-left: 0;
   padding-top: 58px;
+}
+
+/* Elevação dinâmica quando há rolagem */
+body.is-scrolled .topbar{
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
+}
+
+body.is-scrolled .sidebar{
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.10);
+  backdrop-filter: blur(10px);
 }
 
 /* Desativa comportamento de drawer mobile antigo */

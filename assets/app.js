@@ -276,6 +276,14 @@ function bindSidebarChrome() {
   });
 }
 
+function setupStickyChrome() {
+  const update = () => {
+    document.body.classList.toggle('is-scrolled', window.scrollY > 8);
+  };
+  update();
+  window.addEventListener('scroll', update, { passive: true });
+}
+
 function bindLogoutButtons() {
   const btn = document.getElementById('logout-btn');
   if (!btn) return;
@@ -3674,6 +3682,7 @@ function injectToastStyles() {
 
   // Chrome comum (evita duplicidade entre páginas)
   bindSidebarChrome();
+  setupStickyChrome();
   bindLogoutButtons();
   const authOk = await enforcePageAuth();
   if (!authOk) return;
