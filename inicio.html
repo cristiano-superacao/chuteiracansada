@@ -142,6 +142,25 @@
       opacity: 0.9;
     }
 
+    .my-team-chip {
+      display: inline-flex;
+      align-items: center;
+      margin-left: 8px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+      color: #0A6C36;
+      background: rgba(6, 170, 72, 0.14);
+      border: 1px solid rgba(6, 170, 72, 0.24);
+      white-space: nowrap;
+    }
+
+    .my-team-row td {
+      background: rgba(6, 170, 72, 0.05);
+    }
+
     @media (max-width: 768px) {
       .dashboard-cards {
         grid-template-columns: 1fr;
@@ -695,6 +714,14 @@
       return [...myGames, ...otherGames];
     }
 
+    function isMyTeamGame(game, teamName) {
+      const normalizedTeam = normalizeKey(teamName);
+      if (!normalizedTeam) return false;
+      const casa = normalizeKey(game?.casa);
+      const fora = normalizeKey(game?.fora);
+      return casa === normalizedTeam || fora === normalizedTeam;
+    }
+
     async function loadRecentGames(playerContext) {
       try {
         const games = await apiGetJson('/api/data/campeonato-jogos');
@@ -710,13 +737,27 @@
         }
 
         orderedGames.slice(0, 5).forEach(game => {
+          const isMine = isMyTeamGame(game, myTeamName);
           const row = document.createElement('tr');
+          if (isMine) row.classList.add('my-team-row');
+
+          const casa = game.casa || '-';
+          const fora = game.fora || '-';
+
+          const casaCell = normalizeKey(casa) === normalizeKey(myTeamName)
+            ? `${casa} <span class="my-team-chip">Meu time</span>`
+            : casa;
+
+          const foraCell = normalizeKey(fora) === normalizeKey(myTeamName)
+            ? `${fora} <span class="my-team-chip">Meu time</span>`
+            : fora;
+
           row.innerHTML = `
             <td>${game.rodada || '-'}</td>
             <td>${game.data || '-'}</td>
-            <td>${game.casa || '-'}</td>
+            <td>${casaCell}</td>
             <td style="font-weight:600;text-align:center">${game.placar || '-'}</td>
-            <td>${game.fora || '-'}</td>
+            <td>${foraCell}</td>
           `;
           tbody.appendChild(row);
         });
