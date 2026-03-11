@@ -17,13 +17,16 @@ router.post('/login', async (req, res) => {
   const password = String(req.body?.password ?? '');
   const adminEmail = getConfiguredAdminEmail();
   const adminPassword = getConfiguredAdminPassword();
+  const isConfiguredAdminEmail = Boolean(email) && email === adminEmail;
 
   if (!process.env.ADMIN_JWT_SECRET) {
     return res.status(500).json({ error: 'server_misconfigured' });
   }
 
-  // Login admin configurado por ambiente, com fallback interno de compatibilidade
-  if (email && email === adminEmail) {
+  // Login admin configurado por ambiente.
+  // Se a senha não bater aqui, ainda tentamos o usuário do banco para evitar lockout
+  // quando env e tabela users estiverem temporariamente desalinhados.
+  if (isConfiguredAdminEmail) {
     if (!adminPassword) {
       return res.status(500).json({ error: 'server_misconfigured' });
     }
@@ -35,8 +38,6 @@ router.post('/login', async (req, res) => {
         user: { id: 0, email: adminEmail, role: 'admin', nome: 'Administrador' }
       });
     }
-
-    return res.status(401).json({ error: 'invalid_credentials' });
   }
 
   // Login de usuário do banco

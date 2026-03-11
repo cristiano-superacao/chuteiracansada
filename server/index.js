@@ -8,6 +8,7 @@ const session = require('express-session');
 const passport = require('passport');
 const { migrateWithRetry } = require('./migrate');
 const { pool, dbEnabled } = require('./db');
+const { ensureAdminUser } = require('./user-service');
 const { authRouter } = require('./routes/auth');
 const { dataRouter } = require('./routes/data');
 const oauthRouter = require('./routes/oauth');
@@ -141,6 +142,14 @@ function listenAsync(port) {
   // Executa migrações em background com retry para evitar crashloop enquanto o Postgres sobe
   try {
     await migrateWithRetry({ retries: 20, delayMs: 2000 });
+    try {
+      const ensured = await ensureAdminUser();
+      if (ensured?.ensured) {
+        console.log('[auth] admin user sincronizado em users');
+      }
+    } catch (err) {
+      console.warn('[auth] não foi possível sincronizar usuário admin no banco:', err?.message || err);
+    }
   } catch (err) {
     console.error('Migrações falharam após várias tentativas. A API seguirá executando, mas operações de dados podem falhar até corrigir a conexão ao banco.', err);
   }
