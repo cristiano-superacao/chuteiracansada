@@ -343,7 +343,10 @@ async function enforcePageAuth() {
     } catch {}
     return true;
   } catch (err) {
-    console.warn('Auth gate falhou:', err);
+    // Erro 401 é esperado quando token expira - não precisa logar
+    if (err?.status !== 401) {
+      console.warn('Auth gate falhou:', err);
+    }
     clearAuth();
     try {
       window.__CC_AUTH_STATE = { ok: false, user: null, page };
@@ -732,7 +735,11 @@ async function refreshAdminFromToken() {
       setAdminSession(false);
       clearAuth();
     }
-  } catch {
+  } catch (err) {
+    // Erro 401 é esperado quando token expira - não precisa logar
+    if (err?.status !== 401) {
+      console.warn('Falha ao verificar autenticação:', err);
+    }
     setAdminSession(false);
   }
 
