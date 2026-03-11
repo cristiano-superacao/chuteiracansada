@@ -547,7 +547,7 @@
       await loadFinancialStatus(user.associadoId);
 
       // Carregar últimos jogos
-      await loadRecentGames();
+      await loadRecentGames(playerContext);
     }
 
     function pickNextGame(games, teamName) {
@@ -677,19 +677,39 @@
       }
     }
 
-    async function loadRecentGames() {
+    function prioritizeGamesForTeam(games, teamName) {
+      const list = Array.isArray(games) ? [...games] : [];
+      const normalizedTeam = normalizeKey(teamName);
+      if (!normalizedTeam) return list;
+
+      const myGames = [];
+      const otherGames = [];
+
+      list.forEach((game) => {
+        const casa = normalizeKey(game?.casa);
+        const fora = normalizeKey(game?.fora);
+        if (casa === normalizedTeam || fora === normalizedTeam) myGames.push(game);
+        else otherGames.push(game);
+      });
+
+      return [...myGames, ...otherGames];
+    }
+
+    async function loadRecentGames(playerContext) {
       try {
         const games = await apiGetJson('/api/data/campeonato-jogos');
+        const myTeamName = playerContext?.myTeam?.time || '';
+        const orderedGames = prioritizeGamesForTeam(games, myTeamName);
         
         const tbody = document.getElementById('recent-games');
         tbody.innerHTML = '';
 
-        if (!games || games.length === 0) {
+        if (!orderedGames || orderedGames.length === 0) {
           tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-light)">Nenhum jogo registrado</td></tr>';
           return;
         }
 
-        games.slice(0, 5).forEach(game => {
+        orderedGames.slice(0, 5).forEach(game => {
           const row = document.createElement('tr');
           row.innerHTML = `
             <td>${game.rodada || '-'}</td>
