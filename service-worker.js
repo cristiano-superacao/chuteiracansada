@@ -1,6 +1,6 @@
 ﻿/* Chuteira Cansada - Service Worker (PWA) */
 
-const CACHE_NAME = 'chuteira-cansada-v26';
+const CACHE_NAME = 'chuteira-cansada-v27';
 
 const PRECACHE_URLS = [
   '/',

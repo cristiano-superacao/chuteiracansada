@@ -1194,16 +1194,14 @@ body[data-page="campeonato"] .cup-card__round{
 
 /* Barra de páginas logo abaixo da topbar */
 .sidebar{
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+  display:block;
   width: 100%;
   height: var(--page-nav-h);
   left: 0;
   right: 0;
   top: var(--topbar-h);
   bottom: auto;
+  position: fixed;
   border-right: none;
   border-bottom: 1px solid var(--border);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
@@ -1215,9 +1213,14 @@ body[data-page="campeonato"] .cup-card__round{
 /* Mantém ação de sair visível no modo topo */
 .sidebar__footer{
   display:block;
+  position:absolute;
+  top:50%;
+  right:12px;
+  transform:translateY(-50%);
   border-top:none;
-  padding:8px 12px 8px 0;
+  padding:0;
   flex-shrink:0;
+  z-index:1;
 }
 
 .sidebar__footer .btn{
@@ -1228,11 +1231,11 @@ body[data-page="campeonato"] .cup-card__round{
 }
 
 .sidebar__nav{
-  flex:1;
-  padding: 8px 12px;
+  padding: 8px 126px 8px 12px;
   overflow-x: auto;
   overflow-y: hidden;
   scrollbar-width: none;
+  height:100%;
 }
 
 .sidebar__nav::-webkit-scrollbar{
@@ -1321,12 +1324,19 @@ body.is-scrolled .sidebar{
 
   .sidebar__footer{
     display:block;
+    position:static;
+    top:auto;
+    right:auto;
+    transform:none;
+    padding:12px 10px 14px;
+    border-top:1px solid var(--border);
   }
 
   .sidebar__nav{
     padding: 12px 10px;
     overflow-y:auto;
     overflow-x:hidden;
+    height:auto;
   }
 
   .sidebar__menu{
