@@ -1803,6 +1803,15 @@ function bindSaldoControls(state) {
   if (movimento) movimento.addEventListener('change', rerender);
 }
 
+function bindCampeonatoControls(state) {
+  if (document.body.getAttribute('data-page') !== 'campeonato') return;
+  const rodada = document.getElementById('campeonato-filter-rodada');
+  const search = document.getElementById('campeonato-search-time');
+  const rerender = () => renderPage(state);
+  if (rodada) rodada.addEventListener('change', rerender);
+  if (search) search.addEventListener('input', rerender);
+}
+
 function getGastosFilter() {
   const q = document.getElementById('gastos-search');
   const mes = document.getElementById('gastos-filter-mes');
@@ -3717,12 +3726,80 @@ function renderCampeonato(state) {
   if (!state.data.campeonato) state.data.campeonato = { jogos: [], videos: [], imagens: [], posts: [] };
   const admin = isAdmin();
 
+  const rodadaFilterEl = document.getElementById('campeonato-filter-rodada');
+  const teamSearchEl = document.getElementById('campeonato-search-time');
+  const kpiTotalEl = document.getElementById('cmp-kpi-total-jogos');
+  const kpiRodadasEl = document.getElementById('cmp-kpi-rodadas');
+  const kpiFinalizadosEl = document.getElementById('cmp-kpi-finalizados');
+  const kpiPendentesEl = document.getElementById('cmp-kpi-pendentes');
+  const kpiContextEl = document.getElementById('cmp-kpi-context');
+  const countInfoEl = document.getElementById('campeonato-count-info');
+
   // Jogos (cartelas por rodada)
   const roundsSlot = document.querySelector('[data-slot="campeonato-rounds"]');
   if (roundsSlot) {
     roundsSlot.innerHTML = '';
     const allJogos = state.data.campeonato.jogos ?? [];
-    const jogos = admin ? allJogos : allJogos.filter((j) => isVisibleJogoForVisitor(j));
+    const baseJogos = admin ? allJogos : allJogos.filter((j) => isVisibleJogoForVisitor(j));
+
+    const roundsForFilter = [...new Set(
+      baseJogos
+        .map((j) => String(j?.rodada || '').trim())
+        .filter(Boolean)
+    )].sort((a, b) => {
+      const na = Number(a);
+      const nb = Number(b);
+      if (Number.isFinite(na) && Number.isFinite(nb)) return na - nb;
+      return String(a).localeCompare(String(b), 'pt-BR');
+    });
+
+    if (rodadaFilterEl) {
+      const selectedBefore = String(rodadaFilterEl.value || 'todas');
+      rodadaFilterEl.innerHTML = '';
+      rodadaFilterEl.appendChild(el('option', { value: 'todas', text: 'Todas' }));
+      roundsForFilter.forEach((round) => {
+        rodadaFilterEl.appendChild(el('option', { value: round, text: `Rodada ${round}` }));
+      });
+      rodadaFilterEl.value = roundsForFilter.includes(selectedBefore) || selectedBefore === 'todas'
+        ? selectedBefore
+        : 'todas';
+    }
+
+    const rodadaFilter = String(rodadaFilterEl?.value || 'todas');
+    const teamSearch = normalizeText(teamSearchEl?.value || '');
+
+    const jogos = baseJogos.filter((j) => {
+      const rodada = String(j?.rodada || '').trim();
+      if (rodadaFilter !== 'todas' && rodada !== rodadaFilter) return false;
+      if (!teamSearch) return true;
+      const home = normalizeText(j?.casa);
+      const away = normalizeText(j?.fora);
+      return home.includes(teamSearch) || away.includes(teamSearch);
+    });
+
+    const totalJogos = jogos.length;
+    const totalRodadas = new Set(jogos.map((j) => String(j?.rodada || '').trim()).filter(Boolean)).size;
+    const finalizados = jogos.filter((j) => {
+      const parts = parsePlacarParts(j?.placar);
+      return Boolean(parts.a) && Boolean(parts.b);
+    }).length;
+    const pendentes = Math.max(0, totalJogos - finalizados);
+
+    if (kpiTotalEl) kpiTotalEl.textContent = String(totalJogos);
+    if (kpiRodadasEl) kpiRodadasEl.textContent = String(totalRodadas);
+    if (kpiFinalizadosEl) kpiFinalizadosEl.textContent = String(finalizados);
+    if (kpiPendentesEl) kpiPendentesEl.textContent = String(pendentes);
+
+    if (kpiContextEl) {
+      const rodadaLabel = rodadaFilter === 'todas' ? 'Todas as rodadas' : `Rodada ${rodadaFilter}`;
+      const buscaLabel = teamSearch ? ` • Busca: "${teamSearchEl?.value || ''}"` : '';
+      kpiContextEl.textContent = `${rodadaLabel}${buscaLabel}.`;
+    }
+    if (countInfoEl) {
+      countInfoEl.textContent = totalJogos === 1
+        ? 'Exibindo 1 jogo.'
+        : `Exibindo ${totalJogos} jogos.`;
+    }
 
     if (!jogos.length) {
       roundsSlot.appendChild(el('div', { class: 'muted', text: 'Nenhum jogo cadastrado.' }));
@@ -4050,6 +4127,7 @@ function injectToastStyles() {
   bindJogadoresFilter(state);
   bindGastosControls(state);
   bindSaldoControls(state);
+  bindCampeonatoControls(state);
   bindJogadoresImport(state);
   bindAssociadosImport(state);
   bindGastosImport(state);

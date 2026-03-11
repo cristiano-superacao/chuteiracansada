@@ -4,15 +4,15 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#06AA48" />
-  <title>Chuteira Cansada â€” Gastos</title>
+  <title>Chuteira Cansada - Gastos</title>
   <link rel="manifest" href="manifest.json" />
   <link rel="icon" type="image/png" href="assets/icon-192.png" />
   <link rel="apple-touch-icon" href="assets/icon-192.png" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-  <link rel="stylesheet" href="assets/styles.css?v=20260311-09" />
+  <link rel="stylesheet" href="assets/styles.css?v=20260311-10" />
 </head>
 <body data-page="gastos">
-  <a class="skip-link" href="#conteudo">Pular para o conteÃºdo</a>
+  <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
   
   <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle menu">â˜°</button>
   <div class="sidebar-overlay" id="sidebar-overlay"></div>
@@ -28,17 +28,17 @@
       </div>
     </div>
     
-    <nav class="sidebar__nav" aria-label="NavegaÃ§Ã£o principal">
+    <nav class="sidebar__nav" aria-label="Navegação principal">
       <ul class="sidebar__menu">
         <li><a class="sidebar__link" href="dashboard.html"><span class="sidebar__icon"><i class="fas fa-tachometer-alt"></i></span> Dashboard</a></li>
         <li><a class="sidebar__link" href="dashboard.html"><span class="sidebar__icon"><i class="fas fa-users"></i></span> Associados</a></li>
         <li><a class="sidebar__link" href="jogadores.html"><span class="sidebar__icon"><i class="fas fa-futbol"></i></span> Jogadores</a></li>
         <li><a class="sidebar__link is-active" href="gastos.html"><span class="sidebar__icon"><i class="fas fa-money-bill-wave"></i></span> Gastos</a></li>
         <li><a class="sidebar__link" href="saldo.html"><span class="sidebar__icon"><i class="fas fa-chart-line"></i></span> Saldo</a></li>
-        <li><a class="sidebar__link" href="classificacao.html"><span class="sidebar__icon"><i class="fas fa-trophy"></i></span> ClassificaÃ§Ã£o</a></li>
+        <li><a class="sidebar__link" href="classificacao.html"><span class="sidebar__icon"><i class="fas fa-trophy"></i></span> Classificação</a></li>
         <li><a class="sidebar__link" href="campeonato.html"><span class="sidebar__icon"><i class="fas fa-calendar-alt"></i></span> Campeonato</a></li>
         <li><a class="sidebar__link" href="entreterimento.html"><span class="sidebar__icon"><i class="fas fa-gamepad"></i></span> Entretenimento</a></li>
-        <li><a class="sidebar__link" href="dashboard.html#configuracoes"><span class="sidebar__icon"><i class="fas fa-cog"></i></span> ConfiguraÃ§Ãµes</a></li>
+        <li><a class="sidebar__link" href="dashboard.html#configuracoes"><span class="sidebar__icon"><i class="fas fa-cog"></i></span> Configurações</a></li>
       </ul>
     </nav>
     
@@ -51,13 +51,13 @@
     <main id="conteudo" class="container page">
     <header class="page__header">
       <h1 class="page__title">Gastos</h1>
-      <p class="page__subtitle">Controle despesas por mÃªs com visÃ£o rÃ¡pida de total, mÃ©dia e maior lanÃ§amento.</p>
+      <p class="page__subtitle">Controle despesas por mês com visão rápida de total, média e maior lançamento.</p>
     </header>
 
     <section class="gst-overview" aria-label="Resumo financeiro de gastos">
       <div class="gst-kpis">
         <article class="gst-kpi" aria-live="polite">
-          <p class="gst-kpi__label">LanÃ§amentos filtrados</p>
+          <p class="gst-kpi__label">Lançamentos filtrados</p>
           <p class="gst-kpi__value" id="gastos-kpi-lancamentos">0</p>
         </article>
         <article class="gst-kpi" aria-live="polite">
@@ -65,7 +65,7 @@
           <p class="gst-kpi__value gst-kpi__value--ok" id="gastos-kpi-total">R$ 0,00</p>
         </article>
         <article class="gst-kpi" aria-live="polite">
-          <p class="gst-kpi__label">MÃ©dia por lanÃ§amento</p>
+          <p class="gst-kpi__label">Média por lançamento</p>
           <p class="gst-kpi__value" id="gastos-kpi-media">R$ 0,00</p>
         </article>
         <article class="gst-kpi" aria-live="polite">
@@ -73,7 +73,7 @@
           <p class="gst-kpi__value gst-kpi__value--warn" id="gastos-kpi-maior">R$ 0,00</p>
         </article>
         <article class="gst-kpi" aria-live="polite">
-          <p class="gst-kpi__label">ParticipaÃ§Ã£o no total geral</p>
+          <p class="gst-kpi__label">Participação no total geral</p>
           <p class="gst-kpi__value" id="gastos-kpi-share">0%</p>
         </article>
       </div>
@@ -83,13 +83,13 @@
     <section class="card" aria-label="Tabela de gastos">
       <div class="card__header card__header--gastos">
         <div>
-          <h2 class="card__title">LanÃ§amentos</h2>
-          <p class="card__hint">Clique para editar. Valores aceitam R$ e nÃºmero.</p>
+          <h2 class="card__title">Lançamentos</h2>
+          <p class="card__hint">Clique para editar. Valores aceitam R$ e número.</p>
         </div>
         <div class="gst-toolbar" aria-label="Ferramentas de gastos">
           <div class="gst-toolbar__group gst-toolbar__group--actions">
-            <label class="field" aria-label="Selecionar gasto padrÃ£o">
-              <span class="field__label">Gasto padrÃ£o</span>
+            <label class="field" aria-label="Selecionar gasto padrão">
+              <span class="field__label">Gasto padrão</span>
               <select class="select" id="gastos-item-padrao">
                 <optgroup label="Bebidas">
                   <option>Amstel</option>
@@ -98,28 +98,28 @@
                   <option>Bebidas Lacta</option>
                 </optgroup>
                 <optgroup label="Alimentos">
-                  <option>AlmoÃ§o</option>
-                  <option>CafÃ©</option>
+                  <option>Almoço</option>
+                  <option>Café</option>
                   <option>Frutas</option>
                   <option>Laranja</option>
                   <option>Melancia</option>
-                  <option>MelÃ£o</option>
-                  <option>PÃ£o</option>
-                  <option>PÃ£es</option>
+                  <option>Melão</option>
+                  <option>Pão</option>
+                  <option>Pães</option>
                   <option>Queijo e Presunto</option>
                 </optgroup>
-                <optgroup label="ServiÃ§os">
+                <optgroup label="Serviços">
                   <option>Ãrbitro</option>
                   <option>Gandula</option>
                   <option>Goleiro</option>
-                  <option>ManutenÃ§Ã£o do Campo</option>
+                  <option>Manutenção do Campo</option>
                 </optgroup>
                 <optgroup label="Contas">
                   <option>Coelba</option>
                   <option>Embasa</option>
                 </optgroup>
                 <optgroup label="Limpeza">
-                  <option>Papel higiÃªnico</option>
+                  <option>Papel higiênico</option>
                   <option>Qboa</option>
                   <option>Vassoura</option>
                 </optgroup>
@@ -138,12 +138,12 @@
           </div>
 
           <div class="gst-toolbar__group gst-toolbar__group--filters">
-            <label class="field" aria-label="Pesquisar por descriÃ§Ã£o">
+            <label class="field" aria-label="Pesquisar por descrição">
               <span class="field__label">Pesquisar</span>
-              <input class="input" id="gastos-search" type="search" placeholder="DescriÃ§Ã£o..." />
+              <input class="input" id="gastos-search" type="search" placeholder="Descrição..." />
             </label>
-            <label class="field" aria-label="Filtrar por mÃªs">
-              <span class="field__label">MÃªs</span>
+            <label class="field" aria-label="Filtrar por mês">
+              <span class="field__label">Mês</span>
               <select class="select" id="gastos-filter-mes">
                 <option value="todos">Todos</option>
                 <option>Jan</option>
@@ -160,12 +160,12 @@
                 <option>Dez</option>
               </select>
             </label>
-            <label class="field" aria-label="Filtrar valor mÃ­nimo">
-              <span class="field__label">Valor mÃ­nimo (R$)</span>
+            <label class="field" aria-label="Filtrar valor mínimo">
+              <span class="field__label">Valor mínimo (R$)</span>
               <input class="input" id="gastos-filter-min" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0" />
             </label>
-            <label class="field" aria-label="Filtrar valor mÃ¡ximo">
-              <span class="field__label">Valor mÃ¡ximo (R$)</span>
+            <label class="field" aria-label="Filtrar valor máximo">
+              <span class="field__label">Valor máximo (R$)</span>
               <input class="input" id="gastos-filter-max" type="number" inputmode="decimal" min="0" step="0.01" placeholder="Sem limite" />
             </label>
             <label class="field" aria-label="Ordenar gastos">
@@ -175,7 +175,7 @@
                 <option value="data-asc">Data (mais antiga)</option>
                 <option value="valor-desc">Valor (maior primeiro)</option>
                 <option value="valor-asc">Valor (menor primeiro)</option>
-                <option value="descricao">DescriÃ§Ã£o (A-Z)</option>
+                <option value="descricao">Descrição (A-Z)</option>
               </select>
             </label>
           </div>
@@ -192,11 +192,11 @@
         <table class="table table--striped table--sticky-first table--sticky-actions gastos-table" data-table="gastos">
           <thead>
             <tr>
-              <th class="w-140">MÃªs</th>
+              <th class="w-140">Mês</th>
               <th class="w-160">Data</th>
               <th>O que foi</th>
               <th class="w-160">Valor (R$)</th>
-              <th class="w-72" aria-label="AÃ§Ãµes"></th>
+              <th class="w-72" aria-label="Ações"></th>
             </tr>
           </thead>
           <tbody></tbody>
@@ -205,30 +205,32 @@
 
       <div class="card__footer">
         <div class="stack">
-          <div class="muted" id="gastos-count-info">Mostrando 0 de 0 lanÃ§amentos.</div>
+          <div class="muted" id="gastos-count-info">Mostrando 0 de 0 lançamentos.</div>
           <div class="muted" data-slot="gastos-resumo"></div>
-          <div class="pager" aria-label="PaginaÃ§Ã£o">
+          <div class="pager" aria-label="Paginação">
             <button class="btn btn--ghost" type="button" id="gastos-page-prev">Anterior</button>
             <span class="muted" id="gastos-page-info"></span>
-            <button class="btn btn--ghost" type="button" id="gastos-page-next">PrÃ³xima</button>
+            <button class="btn btn--ghost" type="button" id="gastos-page-next">Próxima</button>
           </div>
         </div>
-        <button class="btn btn--primary" type="button" data-action="save" data-admin-only="1">Salvar alteraÃ§Ãµes</button>
+        <button class="btn btn--primary" type="button" data-action="save" data-admin-only="1">Salvar alterações</button>
       </div>
     </section>
   </main>
 
   <footer class="footer">
     <div class="container footer__inner">
-      <span class="muted">Â© 2026 Chuteira Cansada</span>
+      <span class="muted">© 2026 Chuteira Cansada</span>
       <span class="muted">Dados no servidor (Postgres) com fallback local</span>
     </div>
   </footer>
 
   <input id="import-gastos-file" type="file" accept=".xlsx,.xls,.csv" hidden />
 
-  <script src="assets/app.js?v=20260311-09"></script>
+  <script src="assets/app.js?v=20260311-10"></script>
   </div>
 </body>
 </html>
+
+
 

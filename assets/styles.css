@@ -542,6 +542,23 @@ img{max-width:100%;height:auto}
 .sal-toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end}
 .sal-toolbar .field{min-width:170px}
 
+/* Dashboard de Campeonato */
+.cmp-overview{margin:-6px 0 14px}
+.cmp-kpis{display:grid;grid-template-columns:repeat(4, minmax(170px, 1fr));gap:10px}
+.cmp-kpi{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px;box-shadow:var(--shadow)}
+.cmp-kpi__label{margin:0;color:var(--muted);font-size:12px;font-weight:800;letter-spacing:0.2px}
+.cmp-kpi__value{margin:6px 0 0;font-size:22px;line-height:1.1;font-weight:900;color:var(--brand-1)}
+.cmp-kpi__value--ok{color:var(--ok)}
+.cmp-kpi__value--warn{color:var(--danger)}
+.cmp-overview__hint{margin:8px 2px 0;color:var(--muted);font-weight:700;font-size:12px}
+
+.card__header--campeonato{flex-direction:column;align-items:stretch;gap:14px}
+.cmp-toolbar{display:grid;grid-template-columns:1fr;gap:10px}
+.cmp-toolbar__group{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end}
+.cmp-toolbar__group--filters .field{min-width:180px}
+.cmp-toolbar__group--actions .btn{min-width:170px}
+.card__footer--campeonato{gap:10px;flex-wrap:wrap}
+
 .entradas-table{table-layout:fixed;min-width:980px}
 .saldo-mensal-table{table-layout:fixed;min-width:860px}
 .saldo-mensal-table th:nth-child(2),
@@ -556,6 +573,7 @@ img{max-width:100%;height:auto}
   .jog-kpis{grid-template-columns:repeat(3, minmax(150px, 1fr))}
   .gst-kpis{grid-template-columns:repeat(3, minmax(150px, 1fr))}
   .sal-kpis{grid-template-columns:repeat(3, minmax(150px, 1fr))}
+  .cmp-kpis{grid-template-columns:repeat(2, minmax(170px, 1fr))}
 }
 
 @media (max-width: 1024px){
@@ -861,6 +879,16 @@ img{max-width:100%;height:auto}
   .sal-kpi__value{font-size:18px}
   .sal-overview__hint{margin-top:6px;font-size:11px}
 
+  .cmp-overview{margin:-4px 0 12px}
+  .cmp-kpis{grid-template-columns:1fr 1fr;gap:8px}
+  .cmp-kpi{padding:10px 11px}
+  .cmp-kpi__value{font-size:18px}
+  .cmp-overview__hint{margin-top:6px;font-size:11px}
+
+  .cmp-toolbar__group{display:grid;grid-template-columns:1fr;gap:8px}
+  .cmp-toolbar__group .btn,
+  .cmp-toolbar__group .field{width:100%;min-width:0}
+
   .sal-toolbar{display:grid;grid-template-columns:1fr;gap:8px}
   .sal-toolbar .field,
   .sal-toolbar .check{width:100%;min-width:0}
@@ -962,6 +990,7 @@ img{max-width:100%;height:auto}
   .jog-kpis{grid-template-columns:1fr}
   .gst-kpis{grid-template-columns:1fr}
   .sal-kpis{grid-template-columns:1fr}
+  .cmp-kpis{grid-template-columns:1fr}
 }
 
 /* Barra de progresso superior (requisições) */
@@ -1014,7 +1043,7 @@ body[data-page="campeonato"] .cup-sheet{
   background:var(--card);
   border:2px solid var(--text);
   border-radius: var(--radius);
-  padding:14px;
+  padding:16px;
   box-shadow: var(--shadow);
 }
 body[data-page="campeonato"] .cup-title{
@@ -1022,14 +1051,15 @@ body[data-page="campeonato"] .cup-title{
   font-weight:900;
   letter-spacing:0.6px;
   text-transform:uppercase;
-  padding:6px 8px 10px;
+  padding:8px 10px 12px;
+  font-size:22px;
 }
 
 /* Layout de cartelas de rodadas (imagem 2 + adaptação para tabela imagem 1) */
 body[data-page="campeonato"] .cup-rounds{width:100%}
 body[data-page="campeonato"] .cup-grid{
   display:grid;
-  grid-template-columns:repeat(auto-fill, minmax(400px, 1fr));
+  grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));
   gap:1.5rem;
   width:100%;
 }
@@ -1054,6 +1084,10 @@ body[data-page="campeonato"] .cup-card__round{
   font-weight:700;
   text-transform:uppercase;
   letter-spacing:0.8px;
+}
+
+@media (min-width: 1280px){
+  body[data-page="campeonato"] .cup-grid{grid-template-columns:repeat(3, minmax(0, 1fr))}
 }
 
 /* Tabela de jogos para substituir o Grid, permitindo largura adaptável */
