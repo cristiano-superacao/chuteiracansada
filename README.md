@@ -25,7 +25,7 @@ Sistema completo e profissional para gestão de campeonato de futebol e controle
 - 🔄 **Service Worker**: atualizações automáticas
 
 ### 🔐 Autenticação e Controle de Acesso
-- **Dois tipos de usuário**: Admin e Associado
+- **Três tipos de usuário**: Admin, Associado e Jogador
 - **Login tradicional**: Email + senha com bcrypt
 - **Login com Google OAuth**: Associados podem entrar com Gmail do celular
 - **JWT tokens**: Sessões seguras de 8 horas
@@ -51,6 +51,26 @@ Variáveis opcionais relacionadas:
 
 - `ASSOCIADO_DEFAULT_PASSWORD` = senha padrão para associados
 - `ASSOCIADO_EMAIL_DOMAIN` = domínio usado para email técnico quando faltar email no cadastro
+
+### Login individual por jogador
+
+- Cada jogador pode ter login próprio com role `jogador`.
+- O jogador acessa `jogador.html` para acompanhar estatísticas e histórico do seu time.
+- O admin mantém acesso completo e também pode abrir a área de jogador para suporte.
+
+Sincronizar/gerar credenciais de todos os jogadores cadastrados:
+
+- Comando: `npm run sync:jogadores`
+- Exportar CSV de credenciais: `node -r dotenv/config server/sync-jogadores-users.js --export-csv`
+- Exportar CSV em caminho específico: `node -r dotenv/config server/sync-jogadores-users.js --csv=exports/credenciais-jogadores.csv`
+- Preservar senhas atuais sem reset: `node -r dotenv/config server/sync-jogadores-users.js --preserve-passwords`
+- Senha padrão gerada para jogadores sem senha explícita: `JOGADOR_DEFAULT_PASSWORD` (ou `123456` se não definida)
+- Quando o jogador não possui email cadastrado, o sistema gera email técnico automaticamente com domínio configurável em `JOGADOR_EMAIL_DOMAIN`.
+
+Variáveis opcionais relacionadas:
+
+- `JOGADOR_DEFAULT_PASSWORD` = senha padrão para jogadores
+- `JOGADOR_EMAIL_DOMAIN` = domínio usado para email técnico quando faltar email no cadastro do jogador
 
 > 📖 **Documentação completa**: 
 > - [AUTH_README.md](AUTH_README.md) - Autenticação tradicional

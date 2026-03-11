@@ -11,6 +11,7 @@
     "dev": "node --watch server/index.js",
     "seed": "node server/seed.js --yes",
     "sync:associados": "node server/sync-associados-users.js",
+    "sync:jogadores": "node server/sync-jogadores-users.js",
     "smoke": "node server/smoke.js",
     "test": "echo \"no tests\""
   },

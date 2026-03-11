@@ -61,6 +61,10 @@ Abra no navegador: **http://localhost:3000/login.html**
 - Email: `carlos.silva@gmail.com`
 - Senha: `123456`
 
+**Credenciais Jogador (após sincronização):**
+- Email: gerado automaticamente por nome/id quando não houver email no cadastro
+- Senha: `123456` (ou valor de `JOGADOR_DEFAULT_PASSWORD`)
+
 ---
 
 ## Opção 2: Railway (Produção) 🚂
@@ -204,6 +208,8 @@ Após popular o banco e iniciar o servidor, teste:
 - [ ] Logout funciona
 - [ ] Login associado (`carlos.silva@gmail.com` / `123456`)
 - [ ] Dashboard associado carrega com dados
+- [ ] Login jogador (`email-do-jogador` / `123456`)
+- [ ] Página `jogador.html` exibe histórico e estatísticas do jogador
 - [ ] Todas as páginas são responsivas (testar no mobile)
 
 ---
