@@ -497,9 +497,33 @@ a{color:inherit;text-decoration:none}
 .jogadores-table thead th:nth-child(n+3):nth-child(-n+6),
 .jogadores-table tbody td:nth-child(n+3):nth-child(-n+6){text-align:center}
 
+/* Dashboard de Gastos */
+.gst-overview{margin:-6px 0 14px}
+.gst-kpis{display:grid;grid-template-columns:repeat(5, minmax(150px, 1fr));gap:10px}
+.gst-kpi{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px;box-shadow:var(--shadow)}
+.gst-kpi__label{margin:0;color:var(--muted);font-size:12px;font-weight:800;letter-spacing:0.2px}
+.gst-kpi__value{margin:6px 0 0;font-size:22px;line-height:1.1;font-weight:900;color:var(--brand-1)}
+.gst-kpi__value--ok{color:var(--ok)}
+.gst-kpi__value--warn{color:var(--danger)}
+.gst-overview__hint{margin:8px 2px 0;color:var(--muted);font-weight:700;font-size:12px}
+
+.card__header--gastos{flex-direction:column;align-items:stretch;gap:14px}
+.gst-toolbar{display:grid;grid-template-columns:1fr;gap:10px}
+.gst-toolbar__group{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end}
+.gst-toolbar__group--actions .btn{min-width:150px}
+.gst-toolbar__group--actions .field{min-width:220px}
+.gst-toolbar__group--filters .field{min-width:160px}
+.gst-toolbar__group--utilities{justify-content:flex-end}
+
+.gastos-table{table-layout:fixed;min-width:1000px}
+.gastos-table th,.gastos-table td{padding:10px 9px;font-size:13px}
+.gastos-table thead th:nth-child(4),
+.gastos-table tbody td:nth-child(4){text-align:right;padding-right:14px}
+
 @media (max-width: 1280px){
   .assoc-kpis{grid-template-columns:repeat(3, minmax(150px, 1fr))}
   .jog-kpis{grid-template-columns:repeat(3, minmax(150px, 1fr))}
+  .gst-kpis{grid-template-columns:repeat(3, minmax(150px, 1fr))}
 }
 
 @media (max-width: 1024px){
@@ -511,6 +535,11 @@ a{color:inherit;text-decoration:none}
   .jog-kpi__value{font-size:20px}
   .jog-toolbar__group--actions .btn{min-width:156px}
   .jog-toolbar__group--filters .field{min-width:145px}
+  .gst-kpis{grid-template-columns:repeat(2, minmax(150px, 1fr))}
+  .gst-kpi__value{font-size:20px}
+  .gst-toolbar__group--actions .btn{min-width:145px}
+  .gst-toolbar__group--actions .field{min-width:190px}
+  .gst-toolbar__group--filters .field{min-width:145px}
 }
 
 .img-grid{display:grid;grid-template-columns:1fr;gap:12px}
@@ -785,6 +814,17 @@ a{color:inherit;text-decoration:none}
   .jog-kpi__value{font-size:18px}
   .jog-overview__hint{margin-top:6px;font-size:11px}
 
+  .gst-overview{margin:-4px 0 12px}
+  .gst-kpis{grid-template-columns:1fr 1fr;gap:8px}
+  .gst-kpi{padding:10px 11px}
+  .gst-kpi__value{font-size:18px}
+  .gst-overview__hint{margin-top:6px;font-size:11px}
+
+  .gst-toolbar__group{display:grid;grid-template-columns:1fr;gap:8px}
+  .gst-toolbar__group .btn,
+  .gst-toolbar__group .field,
+  .gst-toolbar__group .check{width:100%;min-width:0}
+
   .jog-toolbar__group{display:grid;grid-template-columns:1fr;gap:8px}
   .jog-toolbar__group .btn,
   .jog-toolbar__group .field,
@@ -875,6 +915,7 @@ a{color:inherit;text-decoration:none}
   .input,.select{padding:10px 12px}
   .assoc-kpis{grid-template-columns:1fr}
   .jog-kpis{grid-template-columns:1fr}
+  .gst-kpis{grid-template-columns:1fr}
 }
 
 /* Barra de progresso superior (requisições) */

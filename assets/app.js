@@ -1761,6 +1761,10 @@ function downloadGastosTemplate() {
 function bindGastosControls(state) {
   if (document.body.getAttribute('data-page') !== 'gastos') return;
   const q = document.getElementById('gastos-search');
+  const mes = document.getElementById('gastos-filter-mes');
+  const min = document.getElementById('gastos-filter-min');
+  const max = document.getElementById('gastos-filter-max');
+  const sort = document.getElementById('gastos-sort');
   const prev = document.getElementById('gastos-page-prev');
   const next = document.getElementById('gastos-page-next');
 
@@ -1770,6 +1774,10 @@ function bindGastosControls(state) {
   };
 
   if (q) q.addEventListener('input', resetAndRender);
+  if (mes) mes.addEventListener('change', resetAndRender);
+  if (min) min.addEventListener('input', resetAndRender);
+  if (max) max.addEventListener('input', resetAndRender);
+  if (sort) sort.addEventListener('change', resetAndRender);
   if (prev) {
     prev.addEventListener('click', () => {
       gastosCurrentPage = Math.max(1, gastosCurrentPage - 1);
@@ -1786,14 +1794,65 @@ function bindGastosControls(state) {
 
 function getGastosFilter() {
   const q = document.getElementById('gastos-search');
-  return { q: q?.value || '' };
+  const mes = document.getElementById('gastos-filter-mes');
+  const min = document.getElementById('gastos-filter-min');
+  const max = document.getElementById('gastos-filter-max');
+  const sort = document.getElementById('gastos-sort');
+  const minValue = Number(String(min?.value || '').trim());
+  const maxValue = Number(String(max?.value || '').trim());
+  return {
+    q: q?.value || '',
+    mes: mes?.value || 'todos',
+    min: Number.isFinite(minValue) && minValue > 0 ? minValue : 0,
+    max: Number.isFinite(maxValue) && maxValue > 0 ? maxValue : Number.POSITIVE_INFINITY,
+    sort: sort?.value || 'data-desc',
+  };
 }
 
 function gastosMatchesSearch(g, filter) {
   const q = normalizeText(filter?.q);
-  if (!q) return true;
   const desc = normalizeText(g?.descricao);
-  return desc.includes(q);
+  const mes = normalizeMonthLabel(g?.mes, g?.data);
+  const amount = parseMoney(g?.valor);
+  const monthOk = !filter?.mes || filter?.mes === 'todos' ? true : mes === filter.mes;
+  const minOk = amount >= (Number(filter?.min) || 0);
+  const maxLimit = Number(filter?.max);
+  const maxOk = Number.isFinite(maxLimit) ? amount <= maxLimit : true;
+  const textOk = !q ? true : desc.includes(q);
+  return monthOk && minOk && maxOk && textOk;
+}
+
+function sortGastos(list, mode) {
+  const out = [...list];
+  const timeValue = (s) => {
+    const t = Date.parse(String(s || '').trim());
+    return Number.isFinite(t) ? t : 0;
+  };
+
+  out.sort((a, b) => {
+    if (mode === 'valor-desc') {
+      const diff = parseMoney(b?.valor) - parseMoney(a?.valor);
+      if (diff) return diff;
+    }
+    if (mode === 'valor-asc') {
+      const diff = parseMoney(a?.valor) - parseMoney(b?.valor);
+      if (diff) return diff;
+    }
+    if (mode === 'descricao') {
+      const diff = String(a?.descricao || '').localeCompare(String(b?.descricao || ''), 'pt-BR');
+      if (diff) return diff;
+    }
+    if (mode === 'data-asc') {
+      const diff = timeValue(a?.data) - timeValue(b?.data);
+      if (diff) return diff;
+    }
+    // Padrão: data-desc
+    const diff = timeValue(b?.data) - timeValue(a?.data);
+    if (diff) return diff;
+    return String(a?.descricao || '').localeCompare(String(b?.descricao || ''), 'pt-BR');
+  });
+
+  return out;
 }
 
 function bindGastosImport(state) {
@@ -3100,7 +3159,9 @@ function renderGastos(state) {
   const filter = getGastosFilter();
   const base = (state.data.gastos ?? []);
   const visible = isAdmin() ? base : base.filter((g) => !isBlankGasto(g));
-  const all = visible.filter((g) => gastosMatchesSearch(g, filter));
+  const all = sortGastos(visible.filter((g) => gastosMatchesSearch(g, filter)), filter.sort);
+
+  updateGastosDashboard(state, visible, all, filter);
 
   const total = all.length;
   const totalPages = Math.max(1, Math.ceil(total / GASTOS_PAGE_SIZE));
@@ -3119,6 +3180,9 @@ function renderGastos(state) {
   if (prev) prev.disabled = gastosCurrentPage <= 1;
   if (next) next.disabled = gastosCurrentPage >= totalPages;
 
+  const countInfo = document.getElementById('gastos-count-info');
+  if (countInfo) countInfo.textContent = `Mostrando ${total} de ${visible.length} lançamentos.`;
+
   gastos.forEach((g, visualIdx) => {
     const idx = state.data.gastos.indexOf(g);
     const tr = document.createElement('tr');
@@ -3126,19 +3190,28 @@ function renderGastos(state) {
     const tdMes = document.createElement('td');
     setEditableCell(tdMes, {
       value: g.mes,
-      onCommit: (v) => (g.mes = v || '—')
+      onCommit: (v) => {
+        g.mes = v || '—';
+        refreshGastosPanels(state);
+      }
     });
 
     const tdData = document.createElement('td');
     setEditableCell(tdData, {
       value: g.data,
-      onCommit: (v) => (g.data = v)
+      onCommit: (v) => {
+        g.data = v;
+        refreshGastosPanels(state);
+      }
     });
 
     const tdDesc = document.createElement('td');
     setEditableCell(tdDesc, {
       value: g.descricao,
-      onCommit: (v) => (g.descricao = v)
+      onCommit: (v) => {
+        g.descricao = v;
+        refreshGastosPanels(state);
+      }
     });
 
     const tdValor = document.createElement('td');
@@ -3148,7 +3221,7 @@ function renderGastos(state) {
       onCommit: (raw) => {
         g.valor = parseMoney(raw);
         tdValor.textContent = money(g.valor);
-        updateGastosResumo(state);
+        refreshGastosPanels(state);
       }
     });
 
@@ -3178,10 +3251,51 @@ function renderGastos(state) {
   updateGastosResumo(state);
 }
 
+function refreshGastosPanels(state) {
+  const filter = getGastosFilter();
+  const base = (state.data.gastos ?? []);
+  const visible = isAdmin() ? base : base.filter((g) => !isBlankGasto(g));
+  const filtered = sortGastos(visible.filter((g) => gastosMatchesSearch(g, filter)), filter.sort);
+  updateGastosDashboard(state, visible, filtered, filter);
+  updateGastosResumo(state);
+}
+
+function updateGastosDashboard(state, visible, filtered, filter) {
+  const listAll = Array.isArray(visible) ? visible : [];
+  const list = Array.isArray(filtered) ? filtered : [];
+  const totalAll = listAll.reduce((acc, it) => acc + parseMoney(it?.valor), 0);
+  const total = list.reduce((acc, it) => acc + parseMoney(it?.valor), 0);
+  const avg = list.length ? (total / list.length) : 0;
+  const max = list.reduce((acc, it) => Math.max(acc, parseMoney(it?.valor)), 0);
+  const share = totalAll > 0 ? Math.round((total / totalAll) * 100) : 0;
+
+  const elLanc = document.getElementById('gastos-kpi-lancamentos');
+  const elTotal = document.getElementById('gastos-kpi-total');
+  const elMedia = document.getElementById('gastos-kpi-media');
+  const elMaior = document.getElementById('gastos-kpi-maior');
+  const elShare = document.getElementById('gastos-kpi-share');
+  const elCtx = document.getElementById('gastos-kpi-context');
+
+  if (elLanc) elLanc.textContent = String(list.length);
+  if (elTotal) elTotal.textContent = money(total);
+  if (elMedia) elMedia.textContent = money(avg);
+  if (elMaior) elMaior.textContent = money(max);
+  if (elShare) elShare.textContent = `${share}%`;
+  if (elCtx) {
+    const month = filter?.mes && filter.mes !== 'todos' ? filter.mes : 'todos os meses';
+    elCtx.textContent = `Filtro: ${month} • faixa ${money(filter?.min || 0)} até ${Number.isFinite(filter?.max) ? money(filter.max) : 'sem limite'}.`;
+  }
+}
+
 function updateGastosResumo(state) {
-  const total = (state.data.gastos ?? []).reduce((acc, it) => acc + parseMoney(it.valor), 0);
+  const filter = getGastosFilter();
+  const base = (state.data.gastos ?? []);
+  const visible = isAdmin() ? base : base.filter((g) => !isBlankGasto(g));
+  const filtered = visible.filter((g) => gastosMatchesSearch(g, filter));
+  const total = filtered.reduce((acc, it) => acc + parseMoney(it.valor), 0);
+  const totalGeral = visible.reduce((acc, it) => acc + parseMoney(it.valor), 0);
   const slot = document.querySelector('[data-slot="gastos-resumo"]');
-  if (slot) slot.textContent = `Total de gastos: ${money(total)}`;
+  if (slot) slot.textContent = `Total filtrado: ${money(total)} • Total geral: ${money(totalGeral)}`;
 }
 
 function renderEntradas(state) {
