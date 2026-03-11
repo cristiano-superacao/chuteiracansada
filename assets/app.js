@@ -1810,21 +1810,25 @@ function downloadTextFile(filename, text, mime = 'text/plain;charset=utf-8') {
 }
 
 function downloadAssociadosTemplate() {
-  // Template CSV compatível com Excel (pt-BR): separador ';'
+  // Template CSV alinhado à tabela de associados do sistema.
   const headers = ['NOME DOS ASSOCIADOS', 'APELIDO', ...MONTHS.map((m) => m.label.toUpperCase())];
-  const example1 = ['Ademir Exemplo', 'Guilito', 'Pago', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-'];
-  const example2 = ['Aline Exemplo', 'Dica', 'R$ 30,00', 'R$ 30,00', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-'];
-  const lines = [headers, example1, example2].map((row) => row.map(csvEscape).join(';'));
+  const example1 = ['Ademir Exemplo', 'Guilito', 'Pago', 'Pago', 'Pago', '-', '-', '-', '-', '-', '-', '-', '-', '-'];
+  const example2 = ['Aline Exemplo', 'Dica', 'R$ 30,00', 'R$ 30,00', 'R$ 30,00', '-', '-', '-', '-', '-', '-', '-', '-', '-'];
+  const example3 = ['Carlos Exemplo', 'Carlão', 'Pendente', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-'];
+  const example4 = ['Fernanda Exemplo', 'Fê', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-'];
+  const lines = [headers, example1, example2, example3, example4].map((row) => row.map(csvEscape).join(';'));
   const csv = lines.join('\r\n') + '\r\n';
   downloadTextFile('template-associados-chuteira-cansada.csv', csv, 'text/csv;charset=utf-8');
 }
 
 function downloadGastosTemplate() {
-  // Template CSV compatível com Excel (pt-BR): separador ';'
+  // Template CSV alinhado à tabela de gastos do sistema.
   const headers = ['Mês', 'Data', 'O que foi', 'Valor (R$)'];
   const example1 = ['Jan', '2026-01-05', 'Água / gelo', 'R$ 30,00'];
-  const example2 = ['Jan', '2026-01-05', 'Café', '0'];
-  const lines = [headers, example1, example2].map((row) => row.map(csvEscape).join(';'));
+  const example2 = ['Jan', '2026-01-05', 'Café', 'R$ 12,00'];
+  const example3 = ['Fev', '2026-02-02', 'Bolas para treino', 'R$ 180,00'];
+  const example4 = ['Mar', '2026-03-01', 'Aluguel do campo', 'R$ 400,00'];
+  const lines = [headers, example1, example2, example3, example4].map((row) => row.map(csvEscape).join(';'));
   const csv = lines.join('\r\n') + '\r\n';
   downloadTextFile('template-gastos-chuteira-cansada.csv', csv, 'text/csv;charset=utf-8');
 }
