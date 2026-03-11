@@ -402,6 +402,7 @@
     async function checkAuthAndRedirect() {
       try {
         const token = localStorage.getItem(TOKEN_KEY);
+        if (!token) return;
         const response = await fetch(`${API_BASE}/api/auth/me`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -440,9 +441,14 @@
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       
-      const email = document.getElementById('email').value.trim();
+      const email = document.getElementById('email').value.trim().toLowerCase();
       const password = document.getElementById('password').value;
       const btn = document.getElementById('loginBtn');
+
+      if (!email || !password) {
+        showAlert('Preencha e-mail e senha');
+        return;
+      }
 
       btn.disabled = true;
       btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Entrando...</span>';
@@ -458,16 +464,23 @@
 
         if (!response.ok) {
           const code = String(data?.error || '');
-          if (code === 'invalid_credentials') {
-            throw new Error('E-mail ou senha incorretos');
+          if (code === 'invalid_credentials' || response.status === 401) {
+            showAlert(
+              'E-mail ou senha incorretos. ' +
+              'Se for admin: use o e-mail de ADMIN_EMAIL (padrão: admin@admin) e a senha de ADMIN_PASSWORD (Railway). ' +
+              'Se for associado: a senha padrão é 123456 (ou ASSOCIADO_DEFAULT_PASSWORD).'
+            );
+          } else if (code === 'missing_credentials' || response.status === 400) {
+            showAlert('Preencha e-mail e senha');
+          } else if (code === 'server_misconfigured' || response.status === 500) {
+            showAlert('Servidor não configurado para login (admin).');
+          } else {
+            showAlert('Não foi possível entrar agora.');
           }
-          if (code === 'missing_credentials') {
-            throw new Error('Preencha e-mail e senha');
-          }
-          if (code === 'server_misconfigured') {
-            throw new Error('Servidor não configurado para login (admin).');
-          }
-          throw new Error('Não foi possível entrar agora.');
+
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> <span>Entrar</span>';
+          return;
         }
 
         if (!data || !data.token || !data.user) {
