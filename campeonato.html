@@ -1,4 +1,4 @@
-<!doctype html>
+ï»¿<!doctype html>
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
@@ -9,12 +9,12 @@
   <link rel="icon" type="image/png" href="assets/icon-192.png" />
   <link rel="apple-touch-icon" href="assets/icon-192.png" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-  <link rel="stylesheet" href="assets/styles.css?v=20260311-20" />
+  <link rel="stylesheet" href="assets/styles.css?v=20260311-19" />
 </head>
 <body data-page="campeonato">
-  <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+  <a class="skip-link" href="#conteudo">Pular para o conteÃºdo</a>
 
-  <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Abrir menu">?</button>
+  <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Abrir menu">â˜°</button>
   <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
   <aside class="sidebar" id="sidebar">
@@ -28,17 +28,17 @@
       </div>
     </div>
 
-    <nav class="sidebar__nav" aria-label="Navegação principal">
+    <nav class="sidebar__nav" aria-label="NavegaÃ§Ã£o principal">
       <ul class="sidebar__menu">
         <li><a class="sidebar__link" href="dashboard.html"><span class="sidebar__icon"><i class="fas fa-tachometer-alt"></i></span> Dashboard</a></li>
         <li><a class="sidebar__link" href="dashboard.html"><span class="sidebar__icon"><i class="fas fa-users"></i></span> Associados</a></li>
         <li><a class="sidebar__link" href="jogadores.html"><span class="sidebar__icon"><i class="fas fa-futbol"></i></span> Jogadores</a></li>
         <li><a class="sidebar__link" href="gastos.html"><span class="sidebar__icon"><i class="fas fa-money-bill-wave"></i></span> Gastos</a></li>
         <li><a class="sidebar__link" href="saldo.html"><span class="sidebar__icon"><i class="fas fa-chart-line"></i></span> Saldo</a></li>
-        <li><a class="sidebar__link" href="classificacao.html"><span class="sidebar__icon"><i class="fas fa-trophy"></i></span> Classificação</a></li>
+        <li><a class="sidebar__link" href="classificacao.html"><span class="sidebar__icon"><i class="fas fa-trophy"></i></span> ClassificaÃ§Ã£o</a></li>
         <li><a class="sidebar__link is-active" href="campeonato.html"><span class="sidebar__icon"><i class="fas fa-calendar-alt"></i></span> Campeonato</a></li>
         <li><a class="sidebar__link" href="entreterimento.html"><span class="sidebar__icon"><i class="fas fa-gamepad"></i></span> Entretenimento</a></li>
-        <li><a class="sidebar__link" href="dashboard.html#configuracoes"><span class="sidebar__icon"><i class="fas fa-cog"></i></span> Configurações</a></li>
+        <li><a class="sidebar__link" href="dashboard.html#configuracoes"><span class="sidebar__icon"><i class="fas fa-cog"></i></span> ConfiguraÃ§Ãµes</a></li>
       </ul>
     </nav>
 
@@ -51,7 +51,7 @@
     <main id="conteudo" class="container page">
       <header class="page__header">
         <h1 class="page__title">Campeonato</h1>
-        <p class="page__subtitle">Acompanhe rodadas, placares e próximos jogos com visão clara e responsiva.</p>
+        <p class="page__subtitle">Acompanhe rodadas, placares e prÃ³ximos jogos com visÃ£o clara e responsiva.</p>
       </header>
 
       <section class="cmp-overview" aria-label="Resumo do campeonato">
@@ -73,14 +73,14 @@
             <p class="cmp-kpi__value cmp-kpi__value--warn" id="cmp-kpi-pendentes">0</p>
           </article>
         </div>
-        <p class="cmp-overview__hint" id="cmp-kpi-context">Visão geral com os filtros atuais.</p>
+        <p class="cmp-overview__hint" id="cmp-kpi-context">VisÃ£o geral com os filtros atuais.</p>
       </section>
 
       <section class="card" aria-label="Tabela de jogos">
         <div class="card__header card__header--campeonato">
           <div>
             <h2 class="card__title">Jogos por rodada</h2>
-            <p class="card__hint">A tabela é atualizada pelo administrador. Quem acessa pode apenas visualizar.</p>
+            <p class="card__hint">A tabela Ã© atualizada pelo administrador. Quem acessa pode apenas visualizar.</p>
           </div>
 
           <div class="cmp-toolbar" aria-label="Filtros do campeonato">
@@ -96,9 +96,9 @@
                 <input id="campeonato-search-time" class="input" type="text" placeholder="Ex: Brasil, Argentina" />
               </label>
               <label class="field" for="campeonato-layout-mode">
-                <span class="field__label">Visualização</span>
+                <span class="field__label">VisualizaÃ§Ã£o</span>
                 <select id="campeonato-layout-mode" class="select">
-                  <option value="auto">Automático</option>
+                  <option value="auto">AutomÃ¡tico</option>
                   <option value="2col">2 colunas</option>
                 </select>
               </label>
@@ -122,21 +122,21 @@
         <div class="card__footer card__footer--campeonato">
           <span class="muted" id="campeonato-count-info">Exibindo 0 jogos.</span>
           <span class="muted">Dica: use "2-1" no placar.</span>
-          <button class="btn btn--primary" type="button" data-action="save" data-admin-only="1">Salvar alterações</button>
+          <button class="btn btn--primary" type="button" data-action="save" data-admin-only="1">Salvar alteraÃ§Ãµes</button>
         </div>
       </section>
     </main>
 
     <footer class="footer">
       <div class="container footer__inner">
-        <span class="muted">© 2026 Chuteira Cansada</span>
+        <span class="muted">Â© 2026 Chuteira Cansada</span>
         <span class="muted">Dados no servidor (Postgres) com fallback local</span>
       </div>
     </footer>
 
     <input id="import-jogos-file" type="file" accept=".xlsx,.xls,.csv" hidden />
 
-    <script src="assets/app.js?v=20260311-22"></script>
+    <script src="assets/app.js?v=20260311-21"></script>
   </div>
 </body>
 </html>

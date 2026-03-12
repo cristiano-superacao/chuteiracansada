@@ -583,26 +583,6 @@ img{max-width:100%;height:auto}
 .player-billing-item__status{margin-top:4px;font-size:14px;font-weight:700;color:var(--text)}
 .player-billing-item__valor{margin-top:2px;font-size:12px;color:var(--muted)}
 
-/* Nova Área do Jogador */
-.player-dashboard{display:grid;gap:14px}
-.player-dash-grid{display:grid;grid-template-columns:repeat(4,minmax(170px,1fr));gap:10px}
-.player-dash-value{margin:8px 0 0;font-size:22px;font-weight:900;color:var(--brand-1)}
-.player-notice-grid{display:grid;grid-template-columns:repeat(2,minmax(260px,1fr));gap:12px}
-.player-inline-list{margin:8px 0 0;padding-left:18px;display:grid;gap:6px}
-
-.player-profile{display:grid;grid-template-columns:120px 1fr;gap:14px;align-items:center}
-.player-profile__photo-wrap{display:flex;justify-content:center}
-.player-profile__photo{width:104px;height:104px;border-radius:50%;object-fit:cover;border:3px solid var(--brand-soft-12);box-shadow:var(--shadow)}
-.player-profile__meta-grid{display:grid;grid-template-columns:repeat(2,minmax(220px,1fr));gap:8px}
-.player-profile__meta-grid p{margin:0;color:var(--muted);font-weight:700}
-
-.player-kpis--dashboard{grid-template-columns:repeat(4,minmax(150px,1fr))}
-.player-next-game{font-size:22px;font-weight:900;color:var(--text);margin:6px 0}
-.player-table{min-width:760px}
-
-.player-ranking__grid{display:grid;grid-template-columns:repeat(2,minmax(260px,1fr));gap:12px}
-.player-ranking__grid h3{margin:0 0 6px;font-size:14px;color:var(--muted)}
-
 @media (min-width: 1280px){
   body[data-page="campeonato"] .container{max-width:1400px}
   .cmp-kpi{padding:14px 16px}
@@ -639,20 +619,12 @@ img{max-width:100%;height:auto}
   .player-history-grid{grid-template-columns:1fr}
   .player-kpis--billing{grid-template-columns:repeat(2,minmax(130px,1fr))}
   .player-billing-grid{grid-template-columns:repeat(2,minmax(130px,1fr))}
-  .player-dash-grid{grid-template-columns:repeat(2,minmax(150px,1fr))}
-  .player-notice-grid{grid-template-columns:1fr}
-  .player-profile{grid-template-columns:1fr}
-  .player-profile__meta-grid{grid-template-columns:1fr}
-  .player-ranking__grid{grid-template-columns:1fr}
 }
 
 @media (max-width: 720px){
   .player-kpis{grid-template-columns:repeat(2,minmax(120px,1fr))}
   .player-kpis--billing{grid-template-columns:1fr}
   .player-billing-grid{grid-template-columns:1fr}
-  .player-kpis--dashboard{grid-template-columns:1fr}
-  .player-dash-grid{grid-template-columns:1fr}
-  .player-next-game{font-size:18px}
 }
 
 @media (max-width: 1024px){

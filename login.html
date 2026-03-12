@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+Ôªø<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#06AA48" />
   <title>Login - Chuteira Cansada</title>
   <link rel="manifest" href="./manifest.json">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>?</text></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>‚öΩ</text></svg>">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <style>
     * {
@@ -272,9 +272,9 @@
 <body>
   <div class="login-container">
     <div class="logo-section">
-      <div class="logo-icon">?</div>
+      <div class="logo-icon">‚öΩ</div>
       <h1>Chuteira Cansada</h1>
-      <p>FaÁa login para continuar</p>
+      <p>Fa√ßa login para continuar</p>
     </div>
 
     <div id="alert" class="alert"></div>
@@ -303,7 +303,7 @@
             type="password" 
             id="password" 
             name="password" 
-            placeholder="ïïïïïïïï" 
+            placeholder="‚Ä¢‚Ä¢‚Ä¢‚Ä¢‚Ä¢‚Ä¢‚Ä¢‚Ä¢" 
             required 
             autocomplete="current-password"
           >
@@ -360,7 +360,7 @@
       }
     }
 
-    // Captura par‚metros do callback do Google OAuth
+    // Captura par√¢metros do callback do Google OAuth
     const urlParams = new URLSearchParams(window.location.search);
     const googleSuccess = urlParams.get('success');
     const googleToken = urlParams.get('token');
@@ -384,17 +384,17 @@
       }
     } else if (googleError) {
       const errorMessages = {
-        'google_auth_failed': 'Falha na autenticaÁ„o com Google. Tente novamente.',
+        'google_auth_failed': 'Falha na autentica√ß√£o com Google. Tente novamente.',
         'server_error': 'Erro no servidor. Tente novamente mais tarde.',
-        'google_not_configured': 'Login com Google n„o est· configurado.'
+        'google_not_configured': 'Login com Google n√£o est√° configurado.'
       };
       showAlert(errorMessages[googleError] || 'Erro ao fazer login com Google');
       
-      // Limpa a URL para remover os par‚metros de erro
+      // Limpa a URL para remover os par√¢metros de erro
       window.history.replaceState({}, document.title, '/login.html');
     }
 
-    // Verifica se j· est· logado
+    // Verifica se j√° est√° logado
     if (localStorage.getItem(TOKEN_KEY) && !googleSuccess) {
       checkAuthAndRedirect();
     }
@@ -411,12 +411,12 @@
         if (data.authenticated && data.user) {
           redirectByRole(data.user.role);
         } else if (!data.authenticated) {
-          // Token inv·lido/expirado: limpa para evitar loops e UX confusa
+          // Token inv√°lido/expirado: limpa para evitar loops e UX confusa
           try { localStorage.removeItem(TOKEN_KEY); } catch {}
           try { localStorage.removeItem(USER_KEY); } catch {}
         }
       } catch (err) {
-        // Evita poluir o console em caso de falhas transitÛrias (rede/cache)
+        // Evita poluir o console em caso de falhas transit√≥rias (rede/cache)
       }
     }
 
@@ -426,7 +426,7 @@
       } else if (role === 'associado') {
         window.location.href = '/inicio.html';
       } else if (role === 'jogador') {
-        window.location.href = '/player-dashboard.html';
+        window.location.href = '/jogador.html';
       }
     }
 
@@ -469,15 +469,15 @@
           if (code === 'invalid_credentials' || response.status === 401) {
             showAlert(
               'E-mail ou senha incorretos. ' +
-              'Se for admin: use o e-mail de ADMIN_EMAIL (padr„o: admin@admin) e a senha de ADMIN_PASSWORD (Railway). ' +
-              'Se for associado/jogador: a senha padr„o È 123456 (ou ASSOCIADO_DEFAULT_PASSWORD / JOGADOR_DEFAULT_PASSWORD).'
+              'Se for admin: use o e-mail de ADMIN_EMAIL (padr√£o: admin@admin) e a senha de ADMIN_PASSWORD (Railway). ' +
+              'Se for associado/jogador: a senha padr√£o √© 123456 (ou ASSOCIADO_DEFAULT_PASSWORD / JOGADOR_DEFAULT_PASSWORD).'
             );
           } else if (code === 'missing_credentials' || response.status === 400) {
             showAlert('Preencha e-mail e senha');
           } else if (code === 'server_misconfigured' || response.status === 500) {
-            showAlert('Servidor n„o configurado para login (admin).');
+            showAlert('Servidor n√£o configurado para login (admin).');
           } else {
-            showAlert('N„o foi possÌvel entrar agora.');
+            showAlert('N√£o foi poss√≠vel entrar agora.');
           }
 
           btn.disabled = false;
@@ -486,7 +486,7 @@
         }
 
         if (!data || !data.token || !data.user) {
-          throw new Error('Resposta inv·lida do servidor.');
+          throw new Error('Resposta inv√°lida do servidor.');
         }
 
         localStorage.setItem(TOKEN_KEY, data.token);

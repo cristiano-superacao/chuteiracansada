@@ -1,20 +1,20 @@
-<!doctype html>
+ï»¿<!doctype html>
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#06AA48" />
-  <title>Chuteira Cansada - Classificação</title>
+  <title>Chuteira Cansada - ClassificaÃ§Ã£o</title>
   <link rel="manifest" href="manifest.json" />
   <link rel="icon" type="image/png" href="assets/icon-192.png" />
   <link rel="apple-touch-icon" href="assets/icon-192.png" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-  <link rel="stylesheet" href="assets/styles.css?v=20260311-20" />
+  <link rel="stylesheet" href="assets/styles.css?v=20260311-19" />
 </head>
 <body data-page="classificacao">
-  <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+  <a class="skip-link" href="#conteudo">Pular para o conteÃºdo</a>
   
-  <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Abrir menu">?</button>
+  <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Abrir menu">â˜°</button>
   <div class="sidebar-overlay" id="sidebar-overlay"></div>
   
   <aside class="sidebar" id="sidebar">
@@ -28,17 +28,17 @@
       </div>
     </div>
     
-    <nav class="sidebar__nav" aria-label="Navegação principal">
+    <nav class="sidebar__nav" aria-label="NavegaÃ§Ã£o principal">
       <ul class="sidebar__menu">
         <li><a class="sidebar__link" href="dashboard.html"><span class="sidebar__icon"><i class="fas fa-tachometer-alt"></i></span> Dashboard</a></li>
         <li><a class="sidebar__link" href="dashboard.html"><span class="sidebar__icon"><i class="fas fa-users"></i></span> Associados</a></li>
         <li><a class="sidebar__link" href="jogadores.html"><span class="sidebar__icon"><i class="fas fa-futbol"></i></span> Jogadores</a></li>
         <li><a class="sidebar__link" href="gastos.html"><span class="sidebar__icon"><i class="fas fa-money-bill-wave"></i></span> Gastos</a></li>
         <li><a class="sidebar__link" href="saldo.html"><span class="sidebar__icon"><i class="fas fa-chart-line"></i></span> Saldo</a></li>
-        <li><a class="sidebar__link is-active" href="classificacao.html"><span class="sidebar__icon"><i class="fas fa-trophy"></i></span> Classificação</a></li>
+        <li><a class="sidebar__link is-active" href="classificacao.html"><span class="sidebar__icon"><i class="fas fa-trophy"></i></span> ClassificaÃ§Ã£o</a></li>
         <li><a class="sidebar__link" href="campeonato.html"><span class="sidebar__icon"><i class="fas fa-calendar-alt"></i></span> Campeonato</a></li>
         <li><a class="sidebar__link" href="entreterimento.html"><span class="sidebar__icon"><i class="fas fa-gamepad"></i></span> Entretenimento</a></li>
-        <li><a class="sidebar__link" href="dashboard.html#configuracoes"><span class="sidebar__icon"><i class="fas fa-cog"></i></span> Configurações</a></li>
+        <li><a class="sidebar__link" href="dashboard.html#configuracoes"><span class="sidebar__icon"><i class="fas fa-cog"></i></span> ConfiguraÃ§Ãµes</a></li>
       </ul>
     </nav>
     
@@ -50,15 +50,15 @@
   <div class="app-content">
     <main id="conteudo" class="container page">
     <header class="page__header">
-      <h1 class="page__title">Classificação</h1>
-      <p class="page__subtitle">Acompanhe a tabela do campeonato e estatísticas gerais.</p>
+      <h1 class="page__title">ClassificaÃ§Ã£o</h1>
+      <p class="page__subtitle">Acompanhe a tabela do campeonato e estatÃ­sticas gerais.</p>
     </header>
 
     <section class="card">
         <div class="card__header">
           <div>
             <h2 class="card__title">Tabela</h2>
-            <p class="card__hint">Edite para atualizar a classificação e os totais.</p>
+            <p class="card__hint">Edite para atualizar a classificaÃ§Ã£o e os totais.</p>
           </div>
           <div class="actions">
             <button class="btn" type="button" data-action="add-row" data-table="times" data-admin-only="1">Adicionar time</button>
@@ -82,7 +82,7 @@
                 <th class="w-80">CA</th>
                 <th class="w-80">CV</th>
                 <th class="w-90">%</th>
-                <th class="w-72" aria-label="Ações"></th>
+                <th class="w-72" aria-label="AÃ§Ãµes"></th>
               </tr>
             </thead>
             <tbody></tbody>
@@ -90,27 +90,27 @@
         </div>
 
         <div class="card__footer">
-          <div class="muted">Critérios: PG, V, SG, GF, CA, CV.</div>
-          <button class="btn btn--primary" type="button" data-action="save" data-admin-only="1">Salvar alterações</button>
+          <div class="muted">CritÃ©rios: PG, V, SG, GF, CA, CV.</div>
+          <button class="btn btn--primary" type="button" data-action="save" data-admin-only="1">Salvar alteraÃ§Ãµes</button>
         </div>
     </section>
 
     <section class="grid grid--even">
-      <div class="card" aria-label="Critérios da classificação">
+      <div class="card" aria-label="CritÃ©rios da classificaÃ§Ã£o">
         <div class="card__header">
           <div>
-            <h2 class="card__title">Critérios da classificação</h2>
+            <h2 class="card__title">CritÃ©rios da classificaÃ§Ã£o</h2>
             <p class="card__hint">Ordem de desempate usada no campeonato.</p>
           </div>
         </div>
 
         <div class="table-wrap">
-          <table class="table table--compact" aria-label="Critérios">
+          <table class="table table--compact" aria-label="CritÃ©rios">
             <thead>
               <tr>
-                <th class="w-220">Critério</th>
+                <th class="w-220">CritÃ©rio</th>
                 <th class="w-110">Sigla</th>
-                <th>Descrição</th>
+                <th>DescriÃ§Ã£o</th>
               </tr>
             </thead>
             <tbody data-slot="criterios-body"></tbody>
@@ -122,7 +122,7 @@
         <div class="card__header">
           <div>
             <h2 class="card__title">Resumo</h2>
-            <p class="card__hint">Totais e médias do campeonato.</p>
+            <p class="card__hint">Totais e mÃ©dias do campeonato.</p>
           </div>
         </div>
         <div class="summary" data-slot="classificacao-resumo"></div>
@@ -132,12 +132,12 @@
 
   <footer class="footer">
     <div class="container footer__inner">
-      <span class="muted">© 2026 Chuteira Cansada</span>
+      <span class="muted">Â© 2026 Chuteira Cansada</span>
       <span class="muted">Dados no servidor (Postgres) com fallback local</span>
     </div>
   </footer>
 
-  <script src="assets/app.js?v=20260311-22"></script>
+  <script src="assets/app.js?v=20260311-21"></script>
   </div>
 </body>
 </html>
