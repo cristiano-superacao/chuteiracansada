@@ -94,6 +94,72 @@ function normalizeJogadorEmail(value) {
   return email || null;
 }
 
+function normalizeMatchText(value) {
+  return String(value ?? '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function tokenizeMatch(value) {
+  const normalized = normalizeMatchText(value);
+  if (!normalized) return [];
+  return normalized.split(' ').filter(Boolean);
+}
+
+function findBestAssociadoByJogadorNome(jogadorNome, associados) {
+  const nomeNorm = normalizeMatchText(jogadorNome);
+  if (!nomeNorm) return null;
+
+  const nomeTokens = tokenizeMatch(nomeNorm);
+  const nomeFirst = nomeTokens[0] || '';
+
+  let best = null;
+  let bestScore = -1;
+
+  for (const a of associados || []) {
+    const apelidoNorm = normalizeMatchText(a?.apelido);
+    const associadoNomeNorm = normalizeMatchText(a?.nome);
+    const apelidoTokens = tokenizeMatch(apelidoNorm);
+    const associadoTokens = tokenizeMatch(associadoNomeNorm);
+
+    let score = 0;
+
+    if (apelidoNorm && apelidoNorm === nomeNorm) score += 100;
+    if (associadoNomeNorm && associadoNomeNorm === nomeNorm) score += 90;
+
+    if (apelidoNorm && nomeNorm.includes(apelidoNorm)) score += 65;
+    if (apelidoNorm && apelidoNorm.includes(nomeNorm)) score += 55;
+
+    if (associadoNomeNorm && nomeNorm.includes(associadoNomeNorm)) score += 45;
+    if (associadoNomeNorm && associadoNomeNorm.includes(nomeNorm)) score += 35;
+
+    if (nomeFirst) {
+      if (apelidoTokens.includes(nomeFirst)) score += 30;
+      if (associadoTokens.includes(nomeFirst)) score += 20;
+    }
+
+    let tokenHits = 0;
+    for (const tk of nomeTokens) {
+      if (!tk || tk.length < 3) continue;
+      if (apelidoTokens.includes(tk) || associadoTokens.includes(tk)) tokenHits += 1;
+    }
+    score += tokenHits * 8;
+
+    if (score > bestScore) {
+      best = a;
+      bestScore = score;
+    }
+  }
+
+  // Evita falso positivo em nomes muito diferentes.
+  return bestScore >= 30 ? best : null;
+}
+
 function getAssociadoDefaultPassword(item) {
   const explicit = String(item?.senha ?? item?.password ?? '').trim();
   if (explicit) return explicit;
@@ -615,23 +681,25 @@ router.get('/data/jogador/me', requireAuth, async (req, res) => {
 
     const jogadorEmail = String(jogador.email || '').trim();
     const jogadorNome = String(jogador.nome || '').trim();
-    const associadoRes = await pool.query(
-      `SELECT id, nome, apelido, email
-       FROM associados
-       WHERE ($1 <> '' AND LOWER(TRIM(email)) = LOWER(TRIM($1)))
-          OR LOWER(TRIM(nome)) = LOWER(TRIM($2))
-          OR LOWER(TRIM(apelido)) = LOWER(TRIM($2))
-       ORDER BY
-         CASE
-           WHEN $1 <> '' AND LOWER(TRIM(email)) = LOWER(TRIM($1)) THEN 0
-           WHEN LOWER(TRIM(nome)) = LOWER(TRIM($2)) THEN 1
-           WHEN LOWER(TRIM(apelido)) = LOWER(TRIM($2)) THEN 2
-           ELSE 9
-         END,
-         id ASC
-       LIMIT 1`,
-      [jogadorEmail, jogadorNome]
-    );
+
+    let associado = null;
+
+    if (jogadorEmail) {
+      const byEmail = await pool.query(
+        `SELECT id, nome, apelido, email
+         FROM associados
+         WHERE LOWER(TRIM(email)) = LOWER(TRIM($1))
+         ORDER BY id ASC
+         LIMIT 1`,
+        [jogadorEmail]
+      );
+      if (byEmail.rowCount > 0) associado = byEmail.rows[0];
+    }
+
+    if (!associado) {
+      const associadosRes = await pool.query('SELECT id, nome, apelido, email FROM associados ORDER BY id ASC');
+      associado = findBestAssociadoByJogadorNome(jogadorNome, associadosRes.rows || []);
+    }
 
     let mensalidades = {
       associado: null,
@@ -645,8 +713,7 @@ router.get('/data/jogador/me', requireAuth, async (req, res) => {
       },
     };
 
-    if (associadoRes.rowCount > 0) {
-      const associado = associadoRes.rows[0];
+    if (associado) {
       const pagamentosRes = await pool.query(
         `SELECT mes_key, raw, valor
          FROM associados_pagamentos
