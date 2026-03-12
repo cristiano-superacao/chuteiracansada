@@ -740,7 +740,11 @@ router.get('/data/jogador/me', requireAuth, async (req, res) => {
       const isPago = (p) => {
         const raw = String(p?.raw || '').trim().toLowerCase();
         const valor = Number(p?.valor) || 0;
-        return valor > 0 || raw.includes('pago');
+        if (!raw || raw === '-' || raw === '—' || raw === 'r$' || raw.includes('pendente') || raw === 'd') {
+          return false;
+        }
+        if (raw.includes('pago')) return true;
+        return valor > 0;
       };
 
       const totalPagoAno = pagamentos.reduce((acc, p) => acc + (Number(p.valor) || 0), 0);
