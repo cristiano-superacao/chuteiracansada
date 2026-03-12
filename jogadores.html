@@ -1,4 +1,4 @@
-ï»¿<!doctype html>
+<!doctype html>
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
@@ -9,13 +9,13 @@
   <link rel="icon" type="image/png" href="assets/icon-192.png" />
   <link rel="apple-touch-icon" href="assets/icon-192.png" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-  <link rel="stylesheet" href="assets/styles.css?v=20260311-19" />
+  <link rel="stylesheet" href="assets/styles.css?v=20260311-20" />
 </head>
 <body data-page="jogadores">
-  <a class="skip-link" href="#conteudo">Pular para o conteÃºdo</a>
+  <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
   
-  <!-- BotÃ£o hamburger mobile -->
-  <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Abrir menu">â˜°</button>
+  <!-- Botão hamburger mobile -->
+  <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Abrir menu">?</button>
   
   <!-- Overlay mobile -->
   <div class="sidebar-overlay" id="sidebar-overlay"></div>
@@ -30,7 +30,7 @@
       </div>
     </div>
     
-    <nav class="sidebar__nav" aria-label="NavegaÃ§Ã£o principal">
+    <nav class="sidebar__nav" aria-label="Navegação principal">
       <ul class="sidebar__menu">
         <li class="sidebar__menu-item">
           <a class="sidebar__link" href="dashboard.html">
@@ -65,7 +65,7 @@
         <li class="sidebar__menu-item">
           <a class="sidebar__link" href="classificacao.html">
             <span class="sidebar__icon"><i class="fas fa-trophy"></i></span>
-            <span>ClassificaÃ§Ã£o</span>
+            <span>Classificação</span>
           </a>
         </li>
         <li class="sidebar__menu-item">
@@ -83,7 +83,7 @@
         <li class="sidebar__menu-item">
           <a class="sidebar__link" href="dashboard.html#configuracoes">
             <span class="sidebar__icon"><i class="fas fa-cog"></i></span>
-            <span>ConfiguraÃ§Ãµes</span>
+            <span>Configurações</span>
           </a>
         </li>
       </ul>
@@ -96,12 +96,12 @@
     </div>
   </aside>
   
-  <!-- ConteÃºdo principal -->
+  <!-- Conteúdo principal -->
   <div class="app-content">
     <main id="conteudo" class="container page">
     <header class="page__header">
       <h1 class="page__title">Jogadores</h1>
-      <p class="page__subtitle">Visualize desempenho por jogador com filtros rÃ¡pidos e indicadores de disciplina.</p>
+      <p class="page__subtitle">Visualize desempenho por jogador com filtros rápidos e indicadores de disciplina.</p>
     </header>
 
     <section class="jog-overview" aria-label="Resumo de jogadores">
@@ -111,19 +111,27 @@
           <p class="jog-kpi__value" id="jogadores-kpi-total">0</p>
         </article>
         <article class="jog-kpi" aria-live="polite">
+          <p class="jog-kpi__label">Jogos somados</p>
+          <p class="jog-kpi__value" id="jogadores-kpi-jogos">0</p>
+        </article>
+        <article class="jog-kpi" aria-live="polite">
           <p class="jog-kpi__label">Total de gols</p>
           <p class="jog-kpi__value jog-kpi__value--ok" id="jogadores-kpi-gols">0</p>
         </article>
         <article class="jog-kpi" aria-live="polite">
-          <p class="jog-kpi__label">CartÃµes amarelos</p>
+          <p class="jog-kpi__label">Assistências</p>
+          <p class="jog-kpi__value" id="jogadores-kpi-assistencias">0</p>
+        </article>
+        <article class="jog-kpi" aria-live="polite">
+          <p class="jog-kpi__label">Cartões amarelos</p>
           <p class="jog-kpi__value" id="jogadores-kpi-amarelos">0</p>
         </article>
         <article class="jog-kpi" aria-live="polite">
-          <p class="jog-kpi__label">CartÃµes vermelhos</p>
+          <p class="jog-kpi__label">Cartões vermelhos</p>
           <p class="jog-kpi__value jog-kpi__value--warn" id="jogadores-kpi-vermelhos">0</p>
         </article>
         <article class="jog-kpi" aria-live="polite">
-          <p class="jog-kpi__label">SuspensÃµes</p>
+          <p class="jog-kpi__label">Suspensões</p>
           <p class="jog-kpi__value" id="jogadores-kpi-suspensoes">0</p>
         </article>
       </div>
@@ -133,8 +141,8 @@
     <section class="card" aria-label="Tabela de jogadores">
       <div class="card__header card__header--jogadores">
         <div>
-          <h2 class="card__title">EstatÃ­sticas por jogador</h2>
-          <p class="card__hint">Clique para editar. Os dados ficam salvos no servidor quando disponÃ­vel.</p>
+          <h2 class="card__title">Estatísticas por jogador</h2>
+          <p class="card__hint">Clique para editar. Os dados ficam salvos no servidor quando disponível.</p>
         </div>
 
         <div class="jog-toolbar" aria-label="Ferramentas de jogadores">
@@ -155,18 +163,21 @@
               <span class="field__label">Time</span>
               <input class="input" id="jogadores-filter-time" type="search" placeholder="Ex.: Brasil" />
             </label>
-            <label class="field" aria-label="MÃ­nimo de gols">
-              <span class="field__label">Gols mÃ­nimos</span>
+            <label class="field" aria-label="Mínimo de gols">
+              <span class="field__label">Gols mínimos</span>
               <input class="input" id="jogadores-filter-min-gols" type="number" inputmode="numeric" min="0" placeholder="0" />
             </label>
-            <label class="field" aria-label="OrdenaÃ§Ã£o">
+            <label class="field" aria-label="Ordenação">
               <span class="field__label">Ordenar por</span>
               <select class="select" id="jogadores-sort">
                 <option value="nome">Nome (A-Z)</option>
+                <option value="jogos">Jogos (maior primeiro)</option>
                 <option value="gols">Gols (maior primeiro)</option>
+                <option value="assistencias">Assistências (maior primeiro)</option>
+                <option value="cartoes">Cartões totais (maior primeiro)</option>
                 <option value="amarelos">Amarelos (maior primeiro)</option>
                 <option value="vermelhos">Vermelhos (maior primeiro)</option>
-                <option value="suspensoes">SuspensÃµes (maior primeiro)</option>
+                <option value="suspensoes">Suspensões (maior primeiro)</option>
               </select>
             </label>
           </div>
@@ -179,12 +190,17 @@
             <tr>
               <th class="w-280">Nome</th>
               <th class="w-260">Email (login)</th>
+              <th class="w-140">Posição</th>
+              <th class="w-110">Camisa</th>
+              <th class="w-240">Foto URL</th>
               <th class="w-200">Time</th>
+              <th class="w-110">Jogos</th>
               <th class="w-110">Gols</th>
+              <th class="w-110">Assist.</th>
               <th class="w-110">Amarelos</th>
               <th class="w-110">Vermelhos</th>
-              <th class="w-140">SuspensÃµes</th>
-              <th class="w-72" aria-label="AÃ§Ãµes"></th>
+              <th class="w-140">Suspensões</th>
+              <th class="w-72" aria-label="Ações"></th>
             </tr>
           </thead>
           <tbody></tbody>
@@ -194,17 +210,17 @@
       <div class="card__footer">
         <div class="stack">
           <div class="muted" id="jogadores-count-info">Mostrando 0 de 0 jogadores.</div>
-          <div class="muted">Dica: use nÃºmeros inteiros nas colunas de gols/cartÃµes/suspensÃµes.</div>
-          <div class="muted">Para compartilhar acessos, use "Exportar logins" apÃ³s preencher os emails.</div>
+          <div class="muted">Dica: use números inteiros nas colunas de gols/cartões/suspensões.</div>
+          <div class="muted">Para compartilhar acessos, use "Exportar logins" após preencher os emails.</div>
         </div>
-        <button class="btn btn--primary" type="button" data-action="save" data-admin-only="1">Salvar alteraÃ§Ãµes</button>
+        <button class="btn btn--primary" type="button" data-action="save" data-admin-only="1">Salvar alterações</button>
       </div>
     </section>
   </main>
 
   <footer class="footer">
     <div class="container footer__inner">
-      <span class="muted">Â© 2026 Chuteira Cansada</span>
+      <span class="muted">© 2026 Chuteira Cansada</span>
       <span class="muted">Dados no servidor (Postgres) com fallback local</span>
     </div>
   </footer>
@@ -213,7 +229,7 @@
   <input id="import-jogadores-file" type="file" accept=".xlsx,.xls,.csv" hidden />
 
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script src="assets/app.js?v=20260311-21"></script>
+  <script src="assets/app.js?v=20260311-22"></script>
 </body>
 </html>
 

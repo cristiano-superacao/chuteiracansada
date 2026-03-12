@@ -1,4 +1,4 @@
-ï»¿<!doctype html>
+<!doctype html>
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
@@ -9,13 +9,13 @@
   <link rel="icon" type="image/png" href="assets/icon-192.png" />
   <link rel="apple-touch-icon" href="assets/icon-192.png" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-  <link rel="stylesheet" href="assets/styles.css?v=20260311-19" />
+  <link rel="stylesheet" href="assets/styles.css?v=20260311-20" />
 </head>
 <body data-page="associados">
-  <a class="skip-link" href="#conteudo">Pular para o conteÃºdo</a>
+  <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
   
-  <!-- BotÃ£o hamburger mobile -->
-  <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Abrir menu">â˜°</button>
+  <!-- Botão hamburger mobile -->
+  <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Abrir menu">?</button>
   
   <!-- Overlay mobile -->
   <div class="sidebar-overlay" id="sidebar-overlay"></div>
@@ -30,7 +30,7 @@
       </div>
     </div>
     
-    <nav class="sidebar__nav" aria-label="NavegaÃ§Ã£o principal">
+    <nav class="sidebar__nav" aria-label="Navegação principal">
       <ul class="sidebar__menu">
         <li class="sidebar__menu-item">
           <a class="sidebar__link" href="dashboard.html">
@@ -53,7 +53,7 @@
         <li class="sidebar__menu-item">
           <a class="sidebar__link" href="classificacao.html">
             <span class="sidebar__icon"><i class="fas fa-trophy"></i></span>
-            <span>ClassificaÃ§Ã£o</span>
+            <span>Classificação</span>
           </a>
         </li>
         <li class="sidebar__menu-item">
@@ -83,7 +83,7 @@
         <li class="sidebar__menu-item">
           <a class="sidebar__link" href="dashboard.html#configuracoes">
             <span class="sidebar__icon"><i class="fas fa-cog"></i></span>
-            <span>ConfiguraÃ§Ãµes</span>
+            <span>Configurações</span>
           </a>
         </li>
       </ul>
@@ -96,26 +96,26 @@
     </div>
   </aside>
   
-  <!-- ConteÃºdo principal -->
+  <!-- Conteúdo principal -->
   <div class="app-content">
     <main id="conteudo" class="container page">
     <header class="page__header">
       <h1 class="page__title">Associados</h1>
-      <p class="page__subtitle">Acompanhe pagamentos, pendÃªncias e arrecadaÃ§Ã£o mensal em uma visÃ£o Ãºnica.</p>
+      <p class="page__subtitle">Acompanhe pagamentos, pendências e arrecadação mensal em uma visão única.</p>
     </header>
 
-    <section class="assoc-overview" aria-label="Resumo do mÃªs de associados">
+    <section class="assoc-overview" aria-label="Resumo do mês de associados">
       <div class="assoc-kpis">
         <article class="assoc-kpi" aria-live="polite">
           <p class="assoc-kpi__label">Associados</p>
           <p class="assoc-kpi__value" id="associados-kpi-total">0</p>
         </article>
         <article class="assoc-kpi" aria-live="polite">
-          <p class="assoc-kpi__label">Pagos no mÃªs</p>
+          <p class="assoc-kpi__label">Pagos no mês</p>
           <p class="assoc-kpi__value assoc-kpi__value--ok" id="associados-kpi-pagos">0</p>
         </article>
         <article class="assoc-kpi" aria-live="polite">
-          <p class="assoc-kpi__label">Pendentes no mÃªs</p>
+          <p class="assoc-kpi__label">Pendentes no mês</p>
           <p class="assoc-kpi__value assoc-kpi__value--warn" id="associados-kpi-pendentes">0</p>
         </article>
         <article class="assoc-kpi" aria-live="polite">
@@ -123,18 +123,18 @@
           <p class="assoc-kpi__value" id="associados-kpi-arrecadado">R$ 0,00</p>
         </article>
         <article class="assoc-kpi" aria-live="polite">
-          <p class="assoc-kpi__label">Taxa de adimplÃªncia</p>
+          <p class="assoc-kpi__label">Taxa de adimplência</p>
           <p class="assoc-kpi__value" id="associados-kpi-adimplencia">0%</p>
         </article>
       </div>
-      <p class="assoc-overview__hint" id="associados-kpi-context">MÃ©tricas do mÃªs selecionado.</p>
+      <p class="assoc-overview__hint" id="associados-kpi-context">Métricas do mês selecionado.</p>
     </section>
 
     <section class="card" aria-label="Tabela de associados">
       <div class="card__header card__header--associados">
         <div>
           <h2 class="card__title">Pagamentos</h2>
-          <p class="card__hint">Clique em uma cÃ©lula para editar. Com servidor ativo, salva para todos; se nÃ£o, usa fallback local.</p>
+          <p class="card__hint">Clique em uma célula para editar. Com servidor ativo, salva para todos; se não, usa fallback local.</p>
         </div>
         <div class="assoc-toolbar" aria-label="Ferramentas de associados">
           <div class="assoc-toolbar__group assoc-toolbar__group--actions">
@@ -157,8 +157,8 @@
               <span class="field__label">Ano</span>
               <input class="input" id="associados-filter-ano" type="number" inputmode="numeric" min="2000" max="2100" placeholder="2026" />
             </label>
-            <label class="field" aria-label="Filtrar mÃªs">
-              <span class="field__label">MÃªs</span>
+            <label class="field" aria-label="Filtrar mês">
+              <span class="field__label">Mês</span>
               <select class="select" id="associados-filter-mes">
                 <option>Jan</option>
                 <option>Fev</option>
@@ -177,7 +177,7 @@
           </div>
 
           <div class="assoc-toolbar__group assoc-toolbar__group--utilities">
-            <label class="check" title="Mostrar apenas associados com pagamento pendente no mÃªs selecionado">
+            <label class="check" title="Mostrar apenas associados com pagamento pendente no mês selecionado">
               <input type="checkbox" id="associados-filter-pendentes" />
               <span>Somente pendentes</span>
             </label>
@@ -205,7 +205,7 @@
               <th>Out</th>
               <th>Nov</th>
               <th>Dez</th>
-              <th class="w-72" aria-label="AÃ§Ãµes"></th>
+              <th class="w-72" aria-label="Ações"></th>
             </tr>
           </thead>
           <tbody></tbody>
@@ -215,28 +215,28 @@
       <div class="card__footer">
         <div class="stack">
           <div class="muted">Dica: use valores como <strong>"Pago"</strong>, <strong>"Pendente"</strong> ou <strong>"R$ 30"</strong>.</div>
-          <div class="pager" aria-label="PaginaÃ§Ã£o">
+          <div class="pager" aria-label="Paginação">
             <button class="btn btn--ghost" type="button" id="associados-page-prev">Anterior</button>
             <span class="muted" id="associados-page-info"></span>
-            <button class="btn btn--ghost" type="button" id="associados-page-next">PrÃ³xima</button>
+            <button class="btn btn--ghost" type="button" id="associados-page-next">Próxima</button>
           </div>
         </div>
-        <button class="btn btn--primary" type="button" data-action="save" data-admin-only="1">Salvar alteraÃ§Ãµes</button>
+        <button class="btn btn--primary" type="button" data-action="save" data-admin-only="1">Salvar alterações</button>
       </div>
     </section>
 
-    <section class="card" id="configuracoes" tabindex="-1" aria-label="ConfiguraÃ§Ãµes de inadimplÃªncia e lista de inadimplentes">
+    <section class="card" id="configuracoes" tabindex="-1" aria-label="Configurações de inadimplência e lista de inadimplentes">
       <div class="card__header">
         <div>
-          <h2 class="card__title">ConfiguraÃ§Ãµes e inadimplentes</h2>
-          <p class="card__hint">Defina o inÃ­cio da cobranÃ§a e os feriados globais. A lista abaixo mostra os associados com mensalidades em aberto, considerando a regra do 5Ã‚Âº dia Ãºtil.</p>
+          <h2 class="card__title">Configurações e inadimplentes</h2>
+          <p class="card__hint">Defina o início da cobrança e os feriados globais. A lista abaixo mostra os associados com mensalidades em aberto, considerando a regra do 5Âº dia útil.</p>
         </div>
         <div class="actions">
-          <label class="field" aria-label="Ano de inÃ­cio">
+          <label class="field" aria-label="Ano de início">
             <span class="field__label">Ano</span>
             <input class="input" id="inadimplentes-filter-ano" type="number" inputmode="numeric" min="2026" max="2100" placeholder="2026" />
           </label>
-          <label class="field" aria-label="MÃªs de inÃ­cio">
+          <label class="field" aria-label="Mês de início">
             <span class="field__label">A partir de</span>
             <select class="select" id="inadimplentes-filter-mes">
               <option>Jan</option>
@@ -278,10 +278,10 @@
       <div class="card__footer">
         <div class="stack">
           <div class="muted" data-slot="inadimplentes-resumo"></div>
-          <div class="pager" aria-label="PaginaÃ§Ã£o de inadimplentes">
+          <div class="pager" aria-label="Paginação de inadimplentes">
             <button class="btn btn--ghost" type="button" id="inadimplentes-page-prev">Anterior</button>
             <span class="muted" id="inadimplentes-page-info"></span>
-            <button class="btn btn--ghost" type="button" id="inadimplentes-page-next">PrÃ³xima</button>
+            <button class="btn btn--ghost" type="button" id="inadimplentes-page-next">Próxima</button>
           </div>
         </div>
       </div>
@@ -290,7 +290,7 @@
 
   <footer class="footer">
     <div class="container footer__inner">
-      <span class="muted">Â© 2026 Chuteira Cansada</span>
+      <span class="muted">© 2026 Chuteira Cansada</span>
       <span class="muted">Dados no servidor (Postgres) com fallback local</span>
     </div>
   </footer>
@@ -299,7 +299,7 @@
   <input id="import-associados-file" type="file" accept=".xlsx,.xls,.csv" hidden />
 
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script src="assets/app.js?v=20260311-21"></script>
+  <script src="assets/app.js?v=20260311-22"></script>
 </body>
 </html>
 

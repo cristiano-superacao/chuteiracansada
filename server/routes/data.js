@@ -375,12 +375,19 @@ async function replaceAllData(data) {
     for (const j of jogadores) {
       const email = normalizeJogadorEmail(j?.email);
       const ins = await client.query(
-        'INSERT INTO jogadores (nome, email, time, gols, amarelos, vermelhos, suspensoes) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id',
+        `INSERT INTO jogadores (nome, email, posicao, numero_camisa, foto_url, time, gols, assistencias, jogos, amarelos, vermelhos, suspensoes)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+         RETURNING id`,
         [
           String(j?.nome ?? '').trim() || '—',
           email,
+          String(j?.posicao ?? '').trim(),
+          Number(j?.numero_camisa ?? j?.numeroCamisa) || 0,
+          normalizeOptionalText(j?.foto_url ?? j?.fotoUrl),
           String(j?.time ?? '').trim(),
           Number(j?.gols) || 0,
+          Number(j?.assistencias) || 0,
+          Number(j?.jogos) || 0,
           Number(j?.amarelos) || 0,
           Number(j?.vermelhos) || 0,
           Number(j?.suspensoes) || 0,
@@ -585,7 +592,10 @@ router.get('/data/jogador/me', requireAuth, async (req, res) => {
     }
 
     const jogadorRes = await pool.query(
-      'SELECT id, nome, email, time, gols, amarelos, vermelhos, suspensoes FROM jogadores WHERE id = $1 LIMIT 1',
+      `SELECT id, nome, email, posicao, numero_camisa, foto_url, time, gols, assistencias, jogos, amarelos, vermelhos, suspensoes
+       FROM jogadores
+       WHERE id = $1
+       LIMIT 1`,
       [jogadorId]
     );
     if (jogadorRes.rowCount === 0) {
@@ -608,6 +618,19 @@ router.get('/data/jogador/me', requireAuth, async (req, res) => {
         [time]
       )
       : { rows: [] };
+
+    const tabelaRes = await pool.query(
+      `SELECT id, time, pg, j, v, e, der, gf, gs, sg, ca, cv
+       FROM times
+       ORDER BY pg DESC, sg DESC, v DESC, gf DESC, time ASC`
+    );
+
+    const rankingRes = await pool.query(
+      `SELECT id, nome, time, gols, assistencias, jogos
+       FROM jogadores
+       ORDER BY gols DESC, assistencias DESC, jogos DESC, nome ASC
+       LIMIT 10`
+    );
 
     const jogosOrdenados = jogosRes.rows
       .slice()
@@ -708,15 +731,95 @@ router.get('/data/jogador/me', requireAuth, async (req, res) => {
       .reverse()
       .slice(0, 10);
 
+    const tabelaCampeonato = (tabelaRes.rows || []).map((row, index) => ({
+      posicao: index + 1,
+      time: row.time,
+      pontos: Number(row.pg) || 0,
+      vitorias: Number(row.v) || 0,
+      empates: Number(row.e) || 0,
+      derrotas: Number(row.der) || 0,
+      saldo: Number(row.sg) || 0,
+      jogos: Number(row.j) || 0,
+    }));
+
+    const rodadaAtual = proximosJogos[0]?.rodada || ultimosJogos[0]?.rodada || '—';
+    const proximoJogo = proximosJogos[0] || null;
+    const statusAssociacao = mensalidades?.associado ? 'Associado vinculado' : 'Não vinculado';
+
+    const dashboard = {
+      saldo: Number(mensalidades?.resumo?.totalPagoAno) || 0,
+      jogosRodada: jogosOrdenados.filter((j) => String(j?.rodada || '') === String(rodadaAtual)).length,
+      noticias: (ultimosJogos || []).slice(0, 3).map((j) => `${j?.casa || '—'} ${j?.placar || 'x'} ${j?.fora || '—'}`),
+      avisos: [
+        `Status da mensalidade: ${mensalidades?.resumo?.statusMesAtual || '—'}`,
+        proximosJogos.length ? `Próximo jogo em ${proximosJogos[0]?.data || 'data a definir'}` : 'Sem jogo agendado no momento',
+      ],
+      statusMensalidade: mensalidades?.resumo?.statusMesAtual || '—',
+    };
+
+    const ranking = {
+      artilharia: (rankingRes.rows || []).slice(0, 5).map((r) => ({
+        nome: r.nome,
+        time: r.time,
+        gols: Number(r.gols) || 0,
+      })),
+      assistencias: (rankingRes.rows || [])
+        .slice()
+        .sort((a, b) => (Number(b.assistencias) || 0) - (Number(a.assistencias) || 0))
+        .slice(0, 5)
+        .map((r) => ({
+          nome: r.nome,
+          time: r.time,
+          assistencias: Number(r.assistencias) || 0,
+        })),
+      melhorJogador: (rankingRes.rows || [])[0]
+        ? {
+          nome: rankingRes.rows[0].nome,
+          time: rankingRes.rows[0].time,
+          gols: Number(rankingRes.rows[0].gols) || 0,
+          assistencias: Number(rankingRes.rows[0].assistencias) || 0,
+        }
+        : null,
+    };
+
+    const cartoes = (Number(jogador.amarelos) || 0) + (Number(jogador.vermelhos) || 0);
+
     return res.json({
-      jogador,
-      classificacaoTime: classRes.rows?.[0] || null,
+      jogador: {
+        ...jogador,
+        numeroCamisa: Number(jogador.numero_camisa) || 0,
+        fotoUrl: jogador.foto_url || '',
+        statusAssociacao,
+      },
+      estatisticas: {
+        jogos: Number(jogador.jogos) || 0,
+        gols: Number(jogador.gols) || 0,
+        assistencias: Number(jogador.assistencias) || 0,
+        cartoes,
+        amarelos: Number(jogador.amarelos) || 0,
+        vermelhos: Number(jogador.vermelhos) || 0,
+        suspensoes: Number(jogador.suspensoes) || 0,
+      },
+      campeonato: {
+        rodada: rodadaAtual,
+        proximoJogo,
+        ultimosJogos,
+        jogosDoTime: jogosOrdenados,
+      },
+      classificacao: {
+        time: classRes.rows?.[0] || null,
+        tabela: tabelaCampeonato,
+      },
+      dashboard,
+      ranking,
       mensalidades,
+      // Compatibilidade com versão anterior do frontend
       historico: {
         jogosDoTime: jogosOrdenados,
         ultimosJogos,
         proximosJogos,
       },
+      classificacaoTime: classRes.rows?.[0] || null,
     });
   } catch (err) {
     console.error(err);
@@ -957,12 +1060,19 @@ router.post('/jogadores', requireAdmin, async (req, res) => {
     await client.query('BEGIN');
 
     const ins = await client.query(
-      'INSERT INTO jogadores (nome, email, time, gols, amarelos, vermelhos, suspensoes) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id',
+      `INSERT INTO jogadores (nome, email, posicao, numero_camisa, foto_url, time, gols, assistencias, jogos, amarelos, vermelhos, suspensoes)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+       RETURNING id`,
       [
         nome,
         email,
+        String(req.body?.posicao ?? '').trim(),
+        Number(req.body?.numero_camisa ?? req.body?.numeroCamisa) || 0,
+        normalizeOptionalText(req.body?.foto_url ?? req.body?.fotoUrl),
         time,
         Number(req.body?.gols) || 0,
+        Number(req.body?.assistencias) || 0,
+        Number(req.body?.jogos) || 0,
         Number(req.body?.amarelos) || 0,
         Number(req.body?.vermelhos) || 0,
         Number(req.body?.suspensoes) || 0,

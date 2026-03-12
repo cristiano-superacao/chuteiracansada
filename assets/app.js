@@ -400,7 +400,7 @@ async function enforcePageAuth() {
     if (page === 'inicio') {
       // Área do associado (admin pode acessar para suporte)
       if (String(user.role) !== 'associado' && String(user.role) !== 'admin') throw new Error('forbidden');
-    } else if (page === 'jogador') {
+    } else if (page === 'jogador' || page === 'player-dashboard') {
       // Área do jogador (admin pode acessar para suporte)
       if (String(user.role) !== 'jogador' && String(user.role) !== 'admin') throw new Error('forbidden');
     } else {
@@ -699,15 +699,20 @@ function normalizeDataModel(data) {
     if (!j || typeof j !== 'object') return;
     j.nome = trimText(j.nome);
     j.email = String(j.email || '').trim().toLowerCase();
+    j.posicao = trimText(j.posicao);
+    j.numero_camisa = Number(j.numero_camisa ?? j.numeroCamisa) || 0;
+    j.foto_url = trimText(j.foto_url ?? j.fotoUrl);
     j.time = trimText(j.time);
     j.gols = Number(j.gols) || 0;
+    j.assistencias = Number(j.assistencias) || 0;
+    j.jogos = Number(j.jogos) || 0;
     j.amarelos = Number(j.amarelos) || 0;
     j.vermelhos = Number(j.vermelhos) || 0;
     j.suspensoes = Number(j.suspensoes) || 0;
   });
   data.jogadores = dedupeByKey(
     data.jogadores.filter((j) => !isBlankJogador(j)),
-    (j) => `${normalizeText(j?.nome)}|${normalizeText(j?.email)}|${normalizeText(j?.time)}|${j?.gols || 0}|${j?.amarelos || 0}|${j?.vermelhos || 0}|${j?.suspensoes || 0}`
+    (j) => `${normalizeText(j?.nome)}|${normalizeText(j?.email)}|${normalizeText(j?.posicao)}|${j?.numero_camisa || 0}|${normalizeText(j?.foto_url)}|${normalizeText(j?.time)}|${j?.gols || 0}|${j?.assistencias || 0}|${j?.jogos || 0}|${j?.amarelos || 0}|${j?.vermelhos || 0}|${j?.suspensoes || 0}`
   );
 
   data.gastos.forEach((g) => {
@@ -1040,8 +1045,12 @@ async function apiLoadJogadorMe() {
 
 function renderJogadorPortal(payload) {
   const jogador = payload?.jogador || {};
-  const hist = payload?.historico || {};
-  const classif = payload?.classificacaoTime || null;
+  const estat = payload?.estatisticas || {};
+  const hist = payload?.historico || payload?.campeonato || {};
+  const classif = payload?.classificacaoTime || payload?.classificacao?.time || null;
+  const tabela = Array.isArray(payload?.classificacao?.tabela) ? payload.classificacao.tabela : [];
+  const ranking = payload?.ranking || {};
+  const dashboard = payload?.dashboard || {};
   const mensalidades = payload?.mensalidades || {};
 
   const byId = (id) => document.getElementById(id);
@@ -1049,14 +1058,42 @@ function renderJogadorPortal(payload) {
     const node = byId(id);
     if (node) node.textContent = String(value ?? '—');
   };
+  const setTextMany = (ids, value) => ids.forEach((id) => setText(id, value));
 
-  setText('jgd-nome', jogador.nome || '—');
-  setText('jgd-time', jogador.time || '—');
-  setText('jgd-gols', Number(jogador.gols) || 0);
-  setText('jgd-amarelos', Number(jogador.amarelos) || 0);
-  setText('jgd-vermelhos', Number(jogador.vermelhos) || 0);
-  setText('jgd-suspensoes', Number(jogador.suspensoes) || 0);
-  setText('jgd-total-jogos', Array.isArray(hist.jogosDoTime) ? hist.jogosDoTime.length : 0);
+  const monthLabel = (key) => {
+    const k = String(key || '').toLowerCase();
+    const found = MONTHS.find((m) => m.key === k);
+    return found ? found.label : String(key || '—').toUpperCase();
+  };
+
+  const jogosDoTime = Array.isArray(hist.jogosDoTime) ? hist.jogosDoTime : [];
+  const ultimosJogos = Array.isArray(hist.ultimosJogos) ? hist.ultimosJogos : [];
+  const proximosJogos = Array.isArray(hist.proximosJogos) ? hist.proximosJogos : [];
+  const proximoJogo = payload?.campeonato?.proximoJogo || proximosJogos[0] || null;
+  const cartoes = Number(estat.cartoes) || ((Number(estat.amarelos) || Number(jogador.amarelos) || 0) + (Number(estat.vermelhos) || Number(jogador.vermelhos) || 0));
+
+  setTextMany(['jgd-nome', 'pdj-nome'], jogador.nome || '—');
+  setTextMany(['jgd-time', 'pdj-time'], jogador.time || '—');
+  setTextMany(['pdj-posicao'], jogador.posicao || 'Não informada');
+  setTextMany(['pdj-numero'], Number(jogador.numeroCamisa ?? jogador.numero_camisa) || 0);
+  setTextMany(['pdj-status-associacao'], jogador.statusAssociacao || 'Não vinculado');
+  setTextMany(['jgd-gols', 'pdj-gols'], Number(estat.gols ?? jogador.gols) || 0);
+  setTextMany(['pdj-assistencias'], Number(estat.assistencias ?? jogador.assistencias) || 0);
+  setTextMany(['pdj-jogos'], Number(estat.jogos ?? jogador.jogos) || jogosDoTime.length || 0);
+  setTextMany(['pdj-cartoes'], cartoes);
+  setTextMany(['jgd-amarelos'], Number(estat.amarelos ?? jogador.amarelos) || 0);
+  setTextMany(['jgd-vermelhos'], Number(estat.vermelhos ?? jogador.vermelhos) || 0);
+  setTextMany(['jgd-suspensoes'], Number(estat.suspensoes ?? jogador.suspensoes) || 0);
+  setTextMany(['jgd-total-jogos'], jogosDoTime.length || 0);
+
+  const avatar = byId('pdj-avatar');
+  if (avatar) {
+    const foto = String(jogador.fotoUrl || jogador.foto_url || '').trim();
+    if (foto) {
+      avatar.src = foto;
+      avatar.alt = `Foto de ${jogador.nome || 'jogador'}`;
+    }
+  }
 
   const posNode = byId('jgd-posicao-time');
   if (posNode) {
@@ -1065,7 +1102,9 @@ function renderJogadorPortal(payload) {
       : 'Sem classificação disponível';
   }
 
-  const mountJogos = (slotId, jogos) => {
+  const matchText = (j) => `${j?.casa || '—'} ${j?.placar || 'x'} ${j?.fora || '—'}`;
+
+  const mountJogos = (slotId, jogos, withRating = false) => {
     const slot = byId(slotId);
     if (!slot) return;
     slot.innerHTML = '';
@@ -1075,25 +1114,99 @@ function renderJogadorPortal(payload) {
       return;
     }
 
+    if (slotId === 'pdj-last-games-body') {
+      list.slice(0, 8).forEach((j) => {
+        const tr = el('tr', {}, [
+          el('td', { text: j?.data || '—' }),
+          el('td', { text: `${j?.casa || '—'} x ${j?.fora || '—'}` }),
+          el('td', { text: j?.placar || '—' }),
+          el('td', { text: String(Number(j?.golsJogador) || 0) }),
+          el('td', { text: withRating ? (j?.nota || '—') : '—' }),
+        ]);
+        slot.appendChild(tr);
+      });
+      return;
+    }
+
     const wrap = el('div', { class: 'player-history-list' });
     for (const j of list) {
       wrap.appendChild(el('article', { class: 'player-history-item' }, [
         el('div', { class: 'player-history-item__meta', text: `Rodada ${j?.rodada || '—'} • ${j?.data || '—'} ${j?.hora || ''}`.trim() }),
-        el('div', { class: 'player-history-item__match', text: `${j?.casa || '—'} ${j?.placar || 'x'} ${j?.fora || '—'}` }),
+        el('div', { class: 'player-history-item__match', text: matchText(j) }),
         el('div', { class: 'player-history-item__local', text: j?.local || 'Local não informado' }),
       ]));
     }
     slot.appendChild(wrap);
   };
 
-  mountJogos('jgd-ultimos-jogos', hist.ultimosJogos);
-  mountJogos('jgd-proximos-jogos', hist.proximosJogos);
+  mountJogos('jgd-ultimos-jogos', ultimosJogos);
+  mountJogos('jgd-proximos-jogos', proximosJogos);
+  mountJogos('pdj-last-games-body', ultimosJogos, true);
+  mountJogos('pdj-calendar-list', proximosJogos);
 
-  const monthLabel = (key) => {
-    const k = String(key || '').toLowerCase();
-    const found = MONTHS.find((m) => m.key === k);
-    return found ? found.label : String(key || '—').toUpperCase();
+  setText('pdj-next-match', proximoJogo ? matchText(proximoJogo) : 'Sem próximo jogo definido');
+  setText('pdj-next-match-meta', proximoJogo ? `${proximoJogo.data || 'Data a definir'} | ${proximoJogo.hora || 'Horário a definir'} | ${proximoJogo.local || 'Campo a definir'}` : 'Acompanhe novas rodadas para atualização.');
+
+  setText('pdj-dash-saldo', fmtMoney(Number(dashboard.saldo) || 0));
+  setText('pdj-dash-rodada', String(Number(dashboard.jogosRodada) || 0));
+  setText('pdj-dash-status-mensalidade', dashboard.statusMensalidade || mensalidades?.resumo?.statusMesAtual || '—');
+
+  const newsList = byId('pdj-news-list');
+  if (newsList) {
+    newsList.innerHTML = '';
+    const items = Array.isArray(dashboard.noticias) ? dashboard.noticias : [];
+    if (!items.length) newsList.appendChild(el('li', { text: 'Sem notícias da rodada no momento.' }));
+    items.forEach((item) => newsList.appendChild(el('li', { text: item })));
+  }
+
+  const alertsList = byId('pdj-alerts-list');
+  if (alertsList) {
+    alertsList.innerHTML = '';
+    const items = Array.isArray(dashboard.avisos) ? dashboard.avisos : [];
+    if (!items.length) alertsList.appendChild(el('li', { text: 'Nenhum aviso ativo.' }));
+    items.forEach((item) => alertsList.appendChild(el('li', { text: item })));
+  }
+
+  const tabelaBody = byId('pdj-league-body');
+  if (tabelaBody) {
+    tabelaBody.innerHTML = '';
+    if (!tabela.length) {
+      tabelaBody.appendChild(el('tr', {}, [
+        el('td', { text: '—', colspan: '7' }),
+      ]));
+    } else {
+      tabela.forEach((row) => {
+        tabelaBody.appendChild(el('tr', {}, [
+          el('td', { text: String(row.posicao || '—') }),
+          el('td', { text: row.time || '—' }),
+          el('td', { text: String(Number(row.pontos) || 0) }),
+          el('td', { text: String(Number(row.vitorias) || 0) }),
+          el('td', { text: String(Number(row.empates) || 0) }),
+          el('td', { text: String(Number(row.derrotas) || 0) }),
+          el('td', { text: String(Number(row.saldo) || 0) }),
+        ]));
+      });
+    }
+  }
+
+  const renderRanking = (slotId, rows, mode) => {
+    const slot = byId(slotId);
+    if (!slot) return;
+    slot.innerHTML = '';
+    const list = Array.isArray(rows) ? rows : [];
+    if (!list.length) {
+      slot.appendChild(el('li', { text: 'Sem dados de ranking.' }));
+      return;
+    }
+    list.forEach((r) => {
+      const val = mode === 'assistencias' ? Number(r.assistencias) || 0 : Number(r.gols) || 0;
+      slot.appendChild(el('li', { text: `${r.nome || '—'} (${r.time || '—'}) • ${val}` }));
+    });
   };
+
+  renderRanking('pdj-ranking-artilharia', ranking.artilharia, 'gols');
+  renderRanking('pdj-ranking-assists', ranking.assistencias, 'assistencias');
+  setText('pdj-ranking-best', ranking?.melhorJogador ? `${ranking.melhorJogador.nome || '—'} • ${ranking.melhorJogador.time || '—'}` : 'Sem destaque no momento');
 
   const associado = mensalidades?.associado || null;
   const resumo = mensalidades?.resumo || {};
@@ -1106,7 +1219,13 @@ function renderJogadorPortal(payload) {
   setText('jgd-mens-pendentes', Number(resumo.pendentes) || 0);
   setText('jgd-mens-total', fmtMoney(Number(resumo.totalPagoAno) || 0));
 
-  const lista = byId('jgd-mens-lista');
+  setText('pdj-fin-associado', associado ? (associado.apelido || associado.nome || associado.email || '—') : 'Não vinculado');
+  setText('pdj-fin-status', resumo.statusMesAtual || '—');
+  setText('pdj-fin-valor-mes', fmtMoney(Number(resumo.valorMesAtual) || 0));
+  setText('pdj-fin-pendentes', Number(resumo.pendentes) || 0);
+  setText('pdj-fin-total-ano', fmtMoney(Number(resumo.totalPagoAno) || 0));
+
+  const lista = byId('jgd-mens-lista') || byId('pdj-fin-list');
   if (lista) {
     lista.innerHTML = '';
     if (!pagamentos.length) {
@@ -1411,12 +1530,19 @@ function isBlankJogador(j) {
   if (!j || typeof j !== 'object') return true;
   const nome = trimText(j.nome);
   const email = String(j.email || '').trim();
+  const posicao = trimText(j.posicao);
+  const numeroCamisa = Number(j.numero_camisa ?? j.numeroCamisa) || 0;
+  const fotoUrl = trimText(j.foto_url ?? j.fotoUrl);
   const time = trimText(j.time);
   const gols = Number(j.gols) || 0;
+  const assistencias = Number(j.assistencias) || 0;
+  const jogos = Number(j.jogos) || 0;
   const amarelos = Number(j.amarelos) || 0;
   const vermelhos = Number(j.vermelhos) || 0;
   const suspensoes = Number(j.suspensoes) || 0;
-  return !nome && !email && !time && gols === 0 && amarelos === 0 && vermelhos === 0 && suspensoes === 0;
+  return !nome && !email && !posicao && !fotoUrl && !time
+    && numeroCamisa === 0 && gols === 0 && assistencias === 0 && jogos === 0
+    && amarelos === 0 && vermelhos === 0 && suspensoes === 0;
 }
 
 function decodeArrayBufferSafe(buffer, encoding) {
@@ -1951,10 +2077,10 @@ function downloadGastosTemplate() {
 }
 
 function downloadJogadoresTemplate() {
-  // Template CSV alinhado à tabela de jogadores com coluna de login (email).
-  const headers = ['Nome', 'Email', 'Time', 'Gols', 'Amarelos', 'Vermelhos', 'Suspensões'];
-  const example1 = ['Carlos Silva', 'carlos.silva@jogador.chuteira.local', 'Brasil', '5', '1', '0', '0'];
-  const example2 = ['Andre Souza', 'andre.souza@jogador.chuteira.local', 'Argentina', '3', '2', '0', '0'];
+  // Template CSV alinhado à tabela de jogadores com perfil + estatísticas.
+  const headers = ['Nome', 'Email', 'Posição', 'Número', 'Foto URL', 'Time', 'Jogos', 'Gols', 'Assistências', 'Amarelos', 'Vermelhos', 'Suspensões'];
+  const example1 = ['Carlos Silva', 'carlos.silva@jogador.chuteira.local', 'Atacante', '9', 'https://images.unsplash.com/photo-1571019613914-85f342c55f7f?w=200&q=80', 'Brasil', '10', '5', '3', '1', '0', '0'];
+  const example2 = ['Andre Souza', 'andre.souza@jogador.chuteira.local', 'Meia', '10', 'https://images.unsplash.com/photo-1614632537190-23e4146777db?w=200&q=80', 'Argentina', '9', '3', '4', '2', '0', '0'];
   const lines = [headers, example1, example2].map((row) => row.map(csvEscape).join(';'));
   const csv = lines.join('\r\n') + '\r\n';
   downloadTextFile('template-jogadores-chuteira-cansada.csv', csv, 'text/csv;charset=utf-8');
@@ -2971,8 +3097,13 @@ function readJogadoresFromGrid(grid) {
   const map = {
     nome: colIndex(['nome', 'jogador'], 0),
     email: colIndex(['email', 'e-mail', 'login'], -1),
+    posicao: colIndex(['posicao', 'posição'], -1),
+    numero_camisa: colIndex(['numero', 'número', 'camisa', 'numero camisa', 'número camisa'], -1),
+    foto_url: colIndex(['foto', 'foto url', 'imagem', 'avatar'], -1),
     time: colIndex(['time', 'equipe'], 1),
+    jogos: colIndex(['jogos', 'partidas'], -1),
     gols: colIndex(['gols', 'gol'], 2),
+    assistencias: colIndex(['assistencias', 'assistência', 'assistencias', 'assist', 'passes decisivos'], -1),
     amarelos: colIndex(['amarelos', 'cartao amarelo', 'ca'], 3),
     vermelhos: colIndex(['vermelhos', 'cartao vermelho', 'cv'], 4),
     suspensoes: colIndex(['suspensoes', 'suspensao', 'susp'], 5),
@@ -2985,21 +3116,31 @@ function readJogadoresFromGrid(grid) {
     const row = grid[r] ?? [];
     const nome = String(row[map.nome] ?? '').trim();
     const email = map.email >= 0 ? String(row[map.email] ?? '').trim().toLowerCase() : '';
+    const posicao = map.posicao >= 0 ? String(row[map.posicao] ?? '').trim() : '';
+    const numero_camisa = map.numero_camisa >= 0 ? toInt(row[map.numero_camisa]) : 0;
+    const foto_url = map.foto_url >= 0 ? String(row[map.foto_url] ?? '').trim() : '';
     const time = String(row[map.time] ?? '').trim();
+    const jogos = map.jogos >= 0 ? toInt(row[map.jogos]) : 0;
     const gols = toInt(row[map.gols]);
+    const assistencias = map.assistencias >= 0 ? toInt(row[map.assistencias]) : 0;
     const amarelos = toInt(row[map.amarelos]);
     const vermelhos = toInt(row[map.vermelhos]);
     const suspensoes = toInt(row[map.suspensoes]);
 
-    const hasAny = nome || time || gols || amarelos || vermelhos || suspensoes;
+    const hasAny = nome || posicao || numero_camisa || foto_url || time || jogos || gols || assistencias || amarelos || vermelhos || suspensoes;
     if (!hasAny) continue;
     if (!nome) continue;
 
     out.push({
       nome,
       email,
+      posicao,
+      numero_camisa,
+      foto_url,
       time,
+      jogos,
       gols,
+      assistencias,
       amarelos,
       vermelhos,
       suspensoes,
@@ -3046,7 +3187,20 @@ function addRow(state, table) {
       state.data.associados.push({ nome: 'Novo associado', apelido: '', pagamentosByYear: { [String(currentYear())]: seedPayments('') } });
       break;
     case 'jogadores':
-      state.data.jogadores.push({ nome: 'Novo jogador', email: '', time: '', gols: 0, amarelos: 0, vermelhos: 0, suspensoes: 0 });
+      state.data.jogadores.push({
+        nome: 'Novo jogador',
+        email: '',
+        posicao: '',
+        numero_camisa: 0,
+        foto_url: '',
+        time: '',
+        jogos: 0,
+        gols: 0,
+        assistencias: 0,
+        amarelos: 0,
+        vermelhos: 0,
+        suspensoes: 0,
+      });
       break;
     case 'gastos':
       state.data.gastos.push({ mes: 'Jan', data: '', descricao: '', valor: 0 });
@@ -3497,7 +3651,13 @@ function renderJogadores(state) {
 
   jogadores.sort((a, b) => {
     const mode = filter.sort;
-    if (mode === 'gols' || mode === 'amarelos' || mode === 'vermelhos' || mode === 'suspensoes') {
+    if (mode === 'gols' || mode === 'assistencias' || mode === 'jogos' || mode === 'cartoes' || mode === 'amarelos' || mode === 'vermelhos' || mode === 'suspensoes') {
+      if (mode === 'cartoes') {
+        const aCards = (Number(a?.amarelos) || 0) + (Number(a?.vermelhos) || 0);
+        const bCards = (Number(b?.amarelos) || 0) + (Number(b?.vermelhos) || 0);
+        if (bCards !== aCards) return bCards - aCards;
+        return String(a?.nome || '').localeCompare(String(b?.nome || ''), 'pt-BR');
+      }
       const av = Number(a?.[mode]) || 0;
       const bv = Number(b?.[mode]) || 0;
       if (bv !== av) return bv - av;
@@ -3532,6 +3692,22 @@ function renderJogadores(state) {
     const tdTime = document.createElement('td');
     setEditableCell(tdTime, { value: j.time, onCommit: (v) => (j.time = v) });
 
+    const tdPosicao = document.createElement('td');
+    setEditableCell(tdPosicao, { value: j.posicao || '', onCommit: (v) => (j.posicao = String(v || '').trim()) });
+
+    const tdNumeroCamisa = document.createElement('td');
+    setEditableCell(tdNumeroCamisa, {
+      value: String(j.numero_camisa ?? j.numeroCamisa ?? 0),
+      validator: (raw) => /^-?\d+$/.test(raw),
+      onCommit: (raw) => (j.numero_camisa = Number(raw) || 0),
+    });
+
+    const tdFoto = document.createElement('td');
+    setEditableCell(tdFoto, {
+      value: j.foto_url || j.fotoUrl || '',
+      onCommit: (v) => (j.foto_url = String(v || '').trim()),
+    });
+
     const numberCell = (key) => {
       const td = document.createElement('td');
       setEditableCell(td, {
@@ -3544,8 +3720,13 @@ function renderJogadores(state) {
 
     tr.appendChild(tdNome);
     tr.appendChild(tdEmail);
+    tr.appendChild(tdPosicao);
+    tr.appendChild(tdNumeroCamisa);
+    tr.appendChild(tdFoto);
     tr.appendChild(tdTime);
+    tr.appendChild(numberCell('jogos'));
     tr.appendChild(numberCell('gols'));
+    tr.appendChild(numberCell('assistencias'));
     tr.appendChild(numberCell('amarelos'));
     tr.appendChild(numberCell('vermelhos'));
     tr.appendChild(numberCell('suspensoes'));
@@ -3571,28 +3752,36 @@ function renderJogadores(state) {
 
 function updateJogadoresKpis(jogadores, filter) {
   const totalEl = document.getElementById('jogadores-kpi-total');
+  const jogosEl = document.getElementById('jogadores-kpi-jogos');
   const golsEl = document.getElementById('jogadores-kpi-gols');
+  const assistsEl = document.getElementById('jogadores-kpi-assistencias');
   const amarelosEl = document.getElementById('jogadores-kpi-amarelos');
   const vermelhosEl = document.getElementById('jogadores-kpi-vermelhos');
   const suspEl = document.getElementById('jogadores-kpi-suspensoes');
   const ctxEl = document.getElementById('jogadores-kpi-context');
-  if (!totalEl && !golsEl && !amarelosEl && !vermelhosEl && !suspEl && !ctxEl) return;
+  if (!totalEl && !jogosEl && !golsEl && !assistsEl && !amarelosEl && !vermelhosEl && !suspEl && !ctxEl) return;
 
   const list = Array.isArray(jogadores) ? jogadores : [];
+  let jogos = 0;
   let gols = 0;
+  let assistencias = 0;
   let amarelos = 0;
   let vermelhos = 0;
   let susp = 0;
 
   for (const j of list) {
+    jogos += Number(j?.jogos) || 0;
     gols += Number(j?.gols) || 0;
+    assistencias += Number(j?.assistencias) || 0;
     amarelos += Number(j?.amarelos) || 0;
     vermelhos += Number(j?.vermelhos) || 0;
     susp += Number(j?.suspensoes) || 0;
   }
 
   if (totalEl) totalEl.textContent = String(list.length);
+  if (jogosEl) jogosEl.textContent = String(jogos);
   if (golsEl) golsEl.textContent = String(gols);
+  if (assistsEl) assistsEl.textContent = String(assistencias);
   if (amarelosEl) amarelosEl.textContent = String(amarelos);
   if (vermelhosEl) vermelhosEl.textContent = String(vermelhos);
   if (suspEl) suspEl.textContent = String(susp);
@@ -4633,7 +4822,7 @@ function injectToastStyles() {
 
   // A área do associado (`inicio.html`) usa seu próprio carregamento enxuto;
   // evitar `/api/data` aqui impede 401 desnecessário e fallback local incorreto.
-  if (page === 'jogador') {
+  if (page === 'jogador' || page === 'player-dashboard') {
     const payload = await apiLoadJogadorMe();
     renderJogadorPortal(payload);
   } else if (page !== 'inicio') {
