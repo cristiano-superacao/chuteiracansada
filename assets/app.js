@@ -1434,7 +1434,7 @@ function countReplacementChars(s) {
 
 async function readFileTextSmart(file) {
   // Alguns CSVs exportados do Excel (Windows) vêm em ANSI/Windows-1252.
-  // Se lidos como UTF-8, viram "ENCARNA��O" etc. Aqui tentamos UTF-8 e
+  // Se lidos como UTF-8, podem virar "ENCARNACAO" etc. Aqui tentamos UTF-8 e
   // caímos para Windows-1252 quando houver muitos caracteres de substituição.
   const buf = await file.arrayBuffer();
   const utf8 = decodeArrayBufferSafe(buf, 'utf-8') ?? '';
@@ -1898,6 +1898,11 @@ function bindGlobalActions(state) {
 
     if (action === 'export-associados-pdf') {
       exportAssociadosPdf(state);
+      return;
+    }
+
+    if (action === 'export-inadimplentes-pdf') {
+      exportInadimplentesPdf(state);
       return;
     }
   });
@@ -3272,6 +3277,61 @@ function updateAssociadosKpis(filteredAssociados, year, monthLabel, monthKey) {
   if (contextEl) contextEl.textContent = `Métricas para ${monthLabel}/${year} com os filtros atuais.`;
 }
 
+function buildInadimplentesReport(state) {
+  state.data = normalizeDataModel(state.data);
+
+  const configYM = clampInadimplenciaStartYM(String(state.data?.config?.cobrancaInicio || INADIMPLENCIA_MIN_START_YM));
+  const parsed = parseYearMonth(configYM) || { year: 2026, month: 1 };
+
+  const holidaySet = new Set((state.data?.config?.feriados || []).map((x) => String(x)));
+  const now = new Date();
+  const endYM = inadimplenciaEndYMForNow(now, holidaySet);
+  const months = compareYearMonth(endYM, configYM) < 0 ? [] : iterateMonthsInclusive(configYM, endYM);
+
+  const itens = (state.data.associados ?? [])
+    .map((a) => {
+      let firstIdx = -1;
+      let mesesEmAberto = 0;
+      let totalDevido = 0;
+      const mesesDetalhes = [];
+
+      for (let i = 0; i < months.length; i++) {
+        const m = months[i];
+        const raw = getPagamentoRaw(a, m.year, m.key);
+        const pago = paymentAmount(raw);
+        const devido = Math.max(0, MENSALIDADE - pago);
+        if (devido > 0) {
+          if (firstIdx < 0) firstIdx = i;
+          mesesEmAberto++;
+          totalDevido += devido;
+          mesesDetalhes.push(`${m.label}/${m.year}`);
+        }
+      }
+
+      if (mesesEmAberto <= 0) return null;
+      return {
+        nome: a?.nome ?? '—',
+        apelido: a?.apelido ?? '',
+        desde: firstIdx >= 0 ? `${months[firstIdx].label}/${months[firstIdx].year}` : `${monthLabelFromNumber(parsed.month)}/${parsed.year}`,
+        mesesEmAberto,
+        mesesDetalhes,
+        totalDevido,
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => (b.totalDevido - a.totalDevido) || (b.mesesEmAberto - a.mesesEmAberto) || String(a.nome).localeCompare(String(b.nome), 'pt-BR'));
+
+  const totalDevido = itens.reduce((acc, it) => acc + it.totalDevido, 0);
+
+  return {
+    configYM,
+    parsed,
+    months,
+    itens,
+    totalDevido,
+  };
+}
+
 function renderInadimplentes(state) {
   const table = document.querySelector('table[data-table="inadimplentes"]');
   if (!table) return;
@@ -3282,10 +3342,10 @@ function renderInadimplentes(state) {
   const info = document.getElementById('inadimplentes-page-info');
   const prev = document.getElementById('inadimplentes-page-prev');
   const next = document.getElementById('inadimplentes-page-next');
-  state.data = normalizeDataModel(state.data);
-
-  const configYM = clampInadimplenciaStartYM(String(state.data?.config?.cobrancaInicio || INADIMPLENCIA_MIN_START_YM));
-  const parsed = parseYearMonth(configYM) || { year: 2026, month: 1 };
+  const report = buildInadimplentesReport(state);
+  const parsed = report.parsed;
+  const itens = report.itens;
+  const soma = report.totalDevido;
 
   const anoEl = document.getElementById('inadimplentes-filter-ano');
   const mesEl = document.getElementById('inadimplentes-filter-mes');
@@ -3301,45 +3361,6 @@ function renderInadimplentes(state) {
   if (feriadosEl) {
     feriadosEl.value = feriadosToText(state.data?.config?.feriados);
   }
-
-  const holidaySet = new Set((state.data?.config?.feriados || []).map((x) => String(x)));
-
-  const now = new Date();
-  const endYM = inadimplenciaEndYMForNow(now, holidaySet);
-  const months = compareYearMonth(endYM, configYM) < 0 ? [] : iterateMonthsInclusive(configYM, endYM);
-
-  const itens = (state.data.associados ?? [])
-    .map((a) => {
-      let firstIdx = -1;
-      let mesesEmAberto = 0;
-      let totalDevido = 0;
-
-      for (let i = 0; i < months.length; i++) {
-        const m = months[i];
-        const raw = getPagamentoRaw(a, m.year, m.key);
-        const pago = paymentAmount(raw);
-        const devido = Math.max(0, MENSALIDADE - pago);
-        if (devido > 0) {
-          if (firstIdx < 0) firstIdx = i;
-          mesesEmAberto++;
-          totalDevido += devido;
-        }
-      }
-
-      if (mesesEmAberto <= 0) return null;
-      return {
-        nome: a?.nome ?? '—',
-        apelido: a?.apelido ?? '',
-        desde: firstIdx >= 0 ? `${months[firstIdx].label}/${months[firstIdx].year}` : `${monthLabelFromNumber(parsed.month)}/${parsed.year}`,
-        mesesEmAberto,
-        totalDevido,
-      };
-    })
-    .filter(Boolean)
-    .sort((a, b) => (b.totalDevido - a.totalDevido) || (b.mesesEmAberto - a.mesesEmAberto) || String(a.nome).localeCompare(String(b.nome), 'pt-BR'));
-
-  let soma = 0;
-  for (const it of itens) soma += it.totalDevido;
 
   const total = itens.length;
   const totalPages = Math.max(1, Math.ceil(total / INADIMPLENTES_PAGE_SIZE));
@@ -3374,6 +3395,85 @@ function renderInadimplentes(state) {
       resumo.textContent = `Total inadimplentes: ${itens.length} • Total devido: ${money(soma)} • A partir de ${monthLabelFromNumber(parsed.month)}/${parsed.year} • Mensalidade: ${money(MENSALIDADE)}`;
     }
   }
+}
+
+function exportInadimplentesPdf(state) {
+  if (document.body.getAttribute('data-page') !== 'associados') return;
+  const report = buildInadimplentesReport(state);
+  const parsed = report.parsed;
+  const itens = report.itens;
+  const soma = report.totalDevido;
+
+  const startLabel = `${monthLabelFromNumber(parsed.month)}/${parsed.year}`;
+  const title = `Relatório de Inadimplentes — desde ${startLabel}`;
+
+  const rowsHtml = itens.map((it) => {
+    const meses = Array.isArray(it.mesesDetalhes) && it.mesesDetalhes.length
+      ? it.mesesDetalhes.join(', ')
+      : '—';
+    return `
+      <tr>
+        <td>${escapeHtml(it.nome || '—')}</td>
+        <td>${escapeHtml(it.apelido || '—')}</td>
+        <td>${escapeHtml(it.desde || '—')}</td>
+        <td>${escapeHtml(meses)}</td>
+        <td>${escapeHtml(String(it.mesesEmAberto || 0))}</td>
+        <td class="bad">${escapeHtml(money(it.totalDevido || 0))}</td>
+      </tr>`;
+  }).join('');
+
+  const subtitle = itens.length
+    ? `Associados inadimplentes: ${itens.length} • Total devido: ${money(soma)} • Mensalidade: ${money(MENSALIDADE)}`
+    : `Nenhum inadimplente encontrado a partir de ${startLabel}.`;
+
+  const html = `
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>${escapeHtml(title)}</title>
+  <style>
+    :root{--text:#0b1f3a;--muted:#5b6b80;--border:#d6e3f2;--bad:#d64545;}
+    body{font:12px/1.45 system-ui,Segoe UI,Roboto,Arial,sans-serif;margin:24px;color:var(--text)}
+    h1{margin:0 0 6px;font-size:18px}
+    .sub{color:var(--muted);margin:0 0 14px}
+    table{width:100%;border-collapse:collapse}
+    th,td{border-bottom:1px solid var(--border);padding:10px 8px;text-align:left;vertical-align:top}
+    th{color:var(--muted);font-size:11px}
+    .bad{color:var(--bad);font-weight:800}
+    @media print{body{margin:12mm} .no-print{display:none}}
+  </style>
+</head>
+<body>
+  <h1>${escapeHtml(title)}</h1>
+  <p class="sub">${escapeHtml(subtitle)}</p>
+  <table>
+    <thead>
+      <tr>
+        <th>Nome</th>
+        <th>Apelido</th>
+        <th>Desde</th>
+        <th>Meses em aberto</th>
+        <th>Qtd.</th>
+        <th>Total devido</th>
+      </tr>
+    </thead>
+    <tbody>${rowsHtml || '<tr><td colspan="6">Nenhum inadimplente.</td></tr>'}</tbody>
+  </table>
+  <p class="sub no-print">Dica: no diálogo de impressão, escolha “Salvar como PDF”.</p>
+  <script>window.onload = () => setTimeout(() => window.print(), 50);</script>
+</body>
+</html>`;
+
+  const w = window.open('', '_blank');
+  if (!w) {
+    alert('Não consegui abrir a janela para exportar. Verifique se o bloqueador de pop-up está ativo.');
+    return;
+  }
+  w.document.open();
+  w.document.write(html);
+  w.document.close();
 }
 
 function applyPaymentClass(td, raw) {
