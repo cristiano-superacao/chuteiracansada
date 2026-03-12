@@ -734,12 +734,21 @@ router.get('/data/jogador/me', requireAuth, async (req, res) => {
 
       const pagamentos = MONTH_KEYS.map((mk) => byKey.get(mk) || { mesKey: mk, raw: 'Pendente', valor: 0 });
       const mesAtual = MONTH_KEYS[new Date().getMonth()];
+      const mesAtualIndex = Math.max(0, Math.min(11, new Date().getMonth()));
       const itemMesAtual = pagamentos.find((p) => p.mesKey === mesAtual) || { raw: 'Pendente', valor: 0 };
+
+      const isPago = (p) => {
+        const raw = String(p?.raw || '').trim().toLowerCase();
+        const valor = Number(p?.valor) || 0;
+        return valor > 0 || raw.includes('pago');
+      };
+
       const totalPagoAno = pagamentos.reduce((acc, p) => acc + (Number(p.valor) || 0), 0);
-      const pendentes = pagamentos.filter((p) => {
-        const raw = String(p.raw || '').trim().toLowerCase();
-        return (Number(p.valor) || 0) <= 0 && (raw.includes('pendente') || raw === '-' || raw === '' || raw === 'r$');
-      }).length;
+      const pendentes = pagamentos.filter((p, idx) => idx <= mesAtualIndex && !isPago(p)).length;
+
+      const statusMesAtual = isPago(itemMesAtual)
+        ? 'Pago'
+        : (String(itemMesAtual.raw || '').trim() || 'Pendente');
 
       mensalidades = {
         associado: {
@@ -751,7 +760,7 @@ router.get('/data/jogador/me', requireAuth, async (req, res) => {
         pagamentos,
         resumo: {
           mesAtual,
-          statusMesAtual: String(itemMesAtual.raw || 'Pendente'),
+          statusMesAtual,
           valorMesAtual: Number(itemMesAtual.valor) || 0,
           pendentes,
           totalPagoAno,
